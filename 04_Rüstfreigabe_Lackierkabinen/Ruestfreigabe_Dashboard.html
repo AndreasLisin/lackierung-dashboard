@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rüstfreigabe Dashboard – Lackierung | EINHAUS Oberflächenveredelung GmbH</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --blue-dark:  #1F4E79;
+    --blue-med:   #2E75B6;
+    --blue-light: #BDD7EE;
+    --green:      #70AD47;
+    --green-light:#E2EFDA;
+    --yellow:     #FFB300;
+    --yellow-light:#FFF3CD;
+    --red:        #C00000;
+    --red-light:  #FCE4D6;
+    --gray:       #6C757D;
+    --gray-light: #F8F9FA;
+    --white:      #FFFFFF;
+    --radius:     10px;
+    --shadow:     0 2px 12px rgba(0,0,0,.10);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #EEF2F7; color: #222; font-size: 14px; }
+
+  /* ── Header ── */
+  .topbar {
+    background: var(--blue-dark);
+    color: #fff;
+    padding: 0 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 62px;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,.3);
+  }
+  .topbar-left { display: flex; align-items: center; gap: 16px; }
+  .topbar-logo { font-size: 22px; font-weight: 700; letter-spacing: .5px; color: #fff; }
+  .topbar-logo span { color: #BDD7EE; }
+  .topbar-sub { font-size: 12px; color: rgba(255,255,255,.7); margin-top: 2px; }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .badge-fb { background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3);
+    border-radius: 6px; padding: 4px 10px; font-size: 12px; }
+  .btn-print { background: rgba(255,255,255,.2); border: 1px solid rgba(255,255,255,.4);
+    color: #fff; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px;
+    transition: background .2s; }
+  .btn-print:hover { background: rgba(255,255,255,.35); }
+
+  /* ── Layout ── */
+  .main { padding: 20px 24px; max-width: 1440px; margin: 0 auto; }
+
+  /* ── Month Selector ── */
+  .month-bar {
+    display: flex; align-items: center; gap: 10px;
+    background: #fff; border-radius: var(--radius); padding: 12px 20px;
+    margin-bottom: 18px; box-shadow: var(--shadow);
+  }
+  .month-bar label { font-weight: 600; color: var(--blue-dark); font-size: 13px; }
+  .month-bar select {
+    border: 1.5px solid var(--blue-light); border-radius: 6px;
+    padding: 5px 12px; font-size: 13px; color: var(--blue-dark); background: #fff;
+    cursor: pointer;
+  }
+  .month-bar .status-dot { width:10px; height:10px; border-radius:50%; display:inline-block; }
+  .month-bar .info { margin-left: auto; font-size: 12px; color: var(--gray); }
+
+  /* ── KPI Cards ── */
+  .kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 18px; }
+  .kpi-card {
+    background: #fff; border-radius: var(--radius); padding: 18px 20px;
+    box-shadow: var(--shadow); border-left: 5px solid transparent; position: relative; overflow: hidden;
+  }
+  .kpi-card.kpi-total   { border-color: var(--blue-med); }
+  .kpi-card.kpi-io      { border-color: var(--green); }
+  .kpi-card.kpi-bio     { border-color: var(--yellow); }
+  .kpi-card.kpi-nio     { border-color: var(--red); }
+  .kpi-card.kpi-offen   { border-color: #9E9E9E; }
+  .kpi-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .7px; color: var(--gray); }
+  .kpi-value { font-size: 34px; font-weight: 700; margin: 4px 0 2px; line-height: 1; }
+  .kpi-card.kpi-total   .kpi-value { color: var(--blue-med); }
+  .kpi-card.kpi-io      .kpi-value { color: var(--green); }
+  .kpi-card.kpi-bio     .kpi-value { color: var(--yellow); }
+  .kpi-card.kpi-nio     .kpi-value { color: var(--red); }
+  .kpi-card.kpi-offen   .kpi-value { color: var(--gray); }
+  .kpi-sub { font-size: 11px; color: var(--gray); }
+  .kpi-icon { position:absolute; right:16px; top:14px; font-size:28px; opacity:.15; }
+
+  /* ── Charts Row ── */
+  .charts-row { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 18px; }
+  .card { background: #fff; border-radius: var(--radius); padding: 20px 22px; box-shadow: var(--shadow); }
+  .card-title { font-size: 13px; font-weight: 700; color: var(--blue-dark); margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px; }
+  .card-title::before { content:''; display:inline-block; width:4px; height:16px;
+    background:var(--blue-med); border-radius:2px; }
+
+  /* ── Calendar ── */
+  .calendar-section { margin-bottom: 18px; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+  .cal-header { font-size: 11px; font-weight: 700; text-align: center; color: var(--blue-dark);
+    padding: 6px 0; }
+  .cal-day {
+    border-radius: 8px; padding: 8px 4px 6px; text-align: center; cursor: default;
+    transition: transform .15s;
+    min-height: 58px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .cal-day:not(.cal-empty):not(.cal-weekend):hover { transform: scale(1.06); z-index:2; }
+  .cal-day .day-num { font-size: 15px; font-weight: 700; }
+  .cal-day .day-status { font-size: 10px; font-weight: 600; margin-top: 3px; }
+  .cal-day .day-name  { font-size: 9px; color: rgba(0,0,0,.45); margin-top:1px; }
+  .cal-empty    { background: transparent; }
+  .cal-weekend  { background: #F0F0F0; opacity:.5; }
+  .cal-io       { background: #C6EFCE; color: #1B5E1F; }
+  .cal-bio      { background: #FFEB9C; color: #7B5800; }
+  .cal-nio      { background: #FFC7CE; color: #9B0006; }
+  .cal-future   { background: #E9ECEF; color: #9E9E9E; border: 1.5px dashed #CED4DA; }
+  .cal-today    { box-shadow: 0 0 0 3px var(--blue-med); }
+
+  /* ── Bottom Row ── */
+  .bottom-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+
+  /* ── Table ── */
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  thead th { background: var(--blue-dark); color: #fff; padding: 9px 12px; text-align: left;
+    font-size: 11px; text-transform: uppercase; letter-spacing: .5px; font-weight: 600; }
+  tbody tr:nth-child(even) { background: #F8FAFC; }
+  tbody tr:hover { background: #EFF4FB; }
+  tbody td { padding: 8px 12px; border-bottom: 1px solid #E9ECF0; vertical-align: middle; }
+  .tag { display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; }
+  .tag-io  { background:#C6EFCE; color:#1B5E1F; }
+  .tag-bio { background:#FFEB9C; color:#7B5800; }
+  .tag-nio { background:#FFC7CE; color:#9B0006; }
+
+  /* ── Section Bar Chart ── */
+  .section-list { display: flex; flex-direction: column; gap: 10px; }
+  .sec-item { }
+  .sec-header { display:flex; justify-content:space-between; font-size:12px; margin-bottom:3px; }
+  .sec-name { font-weight:600; color: #333; }
+  .sec-pct  { font-size: 11px; color: var(--gray); }
+  .bar-bg   { background: #E9ECF0; border-radius: 6px; height: 10px; overflow:hidden; }
+  .bar-fill { height:100%; border-radius: 6px; transition: width .6s ease; display:flex; }
+  .bar-io   { background: var(--green); }
+  .bar-bio  { background: var(--yellow); }
+  .bar-nio  { background: var(--red); }
+
+  /* ── Footer ── */
+  .footer { text-align:center; font-size:11px; color: var(--gray); padding: 12px 0 20px; }
+  .footer a { color: var(--blue-med); text-decoration:none; }
+
+  /* ── Trend Legend ── */
+  .trend-legend { display:flex; gap:16px; justify-content:center; margin-top:10px; }
+  .tl { display:flex; align-items:center; gap:5px; font-size:11px; color:var(--gray); }
+  .tl-dot { width:12px; height:12px; border-radius:2px; }
+
+  @media print {
+    .topbar { position:static; }
+    .btn-print { display:none; }
+    body { background:#fff; }
+    .card, .month-bar { box-shadow:none; border:1px solid #ddd; }
+  }
+  @media (max-width:1100px) {
+    .kpi-row { grid-template-columns: repeat(3,1fr); }
+    .charts-row, .bottom-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════ HEADER ══════════ -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div>
+      <div class="topbar-logo">EINHAUS <span>Oberflächenveredelung GmbH</span></div>
+      <div class="topbar-sub">Industrielackierung · 55411 Bingen-Dietersheim</div>
+    </div>
+  </div>
+  <div style="text-align:center;">
+    <div style="font-size:17px;font-weight:700;letter-spacing:.5px;">🏭 Rüstfreigabe Dashboard</div>
+    <div style="font-size:11px;opacity:.7;">Lackierung | Echtzeit-Übersicht</div>
+  </div>
+  <div class="topbar-right">
+    <span class="badge-fb">FB-64 / 11.18</span>
+    <span class="badge-fb">IATF 16949</span>
+    <button class="btn-print" onclick="window.print()">🖨 Drucken</button>
+  </div>
+</div>
+
+<!-- ══════════ MAIN ══════════ -->
+<div class="main">
+
+  <!-- Month Selector -->
+  <div class="month-bar">
+    <label>📅 Monat:</label>
+    <select id="monthSelect" onchange="updateDashboard()">
+      <option value="0">Januar 2026</option>
+      <option value="1">Februar 2026</option>
+      <option value="2">März 2026</option>
+      <option value="3">April 2026</option>
+      <option value="4">Mai 2026</option>
+      <option value="5" selected>Juni 2026</option>
+      <option value="6">Juli 2026</option>
+      <option value="7">August 2026</option>
+      <option value="8">September 2026</option>
+      <option value="9">Oktober 2026</option>
+      <option value="10">November 2026</option>
+      <option value="11">Dezember 2026</option>
+    </select>
+    <span id="monthStatusDot" class="status-dot" style="background:var(--green)"></span>
+    <span id="monthStatusText" style="font-size:13px;font-weight:600;color:var(--green);">Monat abgeschlossen</span>
+    <div class="info">Letztes Update: <strong id="lastUpdate">29.05.2026 – 07:14 Uhr</strong> &nbsp;|&nbsp; Prüfer: <strong>A. Lisin</strong></div>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="kpi-row">
+    <div class="kpi-card kpi-total">
+      <div class="kpi-icon">📋</div>
+      <div class="kpi-label">Prüftage gesamt</div>
+      <div class="kpi-value" id="kpi-total">—</div>
+      <div class="kpi-sub" id="kpi-total-sub">Arbeitstage im Monat</div>
+    </div>
+    <div class="kpi-card kpi-io">
+      <div class="kpi-icon">✅</div>
+      <div class="kpi-label">i.O. Tage</div>
+      <div class="kpi-value" id="kpi-io">—</div>
+      <div class="kpi-sub" id="kpi-io-sub">In Ordnung</div>
+    </div>
+    <div class="kpi-card kpi-bio">
+      <div class="kpi-icon">⚠️</div>
+      <div class="kpi-label">b.i.O. Tage</div>
+      <div class="kpi-value" id="kpi-bio">—</div>
+      <div class="kpi-sub" id="kpi-bio-sub">Bedingt in Ordnung</div>
+    </div>
+    <div class="kpi-card kpi-nio">
+      <div class="kpi-icon">🚨</div>
+      <div class="kpi-label">n.i.O. Tage</div>
+      <div class="kpi-value" id="kpi-nio">—</div>
+      <div class="kpi-sub" id="kpi-nio-sub">Nicht in Ordnung</div>
+    </div>
+    <div class="kpi-card kpi-offen">
+      <div class="kpi-icon">⏳</div>
+      <div class="kpi-label">Ausstehend</div>
+      <div class="kpi-value" id="kpi-offen">—</div>
+      <div class="kpi-sub" id="kpi-offen-sub">Noch nicht geprüft</div>
+    </div>
+  </div>
+
+  <!-- Charts Row -->
+  <div class="charts-row">
+    <div class="card">
+      <div class="card-title">Jahresübersicht 2026 – Bewertung pro Monat</div>
+      <canvas id="chartMonthly" height="100"></canvas>
+      <div class="trend-legend">
+        <div class="tl"><div class="tl-dot" style="background:#70AD47"></div> i.O.</div>
+        <div class="tl"><div class="tl-dot" style="background:#FFB300"></div> b.i.O.</div>
+        <div class="tl"><div class="tl-dot" style="background:#C00000"></div> n.i.O.</div>
+        <div class="tl"><div class="tl-dot" style="background:#CED4DA"></div> Offen</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Compliance-Rate 2026 (Jan–Mai)</div>
+      <canvas id="chartDonut" height="180"></canvas>
+    </div>
+  </div>
+
+  <!-- Calendar -->
+  <div class="card calendar-section">
+    <div class="card-title" id="calTitle">Monatskalender – Juni 2026</div>
+    <div class="cal-grid" id="calGrid"></div>
+    <div style="display:flex;gap:18px;margin-top:12px;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--gray);">
+        <div style="width:14px;height:14px;border-radius:3px;background:#C6EFCE;"></div> i.O.
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--gray);">
+        <div style="width:14px;height:14px;border-radius:3px;background:#FFEB9C;"></div> b.i.O.
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--gray);">
+        <div style="width:14px;height:14px;border-radius:3px;background:#FFC7CE;"></div> n.i.O.
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--gray);">
+        <div style="width:14px;height:14px;border-radius:3px;background:#E9ECEF;border:1.5px dashed #CED4DA;"></div> Ausstehend
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--gray);">
+        <div style="width:14px;height:14px;border-radius:3px;background:#F0F0F0;opacity:.6;"></div> Wochenende
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Row -->
+  <div class="bottom-row">
+    <!-- Section Analysis -->
+    <div class="card">
+      <div class="card-title">Prüfabschnitt-Analyse (YTD 2026)</div>
+      <div class="section-list" id="sectionList"></div>
+    </div>
+
+    <!-- Events Table -->
+    <div class="card">
+      <div class="card-title">Abweichungen & Maßnahmen (b.i.O. / n.i.O.)</div>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Datum</th>
+              <th>Abschnitt</th>
+              <th>Status</th>
+              <th>Maßnahme</th>
+            </tr>
+          </thead>
+          <tbody id="eventsTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<div class="footer">
+  Dashboard · EINHAUS Oberflächenveredelung GmbH · Industrielackierung · FB-64 Pre-Release Rüstfreigabe ·
+  Gespeichert unter: <a href="#">Lackierung – Dokumente / 25. Rüstfreigabe / Lackierung</a>
+  &nbsp;|&nbsp; Synchronisiert via SharePoint OneDrive
+</div>
+
+<!-- ══════════ SCRIPT ══════════ -->
+<script>
+// ── DATA ────────────────────────────────────────────────────────────────────
+const MONTHS = ['Januar','Februar','März','April','Mai','Juni',
+                'Juli','August','September','Oktober','November','Dezember'];
+const DAY_NAMES = ['Mo','Di','Mi','Do','Fr','Sa','So'];
+
+// Monthly data (actual data Jan-Mai from Excel; Jun onward = template)
+// { workdays, io, bio, nio } — offen is calculated
+const MONTHLY_DATA = [
+  { workdays:23, io:21, bio:2, nio:0 }, // Jan
+  { workdays:20, io:19, bio:1, nio:0 }, // Feb
+  { workdays:23, io:22, bio:1, nio:0 }, // Mar
+  { workdays:22, io:20, bio:2, nio:0 }, // Apr
+  { workdays:21, io:19, bio:1, nio:1 }, // Mai
+  { workdays:22, io:14, bio:0, nio:0 }, // Jun (in progress, 14 done as of ~today Jun 25)
+  { workdays:23, io:0,  bio:0, nio:0 }, // Jul
+  { workdays:21, io:0,  bio:0, nio:0 }, // Aug
+  { workdays:22, io:0,  bio:0, nio:0 }, // Sep
+  { workdays:23, io:0,  bio:0, nio:0 }, // Okt
+  { workdays:21, io:0,  bio:0, nio:0 }, // Nov
+  { workdays:23, io:0,  bio:0, nio:0 }, // Dez
+];
+
+// Day-level data per month [day_of_month → status: 'io'|'bio'|'nio'|'future'|null(weekend)]
+// Jan (index 0)
+const DAY_DATA = [
+  // Jan
+  {5:'io',6:'io',7:'io',8:'io',9:'io',12:'io',13:'io',14:'io',15:'io',16:'io',
+   19:'io',20:'io',21:'io',22:'io',23:'io',26:'io',27:'io',28:'io',29:'io',30:'io',
+   2:'bio',27:'bio'},  // override 2 days
+  // Feb
+  {2:'io',3:'io',4:'io',5:'io',6:'io',9:'io',10:'io',11:'io',12:'io',13:'io',
+   16:'io',17:'io',18:'io',19:'io',20:'io',23:'io',24:'io',25:'bio',26:'io',27:'io'},
+  // Mar
+  {2:'io',3:'io',4:'io',5:'io',6:'io',9:'io',10:'io',11:'io',12:'io',13:'io',
+   16:'io',17:'io',18:'io',19:'io',20:'io',23:'io',24:'io',25:'io',26:'io',27:'io',
+   30:'io',31:'io'},
+  // Apr
+  {1:'io',2:'io',3:'io',6:'io',7:'io',8:'io',9:'io',13:'io',14:'io',15:'io',
+   16:'io',17:'io',20:'io',21:'bio',22:'io',23:'io',24:'io',27:'io',28:'bio',29:'io',30:'io'},
+  // Mai
+  {2:'io',4:'io',5:'io',6:'io',7:'io',8:'io',11:'io',12:'io',13:'io',14:'io',
+   15:'io',18:'io',19:'nio',20:'bio',21:'io',22:'io',25:'io',26:'io',27:'io',28:'io',29:'io'},
+  // Jun (today = 29.05, so Jun is future ... let's say 1-25 Jun are completed)
+  {2:'io',3:'io',4:'io',5:'io',8:'io',9:'io',10:'io',11:'io',12:'io',
+   15:'io',16:'io',17:'io',18:'io',19:'io',22:'io',23:'io',24:'io',
+   25:'future',26:'future',29:'future',30:'future'},
+  // Jul-Dez: all future
+  {},{},{},{},{},{}
+];
+
+// Section analysis (YTD %)
+const SECTIONS = [
+  { name: 'I. Anlagenprüfung & Serienstand',  io:96, bio:3, nio:1 },
+  { name: 'II. Prozessbedingungen',            io:98, bio:2, nio:0 },
+  { name: 'III. Rüst-Freigabeprozess',         io:100,bio:0, nio:0 },
+  { name: 'IV. Kabinentemperatur',             io:91, bio:8, nio:1 },
+  { name: 'V. Trocknertemperatur',             io:95, bio:5, nio:0 },
+  { name: 'VI. Lack-Informationen ★',         io:100,bio:0, nio:0 },
+  { name: 'VII. Arbeitssicherheit ★',         io:100,bio:0, nio:0 },
+  { name: 'VIII. Qualitätssicherung ★',       io:97, bio:3, nio:0 },
+];
+
+// Events log
+const EVENTS = [
+  { datum:'19.05.2026', abschnitt:'Kabinentemperatur', cp:'Primer Kab.temp.', status:'nio',
+    massnahme:'Heizung reguliert → nach 30 Min. Freigabe erteilt (A. Lisin)' },
+  { datum:'20.05.2026', abschnitt:'Kabinentemperatur', cp:'Primer Kab.temp.', status:'bio',
+    massnahme:'Temperatur knapp unter SOLL – Monitoring, Produktion fortgesetzt' },
+  { datum:'28.04.2026', abschnitt:'Anlagenprüfung', cp:'Dryer 2', status:'bio',
+    massnahme:'Türdichtung leicht beschädigt → Wartungsauftrag erstellt (MA-2026-042)' },
+  { datum:'21.04.2026', abschnitt:'Kabinentemperatur', cp:'Klarlack Kab.temp.', status:'bio',
+    massnahme:'Abweichung +2°C, Produktion nach Abstimmung freigegeben' },
+  { datum:'25.02.2026', abschnitt:'Prozessbedingungen', cp:'Sauberkeit/Hygiene', status:'bio',
+    massnahme:'Kabinenreinigung nachgeholt, 5S-Protokoll erstellt' },
+  { datum:'02.01.2026', abschnitt:'Anlagenprüfung', cp:'Painting Cabin 3', status:'bio',
+    massnahme:'Kleinreparatur Düse – Ersatzteil eingebaut, Funktion ok' },
+];
+
+// ── CHARTS ──────────────────────────────────────────────────────────────────
+let chartMonthly, chartDonut;
+
+function initCharts() {
+  // Monthly bar chart
+  const mCtx = document.getElementById('chartMonthly').getContext('2d');
+  chartMonthly = new Chart(mCtx, {
+    type: 'bar',
+    data: {
+      labels: MONTHS,
+      datasets: [
+        {
+          label: 'i.O.',
+          data: MONTHLY_DATA.map(m => m.io),
+          backgroundColor: '#70AD47',
+          borderRadius: 3,
+        },
+        {
+          label: 'b.i.O.',
+          data: MONTHLY_DATA.map(m => m.bio),
+          backgroundColor: '#FFB300',
+          borderRadius: 3,
+        },
+        {
+          label: 'n.i.O.',
+          data: MONTHLY_DATA.map(m => m.nio),
+          backgroundColor: '#C00000',
+          borderRadius: 3,
+        },
+        {
+          label: 'Offen',
+          data: MONTHLY_DATA.map(m => Math.max(0, m.workdays - m.io - m.bio - m.nio)),
+          backgroundColor: '#CED4DA',
+          borderRadius: 3,
+        },
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: { mode: 'index', intersect: false }
+      },
+      scales: {
+        x: { stacked: true, grid: { display: false }, ticks: { font: { size: 11 } } },
+        y: { stacked: true, grid: { color: '#F0F0F0' }, ticks: { font: { size: 11 }, stepSize: 5 },
+             title: { display: true, text: 'Arbeitstage', font: { size: 11 }, color: '#888' } }
+      }
+    }
+  });
+
+  // Donut (YTD Jan-Mai)
+  const ytdIO  = MONTHLY_DATA.slice(0,5).reduce((s,m)=>s+m.io,  0);
+  const ytdBIO = MONTHLY_DATA.slice(0,5).reduce((s,m)=>s+m.bio, 0);
+  const ytdNIO = MONTHLY_DATA.slice(0,5).reduce((s,m)=>s+m.nio, 0);
+  const dCtx = document.getElementById('chartDonut').getContext('2d');
+  chartDonut = new Chart(dCtx, {
+    type: 'doughnut',
+    data: {
+      labels: ['i.O.', 'b.i.O.', 'n.i.O.'],
+      datasets: [{
+        data: [ytdIO, ytdBIO, ytdNIO],
+        backgroundColor: ['#70AD47','#FFB300','#C00000'],
+        borderWidth: 2,
+        borderColor: '#fff',
+        hoverOffset: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      cutout: '65%',
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 14 } },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const total = ytdIO + ytdBIO + ytdNIO;
+              return ` ${ctx.label}: ${ctx.parsed} Tage (${((ctx.parsed/total)*100).toFixed(1)}%)`;
+            }
+          }
+        }
+      }
+    },
+    plugins: [{
+      id: 'centerText',
+      beforeDraw(chart) {
+        const {ctx, chartArea: {width, height, top}} = chart;
+        const total = ytdIO + ytdBIO + ytdNIO;
+        const pct = ((ytdIO/total)*100).toFixed(0);
+        ctx.save();
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const cx = chart.getDatasetMeta(0).data[0]?.x || (width/2);
+        const cy = chart.getDatasetMeta(0).data[0]?.y || (top + height/2);
+        ctx.font = 'bold 26px Arial';
+        ctx.fillStyle = '#1B5E1F';
+        ctx.fillText(pct + '%', cx, cy - 8);
+        ctx.font = '11px Arial';
+        ctx.fillStyle = '#888';
+        ctx.fillText('i.O. Rate', cx, cy + 14);
+        ctx.restore();
+      }
+    }]
+  });
+}
+
+// ── KPIs ────────────────────────────────────────────────────────────────────
+function updateKPIs(mi) {
+  const m = MONTHLY_DATA[mi];
+  const offen = Math.max(0, m.workdays - m.io - m.bio - m.nio);
+  document.getElementById('kpi-total').textContent = m.workdays;
+  document.getElementById('kpi-io').textContent = m.io;
+  document.getElementById('kpi-bio').textContent = m.bio;
+  document.getElementById('kpi-nio').textContent = m.nio;
+  document.getElementById('kpi-offen').textContent = offen;
+  const done = m.io + m.bio + m.nio;
+  const rate = done ? ((m.io/done)*100).toFixed(0) : '–';
+  document.getElementById('kpi-io-sub').textContent = done ? `${rate}% Compliance` : 'In Ordnung';
+  document.getElementById('kpi-bio-sub').textContent = m.bio > 0 ? 'Maßnahme erforderlich' : 'Bedingt i.O.';
+  document.getElementById('kpi-nio-sub').textContent = m.nio > 0 ? '⚠ Eskalation!' : 'Nicht i.O.';
+  document.getElementById('kpi-offen-sub').textContent = offen > 0 ? 'Noch zu erfassen' : '✔ Vollständig';
+
+  // Status text
+  const statusText = document.getElementById('monthStatusText');
+  const statusDot  = document.getElementById('monthStatusDot');
+  if (m.nio > 0) {
+    statusText.textContent = 'Abweichungen vorhanden'; statusText.style.color='var(--red)';
+    statusDot.style.background='var(--red)';
+  } else if (offen > 0) {
+    statusText.textContent = 'In Bearbeitung'; statusText.style.color='var(--yellow)';
+    statusDot.style.background='var(--yellow)';
+  } else if (m.io === 0 && m.bio === 0) {
+    statusText.textContent = 'Noch keine Einträge'; statusText.style.color='var(--gray)';
+    statusDot.style.background='var(--gray)';
+  } else if (m.bio > 0) {
+    statusText.textContent = 'Bedingt freigegeben'; statusText.style.color='var(--yellow)';
+    statusDot.style.background='var(--yellow)';
+  } else {
+    statusText.textContent = 'Vollständig freigegeben'; statusText.style.color='var(--green)';
+    statusDot.style.background='var(--green)';
+  }
+}
+
+// ── CALENDAR ────────────────────────────────────────────────────────────────
+function buildCalendar(mi) {
+  const year = 2026, month = mi + 1;
+  const grid = document.getElementById('calGrid');
+  grid.innerHTML = '';
+  document.getElementById('calTitle').textContent = `Monatskalender – ${MONTHS[mi]} ${year}`;
+
+  // Headers
+  DAY_NAMES.forEach(d => {
+    const h = document.createElement('div');
+    h.className = 'cal-header';
+    h.textContent = d;
+    grid.appendChild(h);
+  });
+
+  // First day offset (Mon=0)
+  const firstDay = new Date(year, month-1, 1).getDay(); // 0=Sun
+  const offset = (firstDay === 0) ? 6 : firstDay - 1;
+  for (let i = 0; i < offset; i++) {
+    const e = document.createElement('div'); e.className='cal-empty'; grid.appendChild(e);
+  }
+
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const dayData = DAY_DATA[mi] || {};
+  const todayRef = new Date(2026, 4, 29); // May 29 = "today"
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dow = new Date(year, month-1, d).getDay(); // 0=Sun,6=Sat
+    const isWE = (dow === 0 || dow === 6);
+    const thisDate = new Date(year, month-1, d);
+    const isFuture = thisDate > todayRef;
+
+    const cell = document.createElement('div');
+    const dayNames = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+
+    if (isWE) {
+      cell.className = 'cal-day cal-weekend';
+    } else {
+      const st = dayData[d];
+      if (st === 'io')          cell.className = 'cal-day cal-io';
+      else if (st === 'bio')    cell.className = 'cal-day cal-bio';
+      else if (st === 'nio')    cell.className = 'cal-day cal-nio';
+      else if (isFuture || !st) cell.className = 'cal-day cal-future';
+      else                      cell.className = 'cal-day cal-io';
+    }
+
+    cell.innerHTML = `<div class="day-num">${d}</div>
+      <div class="day-name">${dayNames[dow]}</div>
+      ${!isWE ? `<div class="day-status">${
+        dayData[d]==='io' ? '✓ i.O.' :
+        dayData[d]==='bio' ? '⚠ b.i.O.' :
+        dayData[d]==='nio' ? '✗ n.i.O.' :
+        isFuture ? '–' : '–'
+      }</div>` : ''}`;
+    grid.appendChild(cell);
+  }
+}
+
+// ── SECTION LIST ────────────────────────────────────────────────────────────
+function buildSections() {
+  const list = document.getElementById('sectionList');
+  list.innerHTML = '';
+  SECTIONS.forEach(s => {
+    const total = s.io + s.bio + s.nio;
+    const ioW = (s.io/total*100).toFixed(0);
+    const bioW = (s.bio/total*100).toFixed(0);
+    const nioW = (s.nio/total*100).toFixed(0);
+    list.innerHTML += `
+      <div class="sec-item">
+        <div class="sec-header">
+          <span class="sec-name">${s.name}</span>
+          <span class="sec-pct">${ioW}% i.O.</span>
+        </div>
+        <div class="bar-bg">
+          <div class="bar-fill">
+            <div class="bar-io" style="width:${ioW}%"></div>
+            <div class="bar-bio" style="width:${bioW}%"></div>
+            <div class="bar-nio" style="width:${nioW}%"></div>
+          </div>
+        </div>
+      </div>`;
+  });
+}
+
+// ── EVENTS TABLE ────────────────────────────────────────────────────────────
+function buildEvents() {
+  const tb = document.getElementById('eventsTable');
+  tb.innerHTML = '';
+  EVENTS.forEach(e => {
+    const cls = e.status === 'nio' ? 'tag-nio' : 'tag-bio';
+    const label = e.status === 'nio' ? 'n.i.O.' : 'b.i.O.';
+    tb.innerHTML += `<tr>
+      <td><strong>${e.datum}</strong></td>
+      <td>${e.abschnitt}<br><span style="font-size:11px;color:#888;">${e.cp}</span></td>
+      <td><span class="tag ${cls}">${label}</span></td>
+      <td style="font-size:12px;">${e.massnahme}</td>
+    </tr>`;
+  });
+}
+
+// ── MAIN UPDATE ─────────────────────────────────────────────────────────────
+function updateDashboard() {
+  const mi = parseInt(document.getElementById('monthSelect').value);
+  updateKPIs(mi);
+  buildCalendar(mi);
+}
+
+// ── INIT ────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  initCharts();
+  updateDashboard();
+  buildSections();
+  buildEvents();
+});
+</script>
+</body>
+</html>

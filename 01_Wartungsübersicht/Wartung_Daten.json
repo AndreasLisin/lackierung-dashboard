@@ -1,0 +1,82 @@
+[
+  {
+    "id": 1,
+    "anlage": "Lackierroboter 1",
+    "wartungstyp": "Jahreswartung",
+    "letzteWartung": "2025-10-01",
+    "intervallMonate": 12,
+    "person": "Zuständige Person",
+    "email": "",
+    "notizen": ""
+  },
+  {
+    "id": 2,
+    "anlage": "Lackierroboter 2",
+    "wartungstyp": "Ölwechsel",
+    "letzteWartung": "2025-12-01",
+    "intervallMonate": 6,
+    "person": "Zuständige Person",
+    "email": "",
+    "notizen": ""
+  },
+  {
+    "id": 3,
+    "anlage": "Beflammroboter",
+    "wartungstyp": "Halbjahreswartung",
+    "letzteWartung": "2025-10-15",
+    "intervallMonate": 6,
+    "person": "Zuständige Person",
+    "email": "",
+    "notizen": ""
+  },
+  {
+    "id": 4,
+    "anlage": "Absauganlage",
+    "wartungstyp": "Filterwechsel",
+    "letzteWartung": "2026-03-01",
+    "intervallMonate": 3,
+    "person": "Zuständige Person",
+    "email": "",
+    "notizen": ""
+  },
+  {
+    "id": 5,
+    "anlage": "Farbversorgungsanlage",
+    "wartungstyp": "Jahreswartung",
+    "letzteWartung": "2025-09-01",
+    "intervallMonate": 12,
+    "person": "Zuständige Person",
+    "email": "",
+    "notizen": ""
+  },
+  {
+    "id": 6,
+    "anlage": "Drucklufttrockner",
+    "wartungstyp": "Filterwechsel",
+    "letzteWartung": "2026-02-15",
+    "intervallMonate": 6,
+    "person": "Zuständige Person",
+    "email": "",
+    "notizen": ""
+  },
+  {
+    "id": 7,
+    "anlage": "Kabinen-Belüftung",
+    "wartungstyp": "Filterwechsel",
+    "letzteWartung": "2026-04-01",
+    "intervallMonate": 2,
+    "person": "Zuständige Person",
+    "email": "",
+    "notizen": ""
+  },
+  {
+    "id": 1779991660272,
+    "anlage": "Kabine 1/2/3/4",
+    "wartungstyp": "Jahreswartung",
+    "letzteWartung": "2025-05-28",
+    "intervallMonate": 12,
+    "person": "Jan Markert",
+    "email": "andreas.lisin@einhaus-gmbh.de",
+    "notizen": ""
+  }
+]
