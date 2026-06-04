@@ -479,7 +479,7 @@ async function checkConnection() {
     await sbFetch(`${TABLE}?limit=1`);
     sbOnline       = true;
     dot.className  = 'status-dot online';
-    info.innerHTML = '☁️ <strong>Supabase verbunden</strong> – Einträge werden zentral gespeichert. Von überall erreichbar.';
+    info.innerHTML = '☁️ <strong>Verbunden</strong> – Einträge werden zentral gespeichert. Von überall erreichbar.';
   } catch {
     sbOnline       = false;
     dot.className  = 'status-dot offline';
