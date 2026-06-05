@@ -3,28 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
 <title>Wartungsübersicht – Lackierung</title>
 <style>
-  /* ── Topbar (EINHAUS Standard) ── */
-  .topbar {
-    background: #1F4E79;
-    color: #fff;
-    padding: 0 28px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 62px;
-    position: sticky; top: 0; z-index: 100;
-    box-shadow: 0 2px 8px rgba(0,0,0,.3);
-  }
-  .topbar-left { display: flex; align-items: center; gap: 16px; flex: 1; }
-  .topbar-logo { font-size: 22px; font-weight: 700; letter-spacing: .5px; color: #fff; }
-  .topbar-logo span { color: #BDD7EE; }
-  .topbar-sub { font-size: 12px; color: rgba(255,255,255,.7); margin-top: 2px; }
-  .topbar-center { text-align: center; flex: 1; }
-  .topbar-right { display: flex; align-items: center; gap: 12px; flex: 1; justify-content: flex-end; }
+  @import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@700&display=swap');
 
   :root {
     --primary: #1a3a5c;
@@ -77,9 +58,55 @@
     transition: background .25s, color .25s;
   }
 
+  /* ── Header ── */
+  header {
+    background: var(--header);
+    padding: 18px 32px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.15);
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    transition: background .25s;
+  }
+  .logo-wrap { display: flex; flex-direction: column; gap: 6px; }
+  .logo-text {
+    font-size: 38px; font-weight: 900; letter-spacing: 4px;
+    color: var(--logo-text); line-height: 1;
+    font-family: 'Comfortaa', Arial Black, Arial, sans-serif;
+    transition: color .25s;
+  }
+  .logo-sub-row { display: flex; align-items: center; gap: 10px; }
+  .logo-stripes { display: flex; gap: 3px; height: 12px; overflow: visible; }
+  .logo-stripes span { display: block; width: 16px; height: 12px; transform: skewX(-18deg); }
+  .s1{background:#c0c0c0}.s2{background:#ffd400}.s3{background:#44bef0}
+  .s4{background:#3aaa35}.s5{background:#e8007d}.s6{background:#e83010}.s7{background:#1155bb}
+  .logo-tagline {
+    font-size: 10px; font-weight: bold; letter-spacing: 1.5px;
+    color: var(--logo-tagline); text-transform: uppercase; transition: color .25s;
+  }
+  .header-divider { width: 1px; height: 52px; background: var(--divider); margin: 0 8px; transition: background .25s; }
+  .header-title { font-size: 20px; font-weight: bold; color: var(--primary); letter-spacing: .5px; }
+  .header-subtitle { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+  .header-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+  .btn-back {
+    background: var(--icon-bg); border: 1px solid var(--border);
+    border-radius: 8px; padding: 7px 14px; cursor: pointer;
+    font-size: 13px; color: var(--text-muted);
+    display: flex; align-items: center; gap: 6px;
+    text-decoration: none; transition: all .2s; white-space: nowrap;
+  }
+  .btn-back:hover { border-color: var(--primary-light); color: var(--text); }
+  .theme-toggle {
+    background: var(--icon-bg); border: 1px solid var(--border);
+    border-radius: 20px; padding: 6px 14px; cursor: pointer;
+    font-size: 13px; color: var(--text-muted);
+    display: flex; align-items: center; gap: 6px;
+    transition: all .2s; white-space: nowrap;
+  }
+  .theme-toggle:hover { border-color: var(--primary-light); color: var(--text); }
 
   /* ── Main ── */
-  main { flex: 1; max-width: 1500px; margin: 0 auto; width: 100%; padding: 32px 24px; }
+  main { flex: 1; max-width: 1160px; margin: 0 auto; width: 100%; padding: 32px 24px; }
 
   .banners { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
   .banner { display: flex; align-items: center; gap: 12px; padding: 13px 18px; border-radius: 10px; font-size: 14px; font-weight: bold; }
@@ -112,12 +139,12 @@
 
   table { width: 100%; border-collapse: collapse; }
   th {
-    background: var(--bg); padding: 9px 10px; text-align: left;
-    font-size: 10px; font-weight: bold; text-transform: uppercase;
-    letter-spacing: .7px; color: var(--text-muted);
+    background: var(--bg); padding: 11px 14px; text-align: left;
+    font-size: 11px; font-weight: bold; text-transform: uppercase;
+    letter-spacing: .8px; color: var(--text-muted);
     border-bottom: 1px solid var(--border); white-space: nowrap;
   }
-  td { padding: 9px 10px; border-bottom: 1px solid var(--border); font-size: 12px; vertical-align: middle; }
+  td { padding: 13px 14px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
   tr:last-child td { border-bottom: none; }
   tr.row-r td { background: var(--r-bg); }
   tr.row-o td { background: var(--o-bg); }
@@ -143,31 +170,13 @@
   .btn-primary:hover { opacity: .88; }
   .btn-mail { background: #0078d4; color: #fff; }
   .btn-mail:hover { opacity: .88; }
-  .btn-dl { background: #1a7a35; color: #fff; }
-  .btn-dl:hover { opacity: .88; }
   .btn-nomail { background: var(--icon-bg); color: var(--text-muted); border: 1px solid var(--border); }
   .btn-nomail:hover { border-color: var(--primary-light); }
   .btn-edit { background: var(--icon-bg); color: var(--primary-light); border: 1px solid var(--border); }
   .btn-edit:hover { border-color: var(--primary-light); }
-  .btn-del { background: transparent; color: var(--r); border: 1px solid transparent; }
+  .btn-del { background: transparent; color: var(--r); border: 1px solid transparent; padding: 6px 8px; }
   .btn-del:hover { border-color: var(--r); background: var(--r-bg); }
-  .action-group { display: flex; gap: 3px; flex-wrap: nowrap; }
-  /* Icon-only action buttons */
-  .btn-icon {
-    width: 30px; height: 30px; padding: 0;
-    justify-content: center; font-size: 14px; border-radius: 7px;
-    position: relative;
-  }
-  .btn-ghost { background: var(--icon-bg); color: var(--text-muted); border: 1px solid var(--border); }
-  .btn-ghost:hover { border-color: var(--primary-light); color: var(--text); }
-  .table-top-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
-  .ps-hint {
-    font-size: 11px; color: var(--text-muted);
-    background: var(--icon-bg); border: 1px solid var(--border);
-    border-radius: 8px; padding: 10px 16px; margin-top: 12px;
-    display: flex; align-items: flex-start; gap: 8px; line-height: 1.5;
-  }
-  .ps-hint strong { color: var(--primary); }
+  .action-group { display: flex; gap: 4px; flex-wrap: nowrap; }
 
   /* ── Modal ── */
   .modal-overlay {
@@ -199,14 +208,6 @@
   }
   .btn-cancel { background: var(--icon-bg); color: var(--text-muted); border: 1px solid var(--border); }
   .btn-cancel:hover { color: var(--text); }
-  .form-section-divider {
-    grid-column: 1/-1; margin-top: 8px;
-    padding-top: 14px; border-top: 1px solid var(--border);
-    font-size: 11px; font-weight: bold; text-transform: uppercase;
-    letter-spacing: .8px; color: var(--primary);
-    display: flex; align-items: center; gap: 8px;
-  }
-  .dienstleister-info { font-size: 12px; color: var(--text-muted); line-height: 1.6; margin-top: 2px; }
   .btn-save { background: var(--primary-light); color: #fff; padding: 8px 20px; }
   .btn-save:hover { opacity: .88; }
 
@@ -228,20 +229,29 @@
 </head>
 <body>
 
-<!-- ══════════ HEADER ══════════ -->
-<div class="topbar">
-  <div class="topbar-left">
-    <div>
-      <div class="topbar-logo">EINHAUS <span>Oberflächenveredelung GmbH</span></div>
-      <div class="topbar-sub">Industrielackierung · 55411 Bingen-Dietersheim</div>
+<header>
+  <div class="logo-wrap">
+    <div class="logo-text">EINHAUS.</div>
+    <div class="logo-sub-row">
+      <div class="logo-stripes">
+        <span class="s1"></span><span class="s2"></span><span class="s3"></span>
+        <span class="s4"></span><span class="s5"></span><span class="s6"></span><span class="s7"></span>
+      </div>
+      <div class="logo-tagline">Oberflächenveredelung auf höchstem Niveau.</div>
     </div>
   </div>
-  <div class="topbar-center">
-    <div style="font-size:17px;font-weight:700;letter-spacing:.5px;">🔧 Wartungsübersicht</div>
-    <div style="font-size:11px;opacity:.7;">Lackierung | Anlagen &amp; Intervalle</div>
+  <div class="header-divider"></div>
+  <div>
+    <div class="header-title">Wartungsübersicht</div>
+    <div class="header-subtitle">Lackierung – Anlagen &amp; Intervalle</div>
   </div>
-  <div class="topbar-right"></div>
-</div>
+  <div class="header-right">
+    <a class="btn-back" href="Lackierung_Dashboard.html">&#8592; Dashboard</a>
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">
+      <span>🌙</span> Dark Mode
+    </button>
+  </div>
+</header>
 
 <main>
   <div class="banners" id="banners"></div>
@@ -251,26 +261,18 @@
   <div class="table-wrap">
     <div class="table-top">
       <div class="table-top-title">Alle Anlagen</div>
-      <div class="table-top-actions">
-        <button class="btn btn-ghost" onclick="importData()" title="Daten aus Wartung_Daten.json laden">📥 Importieren</button>
-        <button class="btn btn-ghost" onclick="exportData()" title="Daten als Wartung_Daten.json speichern (für PowerShell-Skript)">📤 Exportieren</button>
-        <button class="btn btn-primary" onclick="openModal(null)">+ Anlage hinzufügen</button>
-      </div>
-    </div>
-    <div class="ps-hint">
-      💡 <span><strong>PowerShell-Automatik:</strong>
-      Nach jeder Änderung auf <strong>Exportieren</strong> klicken und die Datei als
-      <code>Wartung_Daten.json</code> in diesen Ordner speichern –
-      das Skript liest sie jeden Montag automatisch aus.</span>
+      <button class="btn btn-primary" onclick="openModal(null)">+ Anlage hinzufügen</button>
     </div>
     <table>
       <thead>
         <tr>
           <th>Status</th>
-          <th>Anlage &amp; Wartungstyp</th>
+          <th>Anlage</th>
+          <th class="hide-sm">Wartungstyp</th>
+          <th class="hide-sm">Letzte Wartung</th>
           <th>Nächste Wartung</th>
-          <th>Zuständig (intern)</th>
-          <th>Dienstleister Kontaktdaten</th>
+          <th>Fällig in</th>
+          <th>Zuständig</th>
           <th>Aktionen</th>
         </tr>
       </thead>
@@ -279,6 +281,9 @@
   </div>
 </main>
 
+<footer>
+  EINHAUS Oberflächenveredelung GmbH &nbsp;&middot;&nbsp; Saarlandstr. 375a, 55411 Bingen
+</footer>
 
 <!-- Modal -->
 <div class="modal-overlay" id="modalOverlay">
@@ -330,26 +335,6 @@
         <label>Notizen</label>
         <textarea id="fNotizen" placeholder="Optionale Hinweise …"></textarea>
       </div>
-
-      <div class="form-section-divider full" style="grid-column:1/-1;margin-top:8px;padding-top:14px;border-top:1px solid var(--border);font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:.8px;color:var(--primary);">
-        🔧 Wartungsfirma / Dienstleister
-      </div>
-      <div class="fg">
-        <label>Firma</label>
-        <input type="text" id="fWFirma" placeholder="z. B. Müller Service GmbH">
-      </div>
-      <div class="fg">
-        <label>Ansprechpartner</label>
-        <input type="text" id="fWKontakt" placeholder="Name">
-      </div>
-      <div class="fg">
-        <label>Telefon</label>
-        <input type="tel" id="fWTelefon" placeholder="+49 ...">
-      </div>
-      <div class="fg">
-        <label>E-Mail Dienstleister</label>
-        <input type="email" id="fWEmail" placeholder="kontakt@firma.de">
-      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-cancel" onclick="closeModal()">Abbrechen</button>
@@ -363,13 +348,13 @@ const LS_KEY = 'einhaus_wartung_anlagen';
 let editId = null;
 
 const DEFAULT_DATA = [
-  { id:1, anlage:'Lackierroboter 1',       wartungstyp:'Jahreswartung',      letzteWartung:'2025-10-01', intervallMonate:12, person:'Zuständige Person', email:'', notizen:'', wFirma:'', wKontakt:'', wTelefon:'', wEmail:'' },
-  { id:2, anlage:'Lackierroboter 2',       wartungstyp:'Ölwechsel',          letzteWartung:'2025-12-01', intervallMonate:6,  person:'Zuständige Person', email:'', notizen:'', wFirma:'', wKontakt:'', wTelefon:'', wEmail:'' },
-  { id:3, anlage:'Beflammroboter',         wartungstyp:'Halbjahreswartung',  letzteWartung:'2025-10-15', intervallMonate:6,  person:'Zuständige Person', email:'', notizen:'', wFirma:'', wKontakt:'', wTelefon:'', wEmail:'' },
-  { id:4, anlage:'Absauganlage',           wartungstyp:'Filterwechsel',      letzteWartung:'2026-03-01', intervallMonate:3,  person:'Zuständige Person', email:'', notizen:'', wFirma:'', wKontakt:'', wTelefon:'', wEmail:'' },
-  { id:5, anlage:'Farbversorgungsanlage',  wartungstyp:'Jahreswartung',      letzteWartung:'2025-09-01', intervallMonate:12, person:'Zuständige Person', email:'', notizen:'', wFirma:'', wKontakt:'', wTelefon:'', wEmail:'' },
-  { id:6, anlage:'Drucklufttrockner',      wartungstyp:'Filterwechsel',      letzteWartung:'2026-02-15', intervallMonate:6,  person:'Zuständige Person', email:'', notizen:'', wFirma:'', wKontakt:'', wTelefon:'', wEmail:'' },
-  { id:7, anlage:'Kabinen-Belüftung',      wartungstyp:'Filterwechsel',      letzteWartung:'2026-04-01', intervallMonate:2,  person:'Zuständige Person', email:'', notizen:'', wFirma:'', wKontakt:'', wTelefon:'', wEmail:'' },
+  { id:1, anlage:'Lackierroboter 1',       wartungstyp:'Jahreswartung',      letzteWartung:'2025-10-01', intervallMonate:12, person:'Zuständige Person', email:'', notizen:'' },
+  { id:2, anlage:'Lackierroboter 2',       wartungstyp:'Ölwechsel',          letzteWartung:'2025-12-01', intervallMonate:6,  person:'Zuständige Person', email:'', notizen:'' },
+  { id:3, anlage:'Beflammroboter',         wartungstyp:'Halbjahreswartung',  letzteWartung:'2025-10-15', intervallMonate:6,  person:'Zuständige Person', email:'', notizen:'' },
+  { id:4, anlage:'Absauganlage',           wartungstyp:'Filterwechsel',      letzteWartung:'2026-03-01', intervallMonate:3,  person:'Zuständige Person', email:'', notizen:'' },
+  { id:5, anlage:'Farbversorgungsanlage',  wartungstyp:'Jahreswartung',      letzteWartung:'2025-09-01', intervallMonate:12, person:'Zuständige Person', email:'', notizen:'' },
+  { id:6, anlage:'Drucklufttrockner',      wartungstyp:'Filterwechsel',      letzteWartung:'2026-02-15', intervallMonate:6,  person:'Zuständige Person', email:'', notizen:'' },
+  { id:7, anlage:'Kabinen-Belüftung',      wartungstyp:'Filterwechsel',      letzteWartung:'2026-04-01', intervallMonate:2,  person:'Zuständige Person', email:'', notizen:'' },
 ];
 
 let data = [];
@@ -466,43 +451,29 @@ function render() {
     const rc = e.st === 'r' ? 'row-r' : e.st === 'o' ? 'row-o' : '';
 
     const mailBtn = e.email
-      ? `<button class="btn btn-icon btn-mail" onclick="sendReminder(${e.id})" title="Erinnerung an ${e.person || 'zuständige Person'}">✉</button>`
-      : `<button class="btn btn-icon btn-nomail" onclick="openModal(${e.id})" title="Keine E-Mail hinterlegt – hier klicken zum Ergänzen">✉</button>`;
-
-    const dlBtn = e.wEmail
-      ? `<button class="btn btn-icon btn-dl" onclick="sendDienstleister(${e.id})" title="E-Mail an Dienstleister: ${e.wFirma || e.wEmail}">🔧</button>`
-      : '';
+      ? `<button class="btn btn-mail" onclick="sendReminder(${e.id})">✉ Erinnerung</button>`
+      : `<button class="btn btn-nomail" onclick="openModal(${e.id})" title="E-Mail hinterlegen, um Erinnerung zu senden">✉ E-Mail fehlt</button>`;
 
     rows += `
       <tr class="${rc}">
         <td>${badgeHtml(e.st)}</td>
         <td>
           <strong>${e.anlage}</strong>
-          <br><span style="font-size:11px;color:var(--text-muted)">${e.wartungstyp}</span>
-          ${e.notizen ? `<br><span style="font-size:11px;color:var(--text-muted);font-style:italic">${e.notizen}</span>` : ''}
+          ${e.notizen ? `<br><small style="color:var(--text-muted)">${e.notizen}</small>` : ''}
         </td>
+        <td class="hide-sm">${e.wartungstyp}</td>
+        <td class="hide-sm">${fmtDate(new Date(e.letzteWartung))}</td>
+        <td>${fmtDate(e.next)}</td>
+        <td>${daysHtml(e.days, e.st)}</td>
         <td>
-          <span style="font-weight:bold">${fmtDate(e.next)}</span>
-          <br>${daysHtml(e.days, e.st)}
-        </td>
-        <td style="max-width:150px">
-          <span title="${e.email || ''}">${e.person}</span>
-          ${e.email ? `<br><small style="color:var(--text-muted);font-size:10px">${e.email}</small>` : ''}
-        </td>
-        <td style="max-width:180px">
-          ${e.wFirma ? `
-              <strong style="font-size:12px">${e.wFirma}</strong>
-              ${e.wKontakt ? `<br><span style="font-size:11px;color:var(--text-muted)">👤 ${e.wKontakt}</span>` : ''}
-              ${e.wTelefon ? `<br><a href="tel:${e.wTelefon}" style="font-size:11px;color:var(--primary-light);text-decoration:none">📞 ${e.wTelefon}</a>` : ''}
-              ${e.wEmail ? `<br><a href="mailto:${e.wEmail}" style="font-size:11px;color:var(--primary-light);text-decoration:none">✉ ${e.wEmail}</a>` : ''}
-          ` : '<span style="color:var(--text-muted);font-size:12px">—</span>'}
+          <span>${e.person}</span>
+          ${e.email ? `<br><small style="color:var(--text-muted)">${e.email}</small>` : ''}
         </td>
         <td>
           <div class="action-group">
             ${mailBtn}
-            ${dlBtn}
-            <button class="btn btn-icon btn-edit" onclick="openModal(${e.id})" title="Bearbeiten">✏</button>
-            <button class="btn btn-icon btn-del"  onclick="deleteEntry(${e.id})" title="Löschen">✕</button>
+            <button class="btn btn-edit" onclick="openModal(${e.id})" title="Bearbeiten">✏</button>
+            <button class="btn btn-del"  onclick="deleteEntry(${e.id})" title="Löschen">✕</button>
           </div>
         </td>
       </tr>`;
@@ -515,7 +486,7 @@ function openModal(id) {
   document.getElementById('modalOverlay').classList.add('open');
   if (id === null) {
     document.getElementById('modalTitle').textContent = 'Anlage hinzufügen';
-    ['fAnlage','fTyp','fPerson','fEmail','fNotizen','fNaechste','fWFirma','fWKontakt','fWTelefon','fWEmail'].forEach(f => document.getElementById(f).value = '');
+    ['fAnlage','fTyp','fPerson','fEmail','fNotizen','fNaechste'].forEach(f => document.getElementById(f).value = '');
     document.getElementById('fZyklus').value = '12';
     document.getElementById('fIntervall').value = '';
     document.getElementById('customWrap').style.display = 'none';
@@ -525,13 +496,9 @@ function openModal(id) {
     document.getElementById('modalTitle').textContent = 'Anlage bearbeiten';
     document.getElementById('fAnlage').value  = e.anlage;
     document.getElementById('fTyp').value     = e.wartungstyp;
-    document.getElementById('fPerson').value   = e.person;
-    document.getElementById('fEmail').value    = e.email;
-    document.getElementById('fNotizen').value  = e.notizen;
-    document.getElementById('fWFirma').value   = e.wFirma   || '';
-    document.getElementById('fWKontakt').value = e.wKontakt || '';
-    document.getElementById('fWTelefon').value = e.wTelefon || '';
-    document.getElementById('fWEmail').value   = e.wEmail   || '';
+    document.getElementById('fPerson').value  = e.person;
+    document.getElementById('fEmail').value   = e.email;
+    document.getElementById('fNotizen').value = e.notizen;
     const presets = ['1','2','3','6','12','24'];
     const iv = String(e.intervallMonate);
     if (presets.includes(iv)) {
@@ -565,13 +532,9 @@ function saveModal() {
     wartungstyp:    document.getElementById('fTyp').value.trim(),
     letzteWartung:  letzte,
     intervallMonate: getIntervall(),
-    person:    document.getElementById('fPerson').value.trim(),
-    email:     document.getElementById('fEmail').value.trim(),
-    notizen:   document.getElementById('fNotizen').value.trim(),
-    wFirma:    document.getElementById('fWFirma').value.trim(),
-    wKontakt:  document.getElementById('fWKontakt').value.trim(),
-    wTelefon:  document.getElementById('fWTelefon').value.trim(),
-    wEmail:    document.getElementById('fWEmail').value.trim(),
+    person:  document.getElementById('fPerson').value.trim(),
+    email:   document.getElementById('fEmail').value.trim(),
+    notizen: document.getElementById('fNotizen').value.trim(),
   };
   if (editId === null) {
     entry.id = Date.now();
@@ -620,37 +583,6 @@ function sendReminder(id) {
   window.location.href = `mailto:${encodeURIComponent(e.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
-function sendDienstleister(id) {
-  const e = data.find(x => x.id === id);
-  const next = addMonths(e.letzteWartung, e.intervallMonate);
-  const days = calcDays(next);
-  const dateStr = fmtDate(next);
-  const st = getStatus(days);
-
-  const anrede = e.wKontakt ? `Guten Tag ${e.wKontakt},` : 'Sehr geehrte Damen und Herren,';
-
-  let intro;
-  if (st === 'r') {
-    const verz = Math.abs(days);
-    intro = `für die unten genannte Anlage ist eine Wartung bereits seit ${verz} Tag${verz !== 1 ? 'en' : ''} überfällig (fällig war: ${dateStr}). Wir bitten Sie, umgehend einen Termin mit uns abzustimmen.`;
-  } else {
-    intro = `für die unten genannte Anlage steht in ${days} Tag${days !== 1 ? 'en' : ''} eine Wartung an (fällig am: ${dateStr}). Wir bitten Sie, rechtzeitig einen Termin mit uns abzustimmen.`;
-  }
-
-  const subject = `Wartungsauftrag: ${e.anlage} – ${e.wartungstyp} (fällig: ${dateStr})`;
-
-  const body =
-    `${anrede}\n\n${intro}\n\n` +
-    `Anlage:          ${e.anlage}\n` +
-    `Wartungstyp:     ${e.wartungstyp}\n` +
-    `Nächste Wartung: ${dateStr}\n` +
-    (e.notizen ? `\nHinweise: ${e.notizen}\n` : '') +
-    `\nBitte nehmen Sie Kontakt mit uns auf, um einen geeigneten Termin zu vereinbaren.\n` +
-    `\nMit freundlichen Grüßen\nLackierung – EINHAUS Oberflächenveredelung GmbH\nSaarlandstr. 375a, 55411 Bingen`;
-
-  window.location.href = `mailto:${encodeURIComponent(e.wEmail)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-}
-
 document.getElementById('modalOverlay').addEventListener('click', function(ev) {
   if (ev.target === this) closeModal();
 });
@@ -665,41 +597,6 @@ function toggleTheme() {
     html.setAttribute('data-theme', 'dark');
     btn.innerHTML = '<span>☀️</span> Light Mode';
   }
-}
-
-function exportData() {
-  const json = JSON.stringify(data, null, 2);
-  const blob = new Blob([json], { type: 'application/json' });
-  const a    = document.createElement('a');
-  a.href     = URL.createObjectURL(blob);
-  a.download = 'Wartung_Daten.json';
-  a.click();
-  URL.revokeObjectURL(a.href);
-}
-
-function importData() {
-  const input    = document.createElement('input');
-  input.type     = 'file';
-  input.accept   = '.json';
-  input.onchange = e => {
-    const file   = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      try {
-        const imported = JSON.parse(ev.target.result);
-        if (!Array.isArray(imported)) throw new Error('Kein Array');
-        data = imported;
-        saveData();
-        render();
-        alert(`✅ ${data.length} Anlage(n) erfolgreich importiert.`);
-      } catch {
-        alert('❌ Fehler: Die Datei konnte nicht gelesen werden.\nBitte eine gültige Wartung_Daten.json auswählen.');
-      }
-    };
-    reader.readAsText(file, 'UTF-8');
-  };
-  input.click();
 }
 
 loadData();
