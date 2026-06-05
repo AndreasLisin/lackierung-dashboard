@@ -69,8 +69,14 @@ try {
 
 $hatDaten = ($response.Count -gt 0)
 
+# Immer volles Dashboard anzeigen - bei keinen Daten mit Leer-Werten
 if ($hatDaten) {
-    $s         = $response[0]
+    $s = $response[0]
+} else {
+    $s = [PSCustomObject]@{ oee=$null; verfuegbarkeit=$null; qualitaet=$null; stoerung_min=0; gesamtmenge=0; ausschuss=0; notiz=''; belegungszeit_min=0 }
+}
+
+if ($true) {
     $oee       = if ($null -ne $s.oee)              { [math]::Round($s.oee, 1) }              else { $null }
     $verfueg   = if ($null -ne $s.verfuegbarkeit)   { [math]::Round($s.verfuegbarkeit, 1) }   else { $null }
     $qualit    = if ($null -ne $s.qualitaet)        { [math]::Round($s.qualitaet, 1) }        else { $null }
@@ -308,37 +314,6 @@ if ($hatDaten) {
 </html>
 "@
 
-} else {
-    $betreff  = "OEE Tagesbericht $gestDatum - Kabine 1: KEIN EINTRAG"
-    $htmlBody = @"
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/></head>
-<body style="margin:0;padding:0;background-color:#eef1f5;">
-<table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#eef1f5">
-<tr><td align="center" style="padding:20px 10px;">
-<table width="680" cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,sans-serif;">
-  <tr><td bgcolor="#1F4E79" style="padding:16px 24px;border-radius:10px 10px 0 0;">
-    <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-      <td style="color:#fff;font-size:17px;font-weight:bold;">EINHAUS Lackierung &ndash; OEE Tagesbericht</td>
-      <td align="right" style="color:rgba(255,255,255,0.75);font-size:12px;">Lackierroboter Kabine 1 &ndash; $gestDatum</td>
-    </tr></table>
-  </td></tr>
-  <tr><td bgcolor="#fde8e6" style="padding:36px 28px;text-align:center;border-left:4px solid #c0392b;border-right:4px solid #c0392b;">
-    <div style="font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:2px;color:#c0392b;margin-bottom:10px;">OEE Gesamt</div>
-    <div style="font-size:48px;font-weight:900;color:#c0392b;line-height:1.1;">Kein Eintrag</div>
-    <div style="font-size:13px;color:#c0392b;margin-top:10px;">Fuer den $gestDatum wurde keine Schicht erfasst.</div>
-    <div style="font-size:12px;color:#888;margin-top:8px;">Bitte pruefen ob die Schichterfassung am Tablet eingetragen wurde.</div>
-  </td></tr>
-  <tr><td bgcolor="#1F4E79" style="padding:12px 24px;border-radius:0 0 10px 10px;text-align:center;">
-    <div style="font-size:11px;color:rgba(255,255,255,0.6);">EINHAUS Oberflaechenveredelung GmbH &middot; Saarlandstr. 375a, 55411 Bingen</div>
-  </td></tr>
-</table>
-</td></tr>
-</table>
-</body>
-</html>
-"@
 }
 
 # Outlook starten
