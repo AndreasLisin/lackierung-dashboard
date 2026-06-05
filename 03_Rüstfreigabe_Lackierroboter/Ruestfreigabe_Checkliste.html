@@ -32,16 +32,25 @@
       padding-bottom: 40px;
     }
 
-    /* ── Header ── */
-    .header {
-      background: var(--hdr);
-      color: white;
-      text-align: center;
-      padding: 16px;
+    /* ── Topbar ── */
+    .topbar {
+      background: #1F4E79; color: #fff;
+      padding: 0 28px; display: flex; align-items: center;
+      justify-content: space-between; height: 62px;
+      position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,.3);
     }
-    .header p { font-size: 0.85rem; opacity: 0.75; margin-top: 2px; }
-    .header h1 { font-size: 1.05rem; font-weight: bold; }
-    .header h2 { font-size: 1.3rem; font-weight: bold; color: #8AAFD0; margin-top: 4px; }
+    .topbar-left { display: flex; align-items: center; gap: 16px; }
+    .topbar-logo { font-size: 22px; font-weight: 700; letter-spacing: .5px; color: #fff; }
+    .topbar-logo span { color: #BDD7EE; }
+    .topbar-sub  { font-size: 12px; color: rgba(255,255,255,.7); margin-top: 2px; }
+    .topbar-right { display: flex; align-items: center; gap: 12px; }
+    .btn-back {
+      background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3);
+      color: #fff; padding: 5px 14px; border-radius: 6px; font-size: 13px;
+      text-decoration: none; display: flex; align-items: center; gap: 6px;
+    }
+    .btn-back:hover { background: rgba(255,255,255,.25); }
 
     /* ── Tabs ── */
     .tabs { display: flex; background: var(--hdr); }
@@ -293,11 +302,21 @@
 </head>
 <body>
 
-<!-- ── Header ── -->
-<div class="header">
-  <p>EINHAUS Oberflächenveredelung GmbH  ·  55411 Bingen-Dietersheim</p>
-  <h2>Pre-Release Rüstfreigabe</h2>
-  <h1>Formblatt FB-95 / FB-96</h1>
+<!-- ── Topbar ── -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div>
+      <div class="topbar-logo">EINHAUS <span>Oberflächenveredelung GmbH</span></div>
+      <div class="topbar-sub">Industrielackierung · 55411 Bingen-Dietersheim</div>
+    </div>
+  </div>
+  <div style="text-align:center;">
+    <div style="font-size:17px;font-weight:700;letter-spacing:.5px;">📋 Pre-Release Rüstfreigabe</div>
+    <div style="font-size:11px;opacity:.7;">Lackierung | Formblatt FB-95 / FB-96</div>
+  </div>
+  <div class="topbar-right">
+    <a class="btn-back" href="../index.html">← Zurück</a>
+  </div>
 </div>
 
 <!-- ── Tabs ── -->
