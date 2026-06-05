@@ -70,68 +70,117 @@ if ($hatDaten) {
 
     $verfText  = if ($null -ne $verfueg) { "$verfueg %" } else { '-' }
     $qualText  = if ($null -ne $qualit)  { "$qualit %" }  else { '-' }
-    $notizHtml = if ($notiz) { "<tr><td style='padding:6px 0;color:#555;font-size:13px;'>Notiz / Stoerungsgrund</td><td style='padding:6px 0;font-weight:600;font-size:13px;'>$notiz</td></tr>" } else { '' }
+
+    # Balkenbreiten (0-100) fuer CSS
+    $oeeBalken  = if ($null -ne $oee)    { [math]::Min([math]::Max([int]$oee,    0), 100) } else { 0 }
+    $verfBalken = if ($null -ne $verfueg){ [math]::Min([math]::Max([int]$verfueg, 0), 100) } else { 0 }
+    $qualBalken = if ($null -ne $qualit) { [math]::Min([math]::Max([int]$qualit,  0), 100) } else { 0 }
+    $oeeRest    = 100 - $oeeBalken
+    $verfRest   = 100 - $verfBalken
+    $qualRest   = 100 - $qualBalken
+
+    $stFarbe    = if ($stoerung -gt 45) { '#c0392b' } elseif ($stoerung -gt 20) { '#c47a00' } else { '#1a7a3c' }
+    $notizZeile = if ($notiz) {
+        "<tr><td colspan='3' style='padding:0;'><table width='100%' cellpadding='0' cellspacing='0' border='0'><tr><td width='180' style='padding:8px 16px;font-size:12px;color:#666;border-top:1px solid #eee;'>Notiz / Storungsgrund</td><td style='padding:8px 16px;font-size:12px;font-weight:600;color:#333;border-top:1px solid #eee;'>$notiz</td></tr></table></td></tr>"
+    } else { '' }
 
     $betreff = "OEE Tagesbericht $gestDatum - Kabine 1: $oeeText [$bewertung]"
 
     $htmlBody = @"
-<!DOCTYPE html>
-<html>
-<head><meta charset='UTF-8'></head>
-<body style='margin:0;padding:0;background:#eef1f5;font-family:Segoe UI,Arial,sans-serif;'>
-<div style='max-width:600px;margin:0 auto;padding:24px 16px;'>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/></head>
+<body style="margin:0;padding:0;background-color:#eef1f5;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#eef1f5">
+<tr><td align="center" style="padding:20px 10px;">
 
-  <!-- Header -->
-  <div style='background:#1F4E79;border-radius:12px 12px 0 0;padding:20px 28px;'>
-    <div style='color:#fff;font-size:18px;font-weight:700;'>EINHAUS Lackierung</div>
-    <div style='color:rgba(255,255,255,0.75);font-size:13px;margin-top:4px;'>OEE Tagesbericht &ndash; Lackierroboter Kabine 1 &ndash; $gestDatum</div>
-  </div>
+<table width="600" cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,sans-serif;">
 
-  <!-- OEE Hauptwert -->
-  <div style='background:$oeeBg;border:3px solid $oeeFarbe;padding:28px;text-align:center;'>
-    <div style='font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#888;margin-bottom:8px;'>OEE</div>
-    <div style='font-size:56px;font-weight:900;color:$oeeFarbe;line-height:1;'>$oeeText</div>
-    <div style='font-size:14px;font-weight:700;color:$oeeFarbe;margin-top:8px;letter-spacing:.05em;'>$bewertung</div>
-  </div>
-
-  <!-- KPI Kacheln -->
-  <div style='display:flex;gap:0;background:#fff;'>
-    <div style='flex:1;padding:18px;text-align:center;border-right:1px solid #dce1e7;'>
-      <div style='font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#888;margin-bottom:6px;'>Verfuegbarkeit</div>
-      <div style='font-size:26px;font-weight:800;color:#2E75B6;'>$verfText</div>
-    </div>
-    <div style='flex:1;padding:18px;text-align:center;border-right:1px solid #dce1e7;'>
-      <div style='font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#888;margin-bottom:6px;'>Qualitaet</div>
-      <div style='font-size:26px;font-weight:800;color:#2E75B6;'>$qualText</div>
-    </div>
-    <div style='flex:1;padding:18px;text-align:center;'>
-      <div style='font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#888;margin-bottom:6px;'>Stillstand</div>
-      <div style='font-size:26px;font-weight:800;color:$(if($stoerung -gt 45){'#c0392b'}elseif($stoerung -gt 20){'#c47a00'}else{'#1a7a3c'});'>$stoerung min</div>
-    </div>
-  </div>
-
-  <!-- Details -->
-  <div style='background:#fff;border-top:1px solid #dce1e7;padding:20px 28px;'>
-    <table style='width:100%;border-collapse:collapse;'>
-      <tr><td style='padding:6px 0;color:#555;font-size:13px;'>Belegungszeit</td><td style='padding:6px 0;font-weight:600;font-size:13px;'>$belegung min</td></tr>
-      <tr><td style='padding:6px 0;color:#555;font-size:13px;'>Stoerung / Stillstand</td><td style='padding:6px 0;font-weight:600;font-size:13px;'>$stoerung min</td></tr>
-      <tr><td style='padding:6px 0;color:#555;font-size:13px;'>Gesamtmenge</td><td style='padding:6px 0;font-weight:600;font-size:13px;'>$menge Stueck</td></tr>
-      <tr><td style='padding:6px 0;color:#555;font-size:13px;'>Ausschuss + Nacharbeit</td><td style='padding:6px 0;font-weight:600;font-size:13px;'>$ausschuss Stueck</td></tr>
-      $notizHtml
+  <!-- HEADER -->
+  <tr><td bgcolor="#1F4E79" style="padding:20px 28px;border-radius:10px 10px 0 0;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td style="color:#ffffff;font-size:20px;font-weight:bold;">EINHAUS Lackierung</td>
+        <td align="right" style="color:rgba(255,255,255,0.7);font-size:12px;">$gestDatum</td>
+      </tr>
+      <tr><td colspan="2" style="color:rgba(255,255,255,0.75);font-size:12px;padding-top:4px;">OEE Tagesbericht &ndash; Lackierroboter Kabine 1</td></tr>
     </table>
-  </div>
+  </td></tr>
 
-  <!-- Button -->
-  <div style='background:#fff;border-top:1px solid #dce1e7;padding:20px 28px;text-align:center;border-radius:0 0 12px 12px;'>
-    <a href='$DASHBOARD_URL' style='display:inline-block;background:#1F4E79;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:700;font-size:14px;'>
-      Dashboard oeffnen &rarr;
-    </a>
-    <div style='margin-top:16px;font-size:11px;color:#aaa;'>
-      EINHAUS Oberflaechenveredelung GmbH &middot; Saarlandstr. 375a, 55411 Bingen
-    </div>
-  </div>
+  <!-- OEE HAUPTWERT -->
+  <tr><td bgcolor="$oeeBg" style="padding:28px;text-align:center;border-left:4px solid $oeeFarbe;border-right:4px solid $oeeFarbe;">
+    <div style="font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:2px;color:#888;margin-bottom:6px;">OEE Gesamt</div>
+    <div style="font-size:64px;font-weight:900;color:$oeeFarbe;line-height:1.1;">$oeeText</div>
+    <div style="font-size:13px;font-weight:bold;color:$oeeFarbe;margin-top:6px;letter-spacing:1px;">$bewertung</div>
+    <!-- OEE Balken -->
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:14px;">
+      <tr>
+        <td width="${oeeBalken}%" bgcolor="$oeeFarbe" style="height:10px;border-radius:5px 0 0 5px;font-size:1px;">&nbsp;</td>
+        <td width="${oeeRest}%" bgcolor="#dce1e7" style="height:10px;border-radius:0 5px 5px 0;font-size:1px;">&nbsp;</td>
+      </tr>
+    </table>
+    <div style="font-size:10px;color:#888;margin-top:4px;">Ziel: 80 %</div>
+  </td></tr>
 
-</div>
+  <!-- KPI KACHELN -->
+  <tr><td bgcolor="#ffffff" style="padding:0;border-top:1px solid #dce1e7;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <!-- Verfuegbarkeit -->
+        <td width="33%" style="padding:18px 16px;text-align:center;border-right:1px solid #dce1e7;">
+          <div style="font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:6px;">Verfuegbarkeit</div>
+          <div style="font-size:28px;font-weight:900;color:#2E75B6;">$verfText</div>
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:8px;">
+            <tr>
+              <td width="${verfBalken}%" bgcolor="#2E75B6" style="height:6px;border-radius:3px 0 0 3px;font-size:1px;">&nbsp;</td>
+              <td width="${verfRest}%"  bgcolor="#dce1e7" style="height:6px;border-radius:0 3px 3px 0;font-size:1px;">&nbsp;</td>
+            </tr>
+          </table>
+        </td>
+        <!-- Qualitaet -->
+        <td width="33%" style="padding:18px 16px;text-align:center;border-right:1px solid #dce1e7;">
+          <div style="font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:6px;">Qualitaet</div>
+          <div style="font-size:28px;font-weight:900;color:#2E75B6;">$qualText</div>
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:8px;">
+            <tr>
+              <td width="${qualBalken}%" bgcolor="#2E75B6" style="height:6px;border-radius:3px 0 0 3px;font-size:1px;">&nbsp;</td>
+              <td width="${qualRest}%"  bgcolor="#dce1e7" style="height:6px;border-radius:0 3px 3px 0;font-size:1px;">&nbsp;</td>
+            </tr>
+          </table>
+        </td>
+        <!-- Stillstand -->
+        <td width="34%" style="padding:18px 16px;text-align:center;">
+          <div style="font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:6px;">Stillstand</div>
+          <div style="font-size:28px;font-weight:900;color:$stFarbe;">$stoerung min</div>
+          <div style="font-size:10px;color:#aaa;margin-top:8px;">von $belegung min Belegung</div>
+        </td>
+      </tr>
+    </table>
+  </td></tr>
+
+  <!-- DETAILS TABELLE -->
+  <tr><td bgcolor="#f8fafc" style="padding:0;border-top:1px solid #dce1e7;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr bgcolor="#1F4E79">
+        <td style="padding:10px 16px;font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#ffffff;">Kennzahl</td>
+        <td style="padding:10px 16px;font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#ffffff;">Wert</td>
+      </tr>
+      <tr bgcolor="#ffffff"><td width="180" style="padding:10px 16px;font-size:13px;color:#555;border-bottom:1px solid #eee;">Belegungszeit</td><td style="padding:10px 16px;font-size:13px;font-weight:bold;color:#222;border-bottom:1px solid #eee;">$belegung min</td></tr>
+      <tr bgcolor="#f8fafc"><td width="180" style="padding:10px 16px;font-size:13px;color:#555;border-bottom:1px solid #eee;">Stoerung / Stillstand</td><td style="padding:10px 16px;font-size:13px;font-weight:bold;color:$stFarbe;border-bottom:1px solid #eee;">$stoerung min</td></tr>
+      <tr bgcolor="#ffffff"><td width="180" style="padding:10px 16px;font-size:13px;color:#555;border-bottom:1px solid #eee;">Gesamtmenge</td><td style="padding:10px 16px;font-size:13px;font-weight:bold;color:#222;border-bottom:1px solid #eee;">$menge Stueck</td></tr>
+      <tr bgcolor="#f8fafc"><td width="180" style="padding:10px 16px;font-size:13px;color:#555;$(if($notiz){'border-bottom:1px solid #eee;'})">Ausschuss + Nacharbeit</td><td style="padding:10px 16px;font-size:13px;font-weight:bold;color:#222;$(if($notiz){'border-bottom:1px solid #eee;'})">$ausschuss Stueck</td></tr>
+      $(if($notiz){"<tr bgcolor='#ffffff'><td width='180' style='padding:10px 16px;font-size:13px;color:#555;'>Notiz / Stoerungsgrund</td><td style='padding:10px 16px;font-size:13px;font-weight:bold;color:#222;'>$notiz</td></tr>"})
+    </table>
+  </td></tr>
+
+  <!-- FOOTER -->
+  <tr><td bgcolor="#ffffff" style="padding:16px 28px;text-align:center;border-top:1px solid #dce1e7;border-radius:0 0 10px 10px;">
+    <div style="font-size:11px;color:#aaa;">EINHAUS Oberflaechenveredelung GmbH &middot; Saarlandstr. 375a, 55411 Bingen</div>
+  </td></tr>
+
+</table>
+</td></tr>
+</table>
 </body>
 </html>
 "@
@@ -139,29 +188,34 @@ if ($hatDaten) {
 } else {
     $betreff = "OEE Tagesbericht $gestDatum - Kabine 1: KEIN EINTRAG"
     $htmlBody = @"
-<!DOCTYPE html>
-<html>
-<head><meta charset='UTF-8'></head>
-<body style='margin:0;padding:0;background:#eef1f5;font-family:Segoe UI,Arial,sans-serif;'>
-<div style='max-width:600px;margin:0 auto;padding:24px 16px;'>
-  <div style='background:#1F4E79;border-radius:12px 12px 0 0;padding:20px 28px;'>
-    <div style='color:#fff;font-size:18px;font-weight:700;'>EINHAUS Lackierung</div>
-    <div style='color:rgba(255,255,255,0.75);font-size:13px;margin-top:4px;'>OEE Tagesbericht &ndash; Lackierroboter Kabine 1 &ndash; $gestDatum</div>
-  </div>
-  <div style='background:#fde8e6;border:3px solid #c0392b;padding:28px;text-align:center;'>
-    <div style='font-size:32px;font-weight:900;color:#c0392b;'>Kein Eintrag</div>
-    <div style='font-size:14px;color:#c0392b;margin-top:8px;'>Fuer den $gestDatum wurde keine Schicht erfasst.</div>
-  </div>
-  <div style='background:#fff;padding:20px 28px;text-align:center;border-radius:0 0 12px 12px;'>
-    <p style='font-size:13px;color:#555;margin-bottom:16px;'>Bitte pruefen, ob die Schichterfassung eingetragen wurde.</p>
-    <a href='$DASHBOARD_URL' style='display:inline-block;background:#1F4E79;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:700;font-size:14px;'>
-      Dashboard oeffnen &rarr;
-    </a>
-    <div style='margin-top:16px;font-size:11px;color:#aaa;'>
-      EINHAUS Oberflaechenveredelung GmbH &middot; Saarlandstr. 375a, 55411 Bingen
-    </div>
-  </div>
-</div>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/></head>
+<body style="margin:0;padding:0;background-color:#eef1f5;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#eef1f5">
+<tr><td align="center" style="padding:20px 10px;">
+<table width="600" cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,sans-serif;">
+  <tr><td bgcolor="#1F4E79" style="padding:20px 28px;border-radius:10px 10px 0 0;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td style="color:#ffffff;font-size:20px;font-weight:bold;">EINHAUS Lackierung</td>
+        <td align="right" style="color:rgba(255,255,255,0.7);font-size:12px;">$gestDatum</td>
+      </tr>
+      <tr><td colspan="2" style="color:rgba(255,255,255,0.75);font-size:12px;padding-top:4px;">OEE Tagesbericht &ndash; Lackierroboter Kabine 1</td></tr>
+    </table>
+  </td></tr>
+  <tr><td bgcolor="#fde8e6" style="padding:36px 28px;text-align:center;border-left:4px solid #c0392b;border-right:4px solid #c0392b;">
+    <div style="font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:2px;color:#c0392b;margin-bottom:10px;">OEE Gesamt</div>
+    <div style="font-size:52px;font-weight:900;color:#c0392b;line-height:1.1;">Kein Eintrag</div>
+    <div style="font-size:13px;color:#c0392b;margin-top:10px;">Fuer den $gestDatum wurde keine Schicht erfasst.</div>
+    <div style="font-size:12px;color:#888;margin-top:8px;">Bitte pruefen ob die Schichterfassung am Tablet eingetragen wurde.</div>
+  </td></tr>
+  <tr><td bgcolor="#ffffff" style="padding:16px 28px;text-align:center;border-top:1px solid #dce1e7;border-radius:0 0 10px 10px;">
+    <div style="font-size:11px;color:#aaa;">EINHAUS Oberflaechenveredelung GmbH &middot; Saarlandstr. 375a, 55411 Bingen</div>
+  </td></tr>
+</table>
+</td></tr>
+</table>
 </body>
 </html>
 "@
