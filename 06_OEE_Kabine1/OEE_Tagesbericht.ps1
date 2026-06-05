@@ -112,7 +112,7 @@ if ($true) {
         "<tr><td bgcolor='#f8fafc' style='padding:9px 12px;font-size:12px;color:#666;border-top:1px solid #eee;'>Notiz / Stoerungsgrund</td><td bgcolor='#f8fafc' style='padding:9px 12px;font-size:12px;font-weight:bold;color:#333;border-top:1px solid #eee;'>$notiz</td><td bgcolor='#f8fafc' style='padding:9px 12px;border-top:1px solid #eee;'></td><td bgcolor='#f8fafc' style='padding:9px 12px;border-top:1px solid #eee;'></td><td bgcolor='#f8fafc' style='padding:9px 12px;border-top:1px solid #eee;'></td><td bgcolor='#f8fafc' style='padding:9px 12px;border-top:1px solid #eee;'></td><td bgcolor='#f8fafc' style='padding:9px 12px;border-top:1px solid #eee;'></td><td bgcolor='#f8fafc' style='padding:9px 12px;border-top:1px solid #eee;'></td></tr>"
     } else { '' }
 
-    $betreff  = "OEE Tagesbericht $gestDatum - Kabine 1: $oeeT [$bewertung]"
+    $betreff  = "OEE Lackierroboter Tagesbericht $gestDatum"
 
     $htmlBody = @"
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
