@@ -397,22 +397,11 @@
 
 <script>
   function oeffneApp(url, name) {
-    document.getElementById('app-frame').src = url + '?v=' + Date.now();
-    document.getElementById('dashboard-view').style.display = 'none';
-    document.getElementById('app-view').classList.add('visible');
-    document.getElementById('btnBack').classList.add('visible');
-    document.getElementById('currentPage').textContent = name;
-    document.getElementById('currentPage').classList.add('visible');
-    document.title = name + ' – EINHAUS';
+    window.location.href = url;
   }
 
   function zurueck() {
-    document.getElementById('app-frame').src = '';
-    document.getElementById('app-view').classList.remove('visible');
-    document.getElementById('dashboard-view').style.display = 'flex';
-    document.getElementById('btnBack').classList.remove('visible');
-    document.getElementById('currentPage').classList.remove('visible');
-    document.title = 'Lackierung – Dashboard';
+    window.history.back();
   }
 
   function toggleTheme() {
