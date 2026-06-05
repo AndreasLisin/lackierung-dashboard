@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OEE Auswertung – Kabine 1</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --blau: #1F4E79;
+      --blau-hell: #2E75B6;
+      --gruen: #1a7a3c;
+      --gelb: #c47a00;
+      --rot: #c0392b;
+      --bg: #eef1f5;
+      --card: #fff;
+      --border: #dce1e7;
+      --text: #222;
+      --muted: #7a8a9a;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* Header */
+    header {
+      background: var(--blau);
+      color: #fff;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .btn-back {
+      background: rgba(255,255,255,0.15);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      padding: 8px 14px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-back:hover { background: rgba(255,255,255,0.25); }
+    header h1 { font-size: 1.1rem; font-weight: 700; }
+    header .sub { font-size: 0.8rem; opacity: .7; }
+    .header-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+
+    /* Filter-Leiste */
+    .filter-bar {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .filter-bar label { font-size: 0.8rem; font-weight: 600; color: var(--muted); }
+    .filter-bar select, .filter-bar input {
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.88rem;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .btn-laden {
+      padding: 7px 18px;
+      background: var(--blau);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-laden:hover { background: var(--blau-hell); }
+    #ladeStatus { font-size: 0.8rem; color: var(--muted); margin-left: auto; }
+
+    /* Layout */
+    .page { max-width: 1200px; margin: 0 auto; padding: 20px 20px 40px; }
+
+    /* KPI-Kacheln */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .kpi {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 18px 20px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+      border-left: 4px solid var(--border);
+    }
+    .kpi.gruen { border-color: var(--gruen); }
+    .kpi.gelb  { border-color: var(--gelb); }
+    .kpi.rot   { border-color: var(--rot); }
+    .kpi.blau  { border-color: var(--blau-hell); }
+    .kpi .label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: 6px; }
+    .kpi .wert  { font-size: 2rem; font-weight: 900; line-height: 1; }
+    .kpi.gruen .wert { color: var(--gruen); }
+    .kpi.gelb  .wert { color: var(--gelb); }
+    .kpi.rot   .wert { color: var(--rot); }
+    .kpi.blau  .wert { color: var(--blau-hell); }
+    .kpi .sub   { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+
+    /* Charts */
+    .chart-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 800px) { .chart-grid { grid-template-columns: 1fr; } }
+    .card {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    }
+    .card h2 {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: var(--blau);
+      margin-bottom: 16px;
+    }
+    .chart-wrap { position: relative; height: 240px; }
+
+    /* Tabelle */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    thead th {
+      background: var(--blau);
+      color: #fff;
+      padding: 10px 12px;
+      text-align: left;
+      font-weight: 700;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    tbody tr:nth-child(even) { background: #f8fafc; }
+    tbody tr:hover { background: #eef3fb; }
+    tbody td { padding: 9px 12px; border-bottom: 1px solid var(--border); }
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+    .badge.gruen { background: #e8f8ee; color: var(--gruen); }
+    .badge.gelb  { background: #fff8e1; color: var(--gelb); }
+    .badge.rot   { background: #fde8e6; color: var(--rot); }
+
+    /* Leer-Zustand */
+    .leer { text-align: center; padding: 40px; color: var(--muted); font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+
+<header>
+  <a class="btn-back" href="../index.html">← Zurück</a>
+  <div>
+    <h1>OEE Auswertung – Kabine 1</h1>
+    <div class="sub">Lackierroboter · Frühschicht</div>
+  </div>
+  <div class="header-right">
+    <span id="letzteAktualisierung" style="font-size:.8rem;opacity:.7;"></span>
+  </div>
+</header>
+
+<div class="filter-bar">
+  <label>Zeitraum</label>
+  <select id="filterZeitraum" onchange="zeitraumGeaendert()">
+    <option value="7">Letzte 7 Tage</option>
+    <option value="30" selected>Letzte 30 Tage</option>
+    <option value="90">Letzte 90 Tage</option>
+    <option value="custom">Benutzerdefiniert</option>
+  </select>
+  <input type="date" id="filterVon" style="display:none">
+  <input type="date" id="filterBis" style="display:none">
+  <button class="btn-laden" onclick="laden()">Aktualisieren</button>
+  <span id="ladeStatus"></span>
+</div>
+
+<div class="page">
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi" id="kpiOEE">
+      <div class="label">Ø OEE</div>
+      <div class="wert" id="kpiOEEWert">–</div>
+      <div class="sub" id="kpiOEESub">Wird geladen…</div>
+    </div>
+    <div class="kpi blau" id="kpiV">
+      <div class="label">Ø Verfügbarkeit</div>
+      <div class="wert" id="kpiVWert">–</div>
+      <div class="sub" id="kpiVSub"></div>
+    </div>
+    <div class="kpi blau" id="kpiQ">
+      <div class="label">Ø Qualität</div>
+      <div class="wert" id="kpiQWert">–</div>
+      <div class="sub" id="kpiQSub"></div>
+    </div>
+    <div class="kpi" id="kpiSt">
+      <div class="label">Ø Stillstand</div>
+      <div class="wert" id="kpiStWert">–</div>
+      <div class="sub" id="kpiStSub">min / Schicht</div>
+    </div>
+    <div class="kpi blau">
+      <div class="label">Schichten gesamt</div>
+      <div class="wert" id="kpiSchichten">–</div>
+      <div class="sub" id="kpiSchichtenSub">im Zeitraum</div>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="chart-grid">
+    <div class="card">
+      <h2>OEE Verlauf</h2>
+      <div class="chart-wrap">
+        <canvas id="chartOEE"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Störungsgründe (Top)</h2>
+      <div class="chart-wrap">
+        <canvas id="chartStorung"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="chart-grid" style="grid-template-columns:1fr 1fr">
+    <div class="card">
+      <h2>Verfügbarkeit &amp; Qualität</h2>
+      <div class="chart-wrap">
+        <canvas id="chartVQ"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Stillstand pro Schicht (min)</h2>
+      <div class="chart-wrap">
+        <canvas id="chartStillstand"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabelle -->
+  <div class="card" style="margin-top:16px">
+    <h2>Schichten</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Datum</th>
+            <th>Schicht</th>
+            <th>Belegung</th>
+            <th>Stillstand</th>
+            <th>Menge</th>
+            <th>Ausschuss</th>
+            <th>Verfügbarkeit</th>
+            <th>Qualität</th>
+            <th>OEE</th>
+            <th>Notiz</th>
+          </tr>
+        </thead>
+        <tbody id="tabelleBody">
+          <tr><td colspan="10" class="leer">Wird geladen…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const SUPABASE_URL  = 'https://tldkqifblxkdligypffr.supabase.co';
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsZGtxaWZibHhrZGxpZ3lwZmZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1NjkwMzEsImV4cCI6MjA5NjE0NTAzMX0.Zg0Yy9uAIvuFwNfYVzfLWqmQUvTnXivYmGIXLCOa6TM';
+
+  let charts = {};
+
+  function zeitraumGeaendert() {
+    const v = document.getElementById('filterZeitraum').value;
+    const custom = v === 'custom';
+    document.getElementById('filterVon').style.display = custom ? 'inline' : 'none';
+    document.getElementById('filterBis').style.display = custom ? 'inline' : 'none';
+  }
+
+  function datumsbereich() {
+    const v = document.getElementById('filterZeitraum').value;
+    if (v === 'custom') {
+      return {
+        von: document.getElementById('filterVon').value,
+        bis: document.getElementById('filterBis').value
+      };
+    }
+    const bis = new Date();
+    const von = new Date();
+    von.setDate(von.getDate() - parseInt(v));
+    return {
+      von: von.toISOString().slice(0, 10),
+      bis: bis.toISOString().slice(0, 10)
+    };
+  }
+
+  async function laden() {
+    document.getElementById('ladeStatus').textContent = 'Lädt…';
+    const { von, bis } = datumsbereich();
+
+    try {
+      const url = `${SUPABASE_URL}/rest/v1/oee_erfassung?datum=gte.${von}&datum=lte.${bis}&order=datum.asc`;
+      const res = await fetch(url, {
+        headers: { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON }
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const daten = await res.json();
+
+      document.getElementById('ladeStatus').textContent = `${daten.length} Einträge`;
+      document.getElementById('letzteAktualisierung').textContent =
+        'Stand: ' + new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+
+      renderKPIs(daten);
+      renderTrendChart(daten);
+      renderVQChart(daten);
+      renderStillstandChart(daten);
+      renderStorungChart(daten);
+      renderTabelle(daten);
+    } catch (e) {
+      document.getElementById('ladeStatus').textContent = 'Fehler: ' + e.message;
+    }
+  }
+
+  function avg(arr, key) {
+    const vals = arr.map(r => r[key]).filter(v => v !== null && v !== undefined);
+    return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+  }
+
+  function renderKPIs(daten) {
+    const oee = avg(daten, 'oee');
+    const v   = avg(daten, 'verfuegbarkeit');
+    const q   = avg(daten, 'qualitaet');
+    const st  = avg(daten, 'stoerung_min');
+
+    const kpiOEE = document.getElementById('kpiOEE');
+    kpiOEE.className = 'kpi ' + (oee === null ? '' : oee >= 80 ? 'gruen' : oee >= 60 ? 'gelb' : 'rot');
+    document.getElementById('kpiOEEWert').textContent = oee !== null ? oee.toFixed(1) + ' %' : '–';
+    document.getElementById('kpiOEESub').textContent  = daten.length + ' Schichten';
+
+    document.getElementById('kpiVWert').textContent = v !== null ? v.toFixed(1) + ' %' : '–';
+    document.getElementById('kpiQWert').textContent = q !== null ? q.toFixed(1) + ' %' : '–';
+    document.getElementById('kpiStWert').textContent = st !== null ? Math.round(st) + ' min' : '–';
+
+    const stKpi = document.getElementById('kpiSt');
+    stKpi.className = 'kpi ' + (st === null ? 'blau' : st <= 20 ? 'gruen' : st <= 45 ? 'gelb' : 'rot');
+
+    document.getElementById('kpiSchichten').textContent = daten.length;
+  }
+
+  function destroyChart(id) {
+    if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+  }
+
+  function renderTrendChart(daten) {
+    destroyChart('oee');
+    const labels = daten.map(r => new Date(r.datum).toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit' }));
+    const oeeVals = daten.map(r => r.oee);
+    charts['oee'] = new Chart(document.getElementById('chartOEE'), {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'OEE %',
+          data: oeeVals,
+          borderColor: '#2E75B6',
+          backgroundColor: 'rgba(46,117,182,0.1)',
+          pointBackgroundColor: oeeVals.map(v => v === null ? '#ccc' : v >= 80 ? '#1a7a3c' : v >= 60 ? '#c47a00' : '#c0392b'),
+          pointRadius: 5,
+          tension: 0.3,
+          fill: true,
+        }, {
+          label: 'Ziel 80%',
+          data: daten.map(() => 80),
+          borderColor: '#1a7a3c',
+          borderDash: [6, 4],
+          pointRadius: 0,
+          borderWidth: 1.5,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { min: 0, max: 100, ticks: { callback: v => v + '%' } },
+          x: { ticks: { maxTicksLimit: 10 } }
+        }
+      }
+    });
+  }
+
+  function renderVQChart(daten) {
+    destroyChart('vq');
+    const labels = daten.map(r => new Date(r.datum).toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit' }));
+    charts['vq'] = new Chart(document.getElementById('chartVQ'), {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          { label: 'Verfügbarkeit %', data: daten.map(r => r.verfuegbarkeit), borderColor: '#2E75B6', pointRadius: 3, tension: 0.3 },
+          { label: 'Qualität %',      data: daten.map(r => r.qualitaet),      borderColor: '#1a7a3c', pointRadius: 3, tension: 0.3 }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } },
+        scales: { y: { min: 0, max: 100, ticks: { callback: v => v + '%' } }, x: { ticks: { maxTicksLimit: 10 } } }
+      }
+    });
+  }
+
+  function renderStillstandChart(daten) {
+    destroyChart('stillstand');
+    const labels = daten.map(r => new Date(r.datum).toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit' }));
+    charts['stillstand'] = new Chart(document.getElementById('chartStillstand'), {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Stillstand min',
+          data: daten.map(r => r.stoerung_min || 0),
+          backgroundColor: daten.map(r => (r.stoerung_min || 0) <= 20 ? 'rgba(26,122,60,0.7)' : (r.stoerung_min || 0) <= 45 ? 'rgba(196,122,0,0.7)' : 'rgba(192,57,43,0.7)'),
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { x: { ticks: { maxTicksLimit: 10 } } }
+      }
+    });
+  }
+
+  function renderStorungChart(daten) {
+    destroyChart('storung');
+
+    // Notizen als Störungsgründe auswerten (falls vorhanden)
+    const gruende = {};
+    daten.forEach(r => {
+      if (r.notiz && r.notiz.trim()) {
+        const g = r.notiz.trim();
+        gruende[g] = (gruende[g] || 0) + (r.stoerung_min || 0);
+      } else if ((r.stoerung_min || 0) > 0) {
+        gruende['Kein Grund angegeben'] = (gruende['Kein Grund angegeben'] || 0) + r.stoerung_min;
+      }
+    });
+
+    const sorted = Object.entries(gruende).sort((a, b) => b[1] - a[1]).slice(0, 8);
+
+    if (sorted.length === 0) {
+      document.getElementById('chartStorung').parentElement.innerHTML =
+        '<div class="leer">Noch keine Störungsdaten</div>';
+      return;
+    }
+
+    const farben = ['#c0392b','#e67e22','#c47a00','#2E75B6','#1F4E79','#1a7a3c','#7f8c8d','#8e44ad'];
+    charts['storung'] = new Chart(document.getElementById('chartStorung'), {
+      type: 'doughnut',
+      data: {
+        labels: sorted.map(e => e[0]),
+        datasets: [{ data: sorted.map(e => e[1]), backgroundColor: farben, borderWidth: 2 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } },
+          tooltip: { callbacks: { label: ctx => ctx.label + ': ' + ctx.parsed + ' min' } }
+        }
+      }
+    });
+  }
+
+  function oeeKlasse(v) {
+    if (v === null || v === undefined) return '';
+    return v >= 80 ? 'gruen' : v >= 60 ? 'gelb' : 'rot';
+  }
+
+  function renderTabelle(daten) {
+    const tbody = document.getElementById('tabelleBody');
+    if (daten.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="10" class="leer">Keine Daten im gewählten Zeitraum</td></tr>';
+      return;
+    }
+    tbody.innerHTML = [...daten].reverse().map(r => `
+      <tr>
+        <td>${new Date(r.datum).toLocaleDateString('de-DE')}</td>
+        <td>${r.schicht || '–'}</td>
+        <td>${r.belegungszeit_min ?? '–'} min</td>
+        <td>${r.stoerung_min ?? 0} min</td>
+        <td>${r.gesamtmenge ?? '–'}</td>
+        <td>${r.ausschuss ?? 0}</td>
+        <td>${r.verfuegbarkeit !== null ? r.verfuegbarkeit.toFixed(1) + ' %' : '–'}</td>
+        <td>${r.qualitaet !== null ? r.qualitaet.toFixed(1) + ' %' : '–'}</td>
+        <td><span class="badge ${oeeKlasse(r.oee)}">${r.oee !== null ? r.oee.toFixed(1) + ' %' : '–'}</span></td>
+        <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.notiz || ''}">${r.notiz || ''}</td>
+      </tr>`).join('');
+  }
+
+  // Beim Laden sofort starten
+  laden();
+</script>
+</body>
+</html>
