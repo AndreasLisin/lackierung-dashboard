@@ -1,0 +1,34 @@
+OEE KABINE 1 – TABLET EINRICHTUNG
+==================================
+
+AM TABLET NUR DIESE URL IM BROWSER EINGEBEN:
+https://andreaslisin.github.io/lackierung-dashboard/06_OEE_Kabine1/OEE_Kabine1_Tablet.html
+
+Kein Login. Keine App. Kein Passwort.
+Funktioniert mit Chrome, Edge oder Safari.
+
+
+ALS STARTBILDSCHIRM SPEICHERN (empfohlen):
+-------------------------------------------
+Chrome / Edge (Android):
+  Menü (3 Punkte oben rechts) → "Zum Startbildschirm hinzufügen"
+
+Safari (iPad/iPhone):
+  Teilen-Symbol → "Zum Home-Bildschirm"
+
+→ Danach erscheint ein Symbol auf dem Tablet-Desktop,
+  der Bediener muss keine URL mehr eintippen.
+
+
+ABLAUF PRO SCHICHT:
+-------------------
+1. ▶ Start Produktion drücken
+2. Bei Störung: STÖRUNG drücken → Grund auswählen
+   Bei Ende der Störung: STÖRUNG nochmal drücken
+3. Am Schichtende: Gesamtmenge + Ausschuss eintragen
+4. "Schicht speichern" drücken → fertig
+
+
+AUSWERTUNG (PC/Büro):
+----------------------
+https://andreaslisin.github.io/lackierung-dashboard/06_OEE_Kabine1/OEE_Auswertung.html
