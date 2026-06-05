@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Beispiel: Forms + Power Automate + Dashboard | EINHAUS Oberflächenveredelung GmbH</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --ms-blue: #0078D4;
+  --ms-blue-dark: #005A9E;
+  --ms-blue-light: #EFF6FC;
+  --ms-green: #107C10;
+  --ms-green-light: #DFF6DD;
+  --ms-yellow: #F7630C;
+  --ms-red: #D13438;
+  --ms-red-light: #FDE7E9;
+  --ms-gray: #605E5C;
+  --ms-gray-light: #F3F2F1;
+  --ms-border: #EDEBE9;
+  --ms-text: #201F1E;
+  --einhaus: #1F4E79;
+  --einhaus-med: #2E75B6;
+  --green-tag: #107C10;
+  --yellow-tag: #986F0B;
+  --red-tag: #D13438;
+  --radius: 8px;
+  --shadow: 0 2px 8px rgba(0,0,0,.1);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', Arial, sans-serif; background: #FAF9F8; color: var(--ms-text); font-size: 14px; }
+
+/* ── Top Nav ── */
+.topnav {
+  background: var(--einhaus);
+  color: #fff;
+  padding: 0 24px;
+  display: flex; align-items: center; gap: 16px;
+  height: 50px; position: sticky; top: 0; z-index: 200;
+  box-shadow: 0 2px 6px rgba(0,0,0,.3);
+}
+.topnav-brand { font-weight: 700; font-size: 15px; letter-spacing: .3px; }
+.topnav-brand span { color: #BDD7EE; }
+.topnav-divider { width: 1px; height: 24px; background: rgba(255,255,255,.3); }
+.topnav-title { font-size: 13px; opacity: .85; }
+.topnav-badge { margin-left: auto; background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3); border-radius: 4px; padding: 3px 10px; font-size: 12px; }
+
+/* ── Tabs ── */
+.tab-bar {
+  background: #fff; border-bottom: 1px solid var(--ms-border);
+  display: flex; padding: 0 24px; gap: 0;
+  position: sticky; top: 50px; z-index: 100;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+}
+.tab-btn {
+  padding: 14px 22px; cursor: pointer; border: none; background: none;
+  font-size: 14px; color: var(--ms-gray); font-family: inherit;
+  border-bottom: 3px solid transparent; margin-bottom: -1px;
+  display: flex; align-items: center; gap: 8px; white-space: nowrap;
+  transition: all .15s;
+}
+.tab-btn:hover { color: var(--ms-blue); background: var(--ms-blue-light); }
+.tab-btn.active { color: var(--ms-blue); border-bottom-color: var(--ms-blue); font-weight: 600; }
+.tab-icon { font-size: 16px; }
+
+/* ── Flow Banner ── */
+.flow-banner {
+  background: linear-gradient(135deg, #0078D4 0%, #1F4E79 100%);
+  color: #fff; padding: 16px 28px;
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.flow-step {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,.15); border-radius: 20px;
+  padding: 6px 14px; font-size: 13px; font-weight: 600;
+}
+.flow-arrow { font-size: 18px; opacity: .7; }
+.flow-banner-sub { width: 100%; font-size: 12px; opacity: .75; margin-top: 2px; }
+
+/* ── Panel ── */
+.panel { display: none; padding: 24px; max-width: 1200px; margin: 0 auto; }
+.panel.active { display: block; }
+
+/* ══════════════════════════════════════════
+   SECTION 1: MICROSOFT FORMS
+══════════════════════════════════════════ */
+.form-container { max-width: 680px; margin: 0 auto; }
+.form-header {
+  background: linear-gradient(135deg, var(--einhaus) 0%, var(--einhaus-med) 100%);
+  border-radius: var(--radius) var(--radius) 0 0;
+  padding: 24px 28px; color: #fff;
+  border-top: 6px solid #BDD7EE;
+}
+.form-header h1 { font-size: 22px; font-weight: 700; }
+.form-header p { font-size: 13px; opacity: .8; margin-top: 6px; }
+.form-body { background: #fff; border-radius: 0 0 var(--radius) var(--radius); box-shadow: var(--shadow); }
+
+.form-section {
+  border: 1px solid var(--ms-border); border-radius: var(--radius);
+  margin: 12px 0; overflow: hidden;
+}
+.form-section-head {
+  background: #F7F9FC; padding: 12px 18px;
+  font-weight: 700; font-size: 13px; color: var(--einhaus);
+  border-bottom: 1px solid var(--ms-border);
+  display: flex; align-items: center; gap: 8px;
+}
+.form-section-body { padding: 4px 0; }
+
+.form-row {
+  display: flex; align-items: center; padding: 10px 18px;
+  border-bottom: 1px solid #F3F2F1; gap: 12px;
+}
+.form-row:last-child { border-bottom: none; }
+.form-label { flex: 1; font-size: 13px; }
+.form-label.required::after { content: ' *'; color: var(--ms-red); }
+.radio-group { display: flex; gap: 6px; }
+.radio-opt {
+  border: 1.5px solid #C8C6C4; border-radius: 6px; padding: 5px 10px;
+  font-size: 12px; font-weight: 600; cursor: pointer; transition: all .15s;
+  user-select: none; white-space: nowrap;
+}
+.radio-opt:hover { border-color: var(--ms-blue); }
+.radio-opt.selected-io    { background: #DFF6DD; border-color: var(--ms-green); color: var(--ms-green); }
+.radio-opt.selected-bio   { background: #FFF4CE; border-color: #986F0B; color: #986F0B; }
+.radio-opt.selected-nio   { background: var(--ms-red-light); border-color: var(--ms-red); color: var(--ms-red); }
+
+.input-field {
+  border: 1.5px solid #C8C6C4; border-radius: 4px;
+  padding: 5px 10px; font-size: 13px; width: 90px; font-family: inherit;
+  transition: border-color .15s;
+}
+.input-field:focus { outline: none; border-color: var(--ms-blue); }
+.soll-badge {
+  font-size: 11px; color: var(--ms-gray); background: #F3F2F1;
+  border-radius: 4px; padding: 2px 7px; white-space: nowrap;
+}
+.input-group { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+.form-meta { padding: 14px 18px; background: #F7F9FC; display: flex; gap: 12px; flex-wrap: wrap; }
+.meta-field { display: flex; flex-direction: column; gap: 4px; }
+.meta-label { font-size: 11px; font-weight: 600; color: var(--ms-gray); text-transform: uppercase; letter-spacing: .5px; }
+.meta-select, .meta-input {
+  border: 1.5px solid #C8C6C4; border-radius: 4px; padding: 6px 10px;
+  font-size: 13px; font-family: inherit; background: #fff; min-width: 150px;
+}
+
+.submit-row { padding: 18px 18px 22px; display: flex; justify-content: space-between; align-items: center; }
+.btn-submit {
+  background: var(--ms-blue); color: #fff; border: none; border-radius: 4px;
+  padding: 10px 28px; font-size: 14px; font-weight: 600; cursor: pointer;
+  transition: background .15s; font-family: inherit;
+}
+.btn-submit:hover { background: var(--ms-blue-dark); }
+.submit-hint { font-size: 12px; color: var(--ms-gray); }
+
+.form-success {
+  display: none; text-align: center; padding: 40px 20px;
+  background: #fff; border-radius: var(--radius); box-shadow: var(--shadow);
+}
+.form-success .success-icon { font-size: 52px; }
+.form-success h2 { color: var(--ms-green); margin: 12px 0 6px; }
+.form-success p { color: var(--ms-gray); font-size: 13px; }
+.btn-new { margin-top: 18px; background: #fff; border: 1.5px solid var(--ms-blue); color: var(--ms-blue); border-radius: 4px; padding: 8px 22px; cursor: pointer; font-size: 13px; font-family: inherit; }
+
+/* ══════════════════════════════════════════
+   SECTION 2: POWER AUTOMATE FLOW
+══════════════════════════════════════════ */
+.flow-diagram {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 0; max-width: 700px; margin: 0 auto; padding: 20px 0;
+}
+.flow-node {
+  background: #fff; border: 2px solid var(--ms-border);
+  border-radius: 12px; padding: 18px 24px; width: 100%;
+  box-shadow: var(--shadow); position: relative;
+}
+.flow-node.trigger { border-color: var(--ms-blue); border-left: 6px solid var(--ms-blue); }
+.flow-node.action  { border-color: #7B2FBE; border-left: 6px solid #7B2FBE; }
+.flow-node.condition { border-color: var(--ms-yellow); border-left: 6px solid var(--ms-yellow); border-style: dashed; }
+.flow-node.notify  { border-color: var(--ms-red); border-left: 6px solid var(--ms-red); }
+.flow-node.done    { border-color: var(--ms-green); border-left: 6px solid var(--ms-green); }
+.flow-node-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.flow-node-icon { font-size: 22px; }
+.flow-node-title { font-weight: 700; font-size: 14px; }
+.flow-node-sub { font-size: 12px; color: var(--ms-gray); line-height: 1.5; }
+.flow-node-tag { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 3px; }
+.tag-trigger { background: #EFF6FC; color: var(--ms-blue); }
+.tag-action  { background: #F4F1FC; color: #7B2FBE; }
+.tag-cond    { background: #FFF4CE; color: #986F0B; }
+.tag-notify  { background: var(--ms-red-light); color: var(--ms-red); }
+.tag-done    { background: var(--ms-green-light); color: var(--ms-green); }
+.flow-connector {
+  width: 3px; height: 36px; background: #C8C6C4; margin: 0 auto;
+  position: relative;
+}
+.flow-connector::after {
+  content: '▼'; position: absolute; bottom: -6px; left: 50%;
+  transform: translateX(-50%); color: #C8C6C4; font-size: 12px;
+}
+.flow-branch {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px; width: 100%;
+}
+.branch-label { text-align: center; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 4px; margin-bottom: 8px; }
+.branch-yes { background: var(--ms-red-light); color: var(--ms-red); }
+.branch-no  { background: var(--ms-green-light); color: var(--ms-green); }
+
+/* ══════════════════════════════════════════
+   SECTION 3: SHAREPOINT LISTE
+══════════════════════════════════════════ */
+.sp-header {
+  background: #fff; border: 1px solid var(--ms-border); border-radius: var(--radius) var(--radius) 0 0;
+  padding: 14px 20px; display: flex; align-items: center; gap: 12px;
+}
+.sp-title { font-weight: 700; font-size: 16px; color: var(--einhaus); }
+.sp-count { background: var(--einhaus); color: #fff; border-radius: 10px; padding: 2px 9px; font-size: 12px; font-weight: 700; }
+.sp-table-wrap { background: #fff; border: 1px solid var(--ms-border); border-top: none; border-radius: 0 0 var(--radius) var(--radius); overflow-x: auto; }
+table.sp-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.sp-table thead th { background: #F3F2F1; padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--ms-gray); border-bottom: 1px solid var(--ms-border); white-space: nowrap; }
+.sp-table tbody tr:hover { background: var(--ms-blue-light); }
+.sp-table tbody td { padding: 9px 14px; border-bottom: 1px solid #F3F2F1; vertical-align: middle; }
+.sp-table tbody tr.new-row { animation: fadeIn .5s ease; background: #FFFCE6; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+.status-badge { display: inline-flex; align-items: center; gap: 5px; border-radius: 12px; padding: 3px 10px; font-size: 12px; font-weight: 700; }
+.badge-io  { background: #DFF6DD; color: var(--ms-green); }
+.badge-bio { background: #FFF4CE; color: #986F0B; }
+.badge-nio { background: var(--ms-red-light); color: var(--ms-red); }
+.timestamp { color: var(--ms-gray); font-size: 12px; }
+
+/* ══════════════════════════════════════════
+   SECTION 4: LIVE DASHBOARD
+══════════════════════════════════════════ */
+.kpi-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 18px; }
+.kpi-card {
+  background: #fff; border-radius: var(--radius); padding: 16px 18px;
+  box-shadow: var(--shadow); border-left: 5px solid transparent;
+}
+.kpi-card.k-total  { border-color: var(--einhaus-med); }
+.kpi-card.k-io     { border-color: var(--ms-green); }
+.kpi-card.k-bio    { border-color: #986F0B; }
+.kpi-card.k-nio    { border-color: var(--ms-red); }
+.kpi-label { font-size: 11px; font-weight: 700; color: var(--ms-gray); text-transform: uppercase; letter-spacing: .5px; }
+.kpi-val { font-size: 32px; font-weight: 800; margin: 4px 0 2px; line-height: 1; }
+.k-total .kpi-val  { color: var(--einhaus-med); }
+.k-io    .kpi-val  { color: var(--ms-green); }
+.k-bio   .kpi-val  { color: #986F0B; }
+.k-nio   .kpi-val  { color: var(--ms-red); }
+.kpi-sub { font-size: 11px; color: var(--ms-gray); }
+.charts-row { display: grid; grid-template-columns: 1.5fr 1fr; gap: 16px; margin-bottom: 18px; }
+.card { background: #fff; border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow); }
+.card-title { font-weight: 700; font-size: 13px; color: var(--einhaus); margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
+.card-title::before { content:''; width:4px; height:14px; background:var(--einhaus-med); border-radius:2px; display:inline-block; }
+
+.live-dot { width:8px; height:8px; border-radius:50%; background: #107C10; display:inline-block; animation: pulse 1.5s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.3;} }
+
+/* ── Info-Box ── */
+.info-box { background: var(--ms-blue-light); border: 1px solid #BAD5EB; border-radius: var(--radius); padding: 14px 18px; margin-bottom: 18px; font-size: 13px; }
+.info-box strong { color: var(--ms-blue); }
+
+/* ── Step cards ── */
+.steps { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 24px; }
+.step-card { background: #fff; border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); border-top: 4px solid var(--ms-blue); }
+.step-num { font-size: 11px; font-weight: 700; color: var(--ms-blue); text-transform: uppercase; letter-spacing: .5px; }
+.step-title { font-size: 15px; font-weight: 700; margin: 6px 0 8px; }
+.step-desc { font-size: 12px; color: var(--ms-gray); line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<!-- ── Top Nav ── -->
+<div class="topnav">
+  <div class="topnav-brand">EINHAUS. <span>Oberflächenveredelung GmbH</span></div>
+  <div class="topnav-divider"></div>
+  <div class="topnav-title">🔬 Prototyp: Forms + Power Automate + Dashboard</div>
+  <div class="topnav-badge">Interaktives Beispiel</div>
+</div>
+
+<!-- ── Flow Banner ── -->
+<div class="flow-banner">
+  <div class="flow-step">📱 Microsoft Forms</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step">⚡ Power Automate</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step">📋 SharePoint Liste</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step">📊 Live Dashboard</div>
+  <div class="flow-banner-sub">Klicke die Tabs durch — fülle das Formular aus, sieh wie die Daten in die Liste fließen und das Dashboard sich live aktualisiert.</div>
+</div>
+
+<!-- ── Tabs ── -->
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="showTab('forms')" id="tab-forms">
+    <span class="tab-icon">📱</span> 1 · Microsoft Forms
+  </button>
+  <button class="tab-btn" onclick="showTab('flow')" id="tab-flow">
+    <span class="tab-icon">⚡</span> 2 · Power Automate Flow
+  </button>
+  <button class="tab-btn" onclick="showTab('liste')" id="tab-liste">
+    <span class="tab-icon">📋</span> 3 · SharePoint Liste
+  </button>
+  <button class="tab-btn" onclick="showTab('dash')" id="tab-dash">
+    <span class="tab-icon">📊</span> 4 · Live Dashboard
+  </button>
+</div>
+
+<!-- ══════════════════════════════════════════
+     TAB 1: MICROSOFT FORMS
+══════════════════════════════════════════ -->
+<div class="panel active" id="panel-forms">
+  <div class="form-container">
+    <div class="info-box" style="margin-bottom:16px;">
+      <strong>📌 So sieht das Formular aus</strong> — Mitarbeiter öffnet es morgens auf Handy/Tablet, füllt alle Punkte aus und klickt „Absenden". Power Automate überträgt die Daten automatisch.
+    </div>
+
+    <div id="form-main">
+      <div class="form-header">
+        <h1>Rüstfreigabe Lackierkabinen</h1>
+        <p>Pre-Release Checkliste · FB-64 · Lackierung | EINHAUS Oberflächenveredelung GmbH</p>
+      </div>
+      <div class="form-body">
+        <!-- Meta -->
+        <div class="form-meta">
+          <div class="meta-field">
+            <div class="meta-label">Datum</div>
+            <input type="date" class="meta-input" id="f-datum">
+          </div>
+          <div class="meta-field">
+            <div class="meta-label">Prüfer *</div>
+            <select class="meta-select" id="f-pruefer">
+              <option>A. Lisin</option>
+              <option>A. Svezencev</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- I. Anlagenprüfung -->
+        <div class="form-section">
+          <div class="form-section-head">🔧 I. Anlagenprüfung & Serienstand</div>
+          <div class="form-section-body">
+            <div class="form-row"><span class="form-label required">Painting Cabin 1 – Zustand & Funktion</span><div class="radio-group" data-key="cabin1"></div></div>
+            <div class="form-row"><span class="form-label required">Painting Cabin 2 – Zustand & Funktion</span><div class="radio-group" data-key="cabin2"></div></div>
+            <div class="form-row"><span class="form-label required">Painting Cabin 3 – Zustand & Funktion</span><div class="radio-group" data-key="cabin3"></div></div>
+            <div class="form-row"><span class="form-label required">Painting Cabin 4 – Zustand & Funktion</span><div class="radio-group" data-key="cabin4"></div></div>
+            <div class="form-row"><span class="form-label required">Dryer 1 – Funktion & Dichtheit</span><div class="radio-group" data-key="dryer1"></div></div>
+            <div class="form-row"><span class="form-label required">Dryer 2 – Funktion & Dichtheit</span><div class="radio-group" data-key="dryer2"></div></div>
+            <div class="form-row"><span class="form-label required">Betriebsmittel/Hilfsmittel gemäß BA vorhanden</span><div class="radio-group" data-key="betriebsmittel"></div></div>
+          </div>
+        </div>
+
+        <!-- II. Prozessbedingungen -->
+        <div class="form-section">
+          <div class="form-section-head">🌡 II. Prozessbedingungen</div>
+          <div class="form-section-body">
+            <div class="form-row"><span class="form-label required">Sauberkeit, Ergonomie, Lichtverhältnisse ok?</span><div class="radio-group" data-key="sauberkeit"></div></div>
+            <div class="form-row"><span class="form-label required">Druckluft-Qualität geprüft (öl-/wasserfrei)</span><div class="radio-group" data-key="druckluft"></div></div>
+          </div>
+        </div>
+
+        <!-- III. Kabinentemperatur -->
+        <div class="form-section">
+          <div class="form-section-head">🌡 III. Kabinentemperatur SOLL / IST</div>
+          <div class="form-section-body">
+            <div class="form-row">
+              <span class="form-label required">Primer [°C]</span>
+              <div class="input-group">
+                <span class="soll-badge">SOLL: 20–23°C</span>
+                <input type="number" class="input-field" id="f-primer-ist" placeholder="IST °C">
+                <div class="radio-group" data-key="primer"></div>
+              </div>
+            </div>
+            <div class="form-row">
+              <span class="form-label required">Basislack [°C]</span>
+              <div class="input-group">
+                <span class="soll-badge">SOLL: 20–23°C</span>
+                <input type="number" class="input-field" id="f-basis-ist" placeholder="IST °C">
+                <div class="radio-group" data-key="basislack"></div>
+              </div>
+            </div>
+            <div class="form-row">
+              <span class="form-label required">Klarlack [°C]</span>
+              <div class="input-group">
+                <span class="soll-badge">SOLL: 20–23°C</span>
+                <input type="number" class="input-field" id="f-klar-ist" placeholder="IST °C">
+                <div class="radio-group" data-key="klarlack"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- IV. Trocknertemperatur -->
+        <div class="form-section">
+          <div class="form-section-head">🔥 IV. Trocknertemperatur SOLL / IST</div>
+          <div class="form-section-body">
+            <div class="form-row">
+              <span class="form-label required">Großraumtrockner [°C]</span>
+              <div class="input-group">
+                <span class="soll-badge">SOLL: 80–90°C</span>
+                <input type="number" class="input-field" id="f-grtrockner" placeholder="IST °C">
+                <div class="radio-group" data-key="grtrockner"></div>
+              </div>
+            </div>
+            <div class="form-row">
+              <span class="form-label required">Trockner Kabine 4 [°C]</span>
+              <div class="input-group">
+                <span class="soll-badge">SOLL: 80–90°C</span>
+                <input type="number" class="input-field" id="f-kab4trockner" placeholder="IST °C">
+                <div class="radio-group" data-key="kab4trockner"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- V. Lack-Info -->
+        <div class="form-section">
+          <div class="form-section-head">🎨 V. Lack-Informationen</div>
+          <div class="form-section-body">
+            <div class="form-row">
+              <span class="form-label required">Chargennummer Lack</span>
+              <input type="text" class="input-field" id="f-charge" placeholder="z.B. 2026-A451" style="width:140px;">
+            </div>
+            <div class="form-row">
+              <span class="form-label required">Viskosität (DIN-Cup 4, Sek.)</span>
+              <div class="input-group">
+                <span class="soll-badge">SOLL: 18–22 Sek.</span>
+                <input type="number" class="input-field" id="f-viskos" placeholder="IST Sek.">
+                <div class="radio-group" data-key="viskositat"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- VI. Arbeitssicherheit -->
+        <div class="form-section">
+          <div class="form-section-head">🦺 VI. Arbeitssicherheit</div>
+          <div class="form-section-body">
+            <div class="form-row"><span class="form-label required">PSA vollständig & in Ordnung</span><div class="radio-group" data-key="psa"></div></div>
+            <div class="form-row"><span class="form-label required">ATEX-Einrichtungen geprüft</span><div class="radio-group" data-key="atex"></div></div>
+            <div class="form-row"><span class="form-label required">Entsorgungsbehälter beschriftet & dicht</span><div class="radio-group" data-key="entsorgung"></div></div>
+          </div>
+        </div>
+
+        <!-- Gesamtbewertung + Absenden -->
+        <div class="submit-row">
+          <div>
+            <div class="meta-label" style="margin-bottom:5px;">Bemerkung</div>
+            <input type="text" class="meta-input" id="f-bemerkung" placeholder="Optional..." style="width:260px;">
+          </div>
+          <div style="text-align:right;">
+            <div class="submit-hint" style="margin-bottom:8px;">* Pflichtfelder müssen ausgefüllt sein</div>
+            <button class="btn-submit" onclick="submitForm()">✓ Absenden</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-success" id="form-success">
+      <div class="success-icon">✅</div>
+      <h2>Rüstfreigabe erfolgreich übermittelt!</h2>
+      <p>Power Automate hat die Daten automatisch in die SharePoint-Liste übertragen.<br>
+         Das Dashboard wurde live aktualisiert.</p>
+      <p style="margin-top:12px;font-size:12px;color:#888;">📧 Bei n.i.O.-Einträgen wurde automatisch eine E-Mail an den Schichtleiter gesendet.</p>
+      <button class="btn-new" onclick="newForm()">+ Neue Rüstfreigabe</button>
+      <button class="btn-new" onclick="showTab('liste')" style="margin-left:8px;">📋 Liste ansehen</button>
+      <button class="btn-new" onclick="showTab('dash')" style="margin-left:8px;">📊 Dashboard öffnen</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     TAB 2: POWER AUTOMATE FLOW
+══════════════════════════════════════════ -->
+<div class="panel" id="panel-flow">
+  <div class="info-box">
+    <strong>⚡ Power Automate</strong> ist Microsofts Automatisierungstool – läuft im Hintergrund, kein Programmieren nötig. Einmal eingerichtet, läuft es vollautomatisch bei jeder Formular-Antwort.
+  </div>
+
+  <div class="steps" style="margin-bottom:24px;">
+    <div class="step-card">
+      <div class="step-num">Schritt 1</div>
+      <div class="step-title">📱 Forms ausfüllen</div>
+      <div class="step-desc">Mitarbeiter öffnet das Formular auf dem Handy oder PC und füllt alle Checkpunkte aus. Dauert ca. 2–3 Minuten.</div>
+    </div>
+    <div class="step-card" style="border-color:#7B2FBE;">
+      <div class="step-num" style="color:#7B2FBE;">Schritt 2</div>
+      <div class="step-title">⚡ Automatische Verarbeitung</div>
+      <div class="step-desc">Power Automate startet sofort und schreibt die Daten in die SharePoint-Liste. Keine menschliche Aktion nötig.</div>
+    </div>
+    <div class="step-card" style="border-color:var(--ms-green);">
+      <div class="step-num" style="color:var(--ms-green);">Schritt 3</div>
+      <div class="step-title">📊 Live-Update</div>
+      <div class="step-desc">Dashboard liest die neue Liste automatisch aus. Alle KPIs, der Kalender und die Charts sind sofort aktuell.</div>
+    </div>
+  </div>
+
+  <div class="flow-diagram">
+    <div class="flow-node trigger">
+      <div class="flow-node-head">
+        <span class="flow-node-icon">📱</span>
+        <div>
+          <div class="flow-node-title">AUSLÖSER: Wenn eine neue Antwort in Forms eingeht</div>
+          <span class="flow-node-tag tag-trigger">Trigger · Microsoft Forms</span>
+        </div>
+      </div>
+      <div class="flow-node-sub">Formular: „Rüstfreigabe Lackierkabinen" · Jede neue Antwort startet den Flow sofort</div>
+    </div>
+    <div class="flow-connector"></div>
+
+    <div class="flow-node action">
+      <div class="flow-node-head">
+        <span class="flow-node-icon">📋</span>
+        <div>
+          <div class="flow-node-title">AKTION: Antwortdetails abrufen</div>
+          <span class="flow-node-tag tag-action">Aktion · Microsoft Forms</span>
+        </div>
+      </div>
+      <div class="flow-node-sub">Alle Formularfelder (Datum, Schicht, Prüfer, alle Bewertungen, Temperaturwerte, Chargennummer) werden geladen</div>
+    </div>
+    <div class="flow-connector"></div>
+
+    <div class="flow-node action">
+      <div class="flow-node-head">
+        <span class="flow-node-icon">📝</span>
+        <div>
+          <div class="flow-node-title">AKTION: Element in SharePoint-Liste erstellen</div>
+          <span class="flow-node-tag tag-action">Aktion · SharePoint</span>
+        </div>
+      </div>
+      <div class="flow-node-sub">Website: <strong>einhausgmbhde.sharepoint.com</strong> · Liste: <strong>Rüstfreigabe_Lackierkabinen</strong><br>
+        Felder: Datum, Schicht, Prüfer, alle i.O./n.i.O.-Werte, IST-Temperaturen, Chargennr., Gesamtbewertung, Zeitstempel</div>
+    </div>
+    <div class="flow-connector"></div>
+
+    <div class="flow-node condition">
+      <div class="flow-node-head">
+        <span class="flow-node-icon">❓</span>
+        <div>
+          <div class="flow-node-title">BEDINGUNG: Enthält die Antwort ein n.i.O.?</div>
+          <span class="flow-node-tag tag-cond">Bedingung</span>
+        </div>
+      </div>
+      <div class="flow-node-sub">Prüft ob mindestens ein Checkpunkt als <strong>n.i.O.</strong> bewertet wurde</div>
+    </div>
+    <div class="flow-connector"></div>
+
+    <div class="flow-branch">
+      <div>
+        <div class="branch-label branch-yes">JA – n.i.O. vorhanden</div>
+        <div class="flow-node notify">
+          <div class="flow-node-head">
+            <span class="flow-node-icon">🚨</span>
+            <div>
+              <div class="flow-node-title">E-Mail-Benachrichtigung</div>
+              <span class="flow-node-tag tag-notify">Aktion · Outlook</span>
+            </div>
+          </div>
+          <div class="flow-node-sub">An: <strong>Schichtleiter</strong><br>
+            Betreff: „⚠ n.i.O. Rüstfreigabe – [Datum]"<br>
+            Inhalt: Welche Punkte n.i.O., Prüfer, IST-Werte, Bemerkung</div>
+        </div>
+      </div>
+      <div>
+        <div class="branch-label branch-no">NEIN – alles i.O.</div>
+        <div class="flow-node done">
+          <div class="flow-node-head">
+            <span class="flow-node-icon">✅</span>
+            <div>
+              <div class="flow-node-title">Flow erfolgreich beendet</div>
+              <span class="flow-node-tag tag-done">Abgeschlossen</span>
+            </div>
+          </div>
+          <div class="flow-node-sub">Daten sind in der SharePoint-Liste gespeichert.<br>Dashboard wird beim nächsten Aufruf automatisch aktualisiert.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     TAB 3: SHAREPOINT LISTE
+══════════════════════════════════════════ -->
+<div class="panel" id="panel-liste">
+  <div class="info-box" style="margin-bottom:16px;">
+    <strong>📋 SharePoint-Liste „Rüstfreigabe_Lackierkabinen"</strong> — jede Formular-Antwort wird hier automatisch als neue Zeile gespeichert. Vollständig rückverfolgbar mit Zeitstempel.
+  </div>
+
+  <div class="sp-header">
+    <span class="sp-title">📋 Rüstfreigabe_Lackierkabinen</span>
+    <span class="sp-count" id="sp-count">7 Einträge</span>
+    <span style="margin-left:auto;font-size:12px;color:var(--ms-gray);">Automatisch befüllt durch Power Automate · SharePoint · einhausgmbhde.sharepoint.com</span>
+  </div>
+  <div class="sp-table-wrap">
+    <table class="sp-table">
+      <thead>
+        <tr>
+          <th>Zeitstempel</th>
+          <th>Datum</th>
+          <th>Schicht</th>
+          <th>Prüfer</th>
+          <th>Kabinen</th>
+          <th>Trockner</th>
+          <th>Primer IST</th>
+          <th>Charge</th>
+          <th>Gesamtbewertung</th>
+          <th>Bemerkung</th>
+        </tr>
+      </thead>
+      <tbody id="sp-tbody">
+        <tr><td class="timestamp">29.05.2026 06:52</td><td>29.05.2026</td><td>Früh</td><td>A. Lisin</td><td><span class="status-badge badge-io">✓ i.O.</span></td><td><span class="status-badge badge-io">✓ i.O.</span></td><td>21°C</td><td>2026-A448</td><td><span class="status-badge badge-io">✓ i.O.</span></td><td>—</td></tr>
+        <tr><td class="timestamp">28.05.2026 06:49</td><td>28.05.2026</td><td>Früh</td><td>A. Lisin</td><td><span class="status-badge badge-io">✓ i.O.</span></td><td><span class="status-badge badge-io">✓ i.O.</span></td><td>22°C</td><td>2026-A447</td><td><span class="status-badge badge-io">✓ i.O.</span></td><td>—</td></tr>
+        <tr><td class="timestamp">27.05.2026 07:01</td><td>27.05.2026</td><td>Früh</td><td>A. Lisin</td><td><span class="status-badge badge-io">✓ i.O.</span></td><td><span class="status-badge badge-io">✓ i.O.</span></td><td>21°C</td><td>2026-A447</td><td><span class="status-badge badge-io">✓ i.O.</span></td><td>—</td></tr>
+        <tr><td class="timestamp">26.05.2026 06:55</td><td>26.05.2026</td><td>Früh</td><td>A. Lisin</td><td><span class="status-badge badge-io">✓ i.O.</span></td><td><span class="status-badge badge-io">✓ i.O.</span></td><td>22°C</td><td>2026-A446</td><td><span class="status-badge badge-io">✓ i.O.</span></td><td>—</td></tr>
+        <tr><td class="timestamp">22.05.2026 07:10</td><td>22.05.2026</td><td>Früh</td><td>A. Lisin</td><td><span class="status-badge badge-io">✓ i.O.</span></td><td><span class="status-badge badge-io">✓ i.O.</span></td><td>21°C</td><td>2026-A445</td><td><span class="status-badge badge-io">✓ i.O.</span></td><td>—</td></tr>
+        <tr><td class="timestamp">20.05.2026 06:58</td><td>20.05.2026</td><td>Früh</td><td>A. Lisin</td><td><span class="status-badge badge-bio">⚠ b.i.O.</span></td><td><span class="status-badge badge-io">✓ i.O.</span></td><td>19°C</td><td>2026-A444</td><td><span class="status-badge badge-bio">⚠ b.i.O.</span></td><td>Primer knapp unter SOLL</td></tr>
+        <tr><td class="timestamp">19.05.2026 06:47</td><td>19.05.2026</td><td>Früh</td><td>A. Lisin</td><td><span class="status-badge badge-io">✓ i.O.</span></td><td><span class="status-badge badge-io">✓ i.O.</span></td><td>17°C</td><td>2026-A443</td><td><span class="status-badge badge-nio">✗ n.i.O.</span></td><td>Heizung ausgefallen → Nachgeregelt</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     TAB 4: LIVE DASHBOARD
+══════════════════════════════════════════ -->
+<div class="panel" id="panel-dash">
+  <div class="info-box" style="display:flex;align-items:center;gap:10px;">
+    <span class="live-dot"></span>
+    <div><strong>Live-Dashboard</strong> — liest die Daten direkt aus der SharePoint-Liste. Fülle das Formular aus (Tab 1) und komm hierher zurück — die Zahlen aktualisieren sich automatisch.</div>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi-card k-total"><div class="kpi-label">Einträge gesamt</div><div class="kpi-val" id="d-total">7</div><div class="kpi-sub">Rüstfreigaben Mai 2026</div></div>
+    <div class="kpi-card k-io"><div class="kpi-label">i.O. Tage</div><div class="kpi-val" id="d-io">5</div><div class="kpi-sub" id="d-io-pct">83% Compliance</div></div>
+    <div class="kpi-card k-bio"><div class="kpi-label">b.i.O. Tage</div><div class="kpi-val" id="d-bio">1</div><div class="kpi-sub">Nachbesserung nötig</div></div>
+    <div class="kpi-card k-nio"><div class="kpi-label">n.i.O. Tage</div><div class="kpi-val" id="d-nio">1</div><div class="kpi-sub" id="d-nio-sub">⚠ Eskalation erfolgt</div></div>
+  </div>
+
+  <div class="charts-row">
+    <div class="card">
+      <div class="card-title">Bewertungsverlauf – letzte Einträge</div>
+      <canvas id="chartLive" height="120"></canvas>
+    </div>
+    <div class="card">
+      <div class="card-title">Gesamtverteilung</div>
+      <canvas id="chartPie" height="160"></canvas>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Letzte 7 Einträge aus SharePoint-Liste</div>
+    <table class="sp-table">
+      <thead><tr><th>Datum</th><th>Prüfer</th><th>Primer IST</th><th>Charge</th><th>Ergebnis</th><th>Bemerkung</th></tr></thead>
+      <tbody id="dash-table"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════ -->
+<script>
+// ── Tab switching ────────────────────────────────────────────────────
+function showTab(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+// ── Radio Buttons init ───────────────────────────────────────────────
+const opts = ['i.O.', 'b.i.O.', 'n.i.O.'];
+const optClasses = ['selected-io', 'selected-bio', 'selected-nio'];
+const formValues = {};
+
+document.querySelectorAll('.radio-group[data-key]').forEach(group => {
+  const key = group.dataset.key;
+  opts.forEach((label, idx) => {
+    const btn = document.createElement('div');
+    btn.className = 'radio-opt';
+    btn.textContent = label;
+    btn.onclick = () => {
+      group.querySelectorAll('.radio-opt').forEach(b => b.className = 'radio-opt');
+      btn.classList.add(optClasses[idx]);
+      formValues[key] = label;
+    };
+    group.appendChild(btn);
+  });
+  // Default: i.O.
+  group.firstChild.classList.add('selected-io');
+  formValues[key] = 'i.O.';
+});
+
+// ── SharePoint list data ─────────────────────────────────────────────
+let listData = [
+  { ts:'29.05.2026 06:52', datum:'29.05.2026', schicht:'Früh', pruefer:'A. Lisin', kabinen:'i.O.', trockner:'i.O.', primerIst:'21°C', charge:'2026-A448', gesamt:'i.O.', bem:'—' },
+  { ts:'28.05.2026 06:49', datum:'28.05.2026', schicht:'Früh', pruefer:'A. Lisin', kabinen:'i.O.', trockner:'i.O.', primerIst:'22°C', charge:'2026-A447', gesamt:'i.O.', bem:'—' },
+  { ts:'27.05.2026 07:01', datum:'27.05.2026', schicht:'Früh', pruefer:'A. Lisin', kabinen:'i.O.', trockner:'i.O.', primerIst:'21°C', charge:'2026-A447', gesamt:'i.O.', bem:'—' },
+  { ts:'26.05.2026 06:55', datum:'26.05.2026', schicht:'Früh', pruefer:'A. Lisin', kabinen:'i.O.', trockner:'i.O.', primerIst:'22°C', charge:'2026-A446', gesamt:'i.O.', bem:'—' },
+  { ts:'22.05.2026 07:10', datum:'22.05.2026', schicht:'Früh', pruefer:'A. Lisin', kabinen:'i.O.', trockner:'i.O.', primerIst:'21°C', charge:'2026-A445', gesamt:'i.O.', bem:'—' },
+  { ts:'20.05.2026 06:58', datum:'20.05.2026', schicht:'Früh', pruefer:'A. Lisin', kabinen:'b.i.O.', trockner:'i.O.', primerIst:'19°C', charge:'2026-A444', gesamt:'b.i.O.', bem:'Primer knapp unter SOLL' },
+  { ts:'19.05.2026 06:47', datum:'19.05.2026', schicht:'Früh', pruefer:'A. Lisin', kabinen:'i.O.', trockner:'i.O.', primerIst:'17°C', charge:'2026-A443', gesamt:'n.i.O.', bem:'Heizung ausgefallen → Nachgeregelt' },
+];
+
+function badgeHtml(val) {
+  if (val === 'i.O.')  return `<span class="status-badge badge-io">✓ i.O.</span>`;
+  if (val === 'b.i.O.') return `<span class="status-badge badge-bio">⚠ b.i.O.</span>`;
+  return `<span class="status-badge badge-nio">✗ n.i.O.</span>`;
+}
+
+function updateDashboard() {
+  const io  = listData.filter(r => r.gesamt === 'i.O.').length;
+  const bio = listData.filter(r => r.gesamt === 'b.i.O.').length;
+  const nio = listData.filter(r => r.gesamt === 'n.i.O.').length;
+  const tot = listData.length;
+  document.getElementById('d-total').textContent = tot;
+  document.getElementById('d-io').textContent = io;
+  document.getElementById('d-bio').textContent = bio;
+  document.getElementById('d-nio').textContent = nio;
+  document.getElementById('d-io-pct').textContent = Math.round(io/tot*100) + '% Compliance';
+  document.getElementById('d-nio-sub').textContent = nio > 0 ? '⚠ Eskalation erfolgt' : 'Alles in Ordnung';
+  document.getElementById('sp-count').textContent = tot + ' Einträge';
+
+  // Dash table
+  const tb = document.getElementById('dash-table');
+  tb.innerHTML = listData.slice(0,7).map(r =>
+    `<tr><td><strong>${r.datum}</strong><br><span class="timestamp">${r.schicht}</span></td>
+     <td>${r.pruefer}</td><td>${r.primerIst}</td><td>${r.charge}</td>
+     <td>${badgeHtml(r.gesamt)}</td><td style="font-size:12px;">${r.bem}</td></tr>`
+  ).join('');
+
+  // Charts update
+  if (chartLive) {
+    chartLive.data.labels = listData.slice(0,7).reverse().map(r => r.datum.slice(0,5));
+    chartLive.data.datasets[0].data = listData.slice(0,7).reverse().map(r =>
+      r.gesamt === 'i.O.' ? 3 : r.gesamt === 'b.i.O.' ? 2 : 1);
+    chartLive.data.datasets[0].backgroundColor = listData.slice(0,7).reverse().map(r =>
+      r.gesamt === 'i.O.' ? '#107C10' : r.gesamt === 'b.i.O.' ? '#986F0B' : '#D13438');
+    chartLive.update();
+    chartPie.data.datasets[0].data = [io, bio, nio];
+    chartPie.update();
+  }
+}
+
+// ── Charts init ──────────────────────────────────────────────────────
+let chartLive, chartPie;
+window.addEventListener('DOMContentLoaded', () => {
+  // Datum immer auf heute setzen
+  const heute = new Date().toISOString().split('T')[0];
+  document.getElementById('f-datum').value = heute;
+  chartLive = new Chart(document.getElementById('chartLive'), {
+    type: 'bar',
+    data: {
+      labels: [],
+      datasets: [{
+        data: [], backgroundColor: [], borderRadius: 5,
+        label: 'Ergebnis'
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display:false }, tooltip: {
+        callbacks: { label: ctx => ['','n.i.O.','b.i.O.','i.O.'][ctx.raw] }
+      }},
+      scales: {
+        y: { min:0, max:3.5, ticks: { callback: v => ['','n.i.O.','b.i.O.','i.O.'][v] || '', stepSize:1 } },
+        x: { grid: { display:false } }
+      }
+    }
+  });
+  chartPie = new Chart(document.getElementById('chartPie'), {
+    type: 'doughnut',
+    data: { labels:['i.O.','b.i.O.','n.i.O.'], datasets:[{ data:[5,1,1], backgroundColor:['#107C10','#986F0B','#D13438'], borderWidth:2, borderColor:'#fff' }] },
+    options: { cutout:'60%', plugins:{ legend:{ position:'bottom', labels:{ font:{size:11} } } } }
+  });
+  updateDashboard();
+});
+
+// ── Form Submit ──────────────────────────────────────────────────────
+function submitForm() {
+  const datum   = document.getElementById('f-datum').value;
+  const schicht = '—';
+  const pruefer = document.getElementById('f-pruefer').value;
+  const primerIst = (document.getElementById('f-primer-ist').value || '?') + '°C';
+  const charge  = document.getElementById('f-charge').value || '—';
+  const bemerkung = document.getElementById('f-bemerkung').value || '—';
+
+  // Gesamtbewertung berechnen
+  const vals = Object.values(formValues);
+  let gesamt = 'i.O.';
+  if (vals.some(v => v === 'n.i.O.')) gesamt = 'n.i.O.';
+  else if (vals.some(v => v === 'b.i.O.')) gesamt = 'b.i.O.';
+
+  const d = new Date(datum);
+  const ds = d.toLocaleDateString('de-DE');
+  const now = new Date().toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
+  const ts = ds + ' ' + now;
+
+  const newRow = { ts, datum: ds, schicht, pruefer, kabinen: formValues['cabin1'] || 'i.O.', trockner: formValues['grtrockner'] || 'i.O.', primerIst, charge, gesamt, bem: bemerkung };
+  listData.unshift(newRow);
+
+  // SharePoint Liste aktualisieren
+  const tbody = document.getElementById('sp-tbody');
+  const tr = document.createElement('tr');
+  tr.className = 'new-row';
+  tr.innerHTML = `<td class="timestamp">${ts}</td><td>${ds}</td><td>${schicht}</td><td>${pruefer}</td>
+    <td>${badgeHtml(newRow.kabinen)}</td><td>${badgeHtml(newRow.trockner)}</td>
+    <td>${primerIst}</td><td>${charge}</td><td>${badgeHtml(gesamt)}</td><td>${bemerkung}</td>`;
+  tbody.insertBefore(tr, tbody.firstChild);
+  document.getElementById('sp-count').textContent = listData.length + ' Einträge';
+
+  updateDashboard();
+  document.getElementById('form-main').style.display = 'none';
+  document.getElementById('form-success').style.display = 'block';
+}
+
+function newForm() {
+  document.getElementById('form-main').style.display = 'block';
+  document.getElementById('form-success').style.display = 'none';
+  document.querySelectorAll('.radio-group .radio-opt').forEach(b => b.className = 'radio-opt');
+  document.querySelectorAll('.radio-group').forEach(g => {
+    const first = g.firstChild;
+    if(first) { first.classList.add('selected-io'); formValues[g.dataset.key] = 'i.O.'; }
+  });
+}
+</script>
+</body>
+</html>

@@ -84,7 +84,6 @@
     }
     .folder-dot.connected { background: var(--io); }
     .folder-dot.error     { background: var(--nio); }
-    .folder-dot.info      { background: var(--tab); }
     .folder-info {
       flex: 1;
       font-size: 0.82rem;
@@ -557,8 +556,8 @@ async function updateFolderBar() {
   const btn  = document.getElementById('btn-connect');
 
   if (!FS_SUPPORTED) {
-    dot.className  = 'folder-dot info';
-    info.innerHTML = 'ℹ️ <strong>Tablet-Modus</strong> – Einträge werden lokal gespeichert. Excel-Export verfügbar.';
+    dot.className  = 'folder-dot error';
+    info.innerHTML = 'Dieser Browser unterstützt keine Ordnerverbindung. Bitte Edge oder Chrome verwenden.';
     btn.style.display = 'none';
     return;
   }

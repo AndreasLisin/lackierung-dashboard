@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Rüstfreigabe Lackierkabinen">
+<meta name="theme-color" content="#1F4E79">
+<title>Rüstfreigabe Lackierkabinen</title>
+<style>
+:root {
+  --primary: #1F4E79;
+  --primary-med: #2E75B6;
+  --primary-light: #EFF6FC;
+  --green: #107C10;
+  --green-bg: #DFF6DD;
+  --yellow: #986F0B;
+  --yellow-bg: #FFF4CE;
+  --red: #D13438;
+  --red-bg: #FDE7E9;
+  --gray: #605E5C;
+  --gray-light: #F3F2F1;
+  --border: #EDEBE9;
+  --radius: 12px;
+  --touch: 52px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html { font-size: 16px; }
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #F0F4F9;
+  color: #201F1E;
+  min-height: 100vh;
+  padding-bottom: 40px;
+}
+
+/* ── Header ── */
+.app-header {
+  background: var(--primary);
+  padding: 16px 18px 14px;
+  position: sticky; top: 0; z-index: 100;
+}
+.app-header-top { display: flex; align-items: center; justify-content: space-between; }
+.app-logo { font-size: 11px; font-weight: 700; color: rgba(255,255,255,.7); letter-spacing: 1px; text-transform: uppercase; }
+.app-title { font-size: 18px; font-weight: 700; color: #fff; margin-top: 4px; }
+.app-sub { font-size: 12px; color: rgba(255,255,255,.65); margin-top: 2px; }
+.progress-bar { height: 4px; background: rgba(255,255,255,.2); border-radius: 2px; margin-top: 12px; overflow: hidden; }
+.progress-fill { height: 100%; background: #7FDBFF; border-radius: 2px; transition: width .4s ease; }
+
+/* ── Content ── */
+.content { padding: 16px; max-width: 560px; margin: 0 auto; }
+
+/* ── Meta Card ── */
+.meta-card {
+  background: #fff; border-radius: var(--radius); padding: 16px;
+  margin-bottom: 14px; box-shadow: 0 1px 6px rgba(0,0,0,.08);
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+}
+.field-label {
+  font-size: 11px; font-weight: 700; color: var(--gray);
+  text-transform: uppercase; letter-spacing: .6px; margin-bottom: 6px;
+}
+.field-input, .field-select {
+  width: 100%; border: 1.5px solid var(--border); border-radius: 8px;
+  padding: 10px 12px; font-size: 15px; font-family: inherit;
+  background: #fff; color: #201F1E; height: var(--touch);
+  transition: border-color .15s;
+}
+.field-input:focus, .field-select:focus {
+  outline: none; border-color: var(--primary-med);
+}
+.field-input[readonly] { background: var(--gray-light); color: var(--gray); }
+
+/* ── Section ── */
+.section {
+  background: #fff; border-radius: var(--radius); margin-bottom: 14px;
+  box-shadow: 0 1px 6px rgba(0,0,0,.08); overflow: hidden;
+}
+.section-head {
+  background: var(--primary-light); padding: 13px 16px;
+  font-size: 13px; font-weight: 700; color: var(--primary);
+  display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #D0E4F5;
+}
+.section-head .sec-icon { font-size: 16px; }
+
+/* ── Checkpoint Row ── */
+.cp-row {
+  padding: 13px 16px; border-bottom: 1px solid var(--gray-light);
+  display: flex; flex-direction: column; gap: 10px;
+}
+.cp-row:last-child { border-bottom: none; }
+.cp-label { font-size: 14px; line-height: 1.4; }
+.cp-label.required::after { content: ' *'; color: var(--red); }
+
+/* ── Toggle Buttons ── */
+.toggle-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+.toggle-btn {
+  height: 44px; border: 2px solid var(--border); border-radius: 8px;
+  font-size: 13px; font-weight: 700; background: #fff; cursor: pointer;
+  transition: all .15s; font-family: inherit; color: var(--gray);
+  display: flex; align-items: center; justify-content: center; gap: 4px;
+}
+.toggle-btn:active { transform: scale(.96); }
+.toggle-btn.sel-io    { background: var(--green-bg);  border-color: var(--green);  color: var(--green); }
+.toggle-btn.sel-bio   { background: var(--yellow-bg); border-color: var(--yellow); color: var(--yellow); }
+.toggle-btn.sel-nio   { background: var(--red-bg);    border-color: var(--red);    color: var(--red); }
+
+/* ── SOLL/IST Row ── */
+.soll-ist-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.soll-badge {
+  font-size: 11px; background: #E8F0FB; color: var(--primary);
+  border-radius: 6px; padding: 4px 9px; font-weight: 600; white-space: nowrap;
+}
+.ist-input {
+  border: 1.5px solid var(--border); border-radius: 8px;
+  padding: 9px 12px; font-size: 15px; width: 110px; font-family: inherit;
+  height: 44px; transition: border-color .15s;
+}
+.ist-input:focus { outline: none; border-color: var(--primary-med); }
+
+/* ── Text Input ── */
+.text-input {
+  border: 1.5px solid var(--border); border-radius: 8px;
+  padding: 10px 12px; font-size: 15px; font-family: inherit;
+  width: 100%; height: 44px; transition: border-color .15s;
+}
+.text-input:focus { outline: none; border-color: var(--primary-med); }
+
+/* ── Bemerkung ── */
+.bemerkung-area {
+  background: #fff; border-radius: var(--radius); margin-bottom: 14px;
+  box-shadow: 0 1px 6px rgba(0,0,0,.08); padding: 14px 16px;
+}
+.textarea {
+  width: 100%; border: 1.5px solid var(--border); border-radius: 8px;
+  padding: 10px 12px; font-size: 15px; font-family: inherit;
+  resize: vertical; min-height: 72px; margin-top: 6px;
+}
+.textarea:focus { outline: none; border-color: var(--primary-med); }
+
+/* ── Submit ── */
+.submit-btn {
+  width: 100%; height: 56px; background: var(--primary); color: #fff;
+  border: none; border-radius: var(--radius); font-size: 17px; font-weight: 700;
+  cursor: pointer; font-family: inherit; display: flex; align-items: center;
+  justify-content: center; gap: 8px; transition: background .15s;
+  box-shadow: 0 3px 12px rgba(31,78,121,.35);
+}
+.submit-btn:active { background: #163d63; transform: scale(.98); }
+.required-note { text-align: center; font-size: 12px; color: var(--gray); margin-bottom: 10px; }
+
+/* ── Success Screen ── */
+#success-screen {
+  display: none; min-height: 80vh;
+  flex-direction: column; align-items: center; justify-content: center;
+  padding: 32px 20px; text-align: center;
+}
+.success-icon { font-size: 72px; margin-bottom: 16px; }
+.success-title { font-size: 24px; font-weight: 700; color: var(--green); margin-bottom: 8px; }
+.success-sub { font-size: 14px; color: var(--gray); line-height: 1.6; max-width: 320px; }
+.success-detail {
+  background: var(--green-bg); border-radius: var(--radius); padding: 14px 18px;
+  margin: 18px 0; width: 100%; max-width: 340px; text-align: left;
+}
+.success-detail-row { font-size: 13px; padding: 3px 0; display: flex; gap: 8px; }
+.success-detail-label { color: var(--gray); min-width: 80px; }
+.success-detail-val { font-weight: 600; color: #201F1E; }
+.nio-alert {
+  background: var(--red-bg); border: 1.5px solid var(--red); border-radius: var(--radius);
+  padding: 12px 16px; margin: 10px 0; font-size: 13px; color: var(--red);
+  font-weight: 600; display: none; max-width: 340px; width: 100%;
+}
+.btn-new {
+  margin-top: 20px; background: #fff; border: 2px solid var(--primary); color: var(--primary);
+  border-radius: var(--radius); padding: 14px 28px; font-size: 15px; font-weight: 700;
+  cursor: pointer; font-family: inherit; width: 100%; max-width: 340px;
+}
+
+/* ── QR Modal ── */
+.qr-fab {
+  position: fixed; bottom: 20px; right: 20px; z-index: 200;
+  width: 54px; height: 54px; border-radius: 50%; background: var(--primary-med);
+  color: #fff; font-size: 22px; border: none; cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0,0,0,.3); display: flex; align-items: center; justify-content: center;
+}
+.qr-modal-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 300;
+  align-items: center; justify-content: center;
+}
+.qr-modal-overlay.open { display: flex; }
+.qr-modal {
+  background: #fff; border-radius: 20px; padding: 28px 24px;
+  max-width: 360px; width: 90%; text-align: center;
+  box-shadow: 0 8px 40px rgba(0,0,0,.3);
+}
+.qr-modal h2 { font-size: 18px; color: var(--primary); margin-bottom: 6px; }
+.qr-modal p { font-size: 13px; color: var(--gray); margin-bottom: 16px; line-height: 1.5; }
+#qr-canvas { margin: 0 auto 16px; display: block; }
+.qr-steps { text-align: left; font-size: 13px; color: #333; line-height: 1.9; background: var(--gray-light); border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; }
+.qr-steps li { margin-left: 16px; }
+.btn-close-qr {
+  background: var(--primary); color: #fff; border: none; border-radius: 8px;
+  padding: 12px 28px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; width: 100%;
+}
+</style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<div class="app-header">
+  <div class="app-header-top">
+    <div class="app-logo">EINHAUS Oberflächenveredelung GmbH</div>
+    <span style="font-size:11px;color:rgba(255,255,255,.5);">FB-64</span>
+  </div>
+  <div class="app-title">Rüstfreigabe Lackierkabinen</div>
+  <div class="app-sub">Pre-Release Checkliste · Lackierung</div>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+</div>
+
+<!-- ── Formular ── -->
+<div id="form-screen">
+<div class="content">
+
+  <!-- Meta -->
+  <div class="meta-card">
+    <div>
+      <div class="field-label">Datum</div>
+      <input type="date" class="field-input" id="f-datum">
+    </div>
+    <div>
+      <div class="field-label">Prüfer *</div>
+      <select class="field-select" id="f-pruefer">
+        <option value="">— Auswahl —</option>
+        <option>A. Lisin</option>
+        <option>A. Svezencev</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- I. Anlagenprüfung -->
+  <div class="section">
+    <div class="section-head"><span class="sec-icon">🔧</span> I. Anlagenprüfung & Serienstand</div>
+    <div class="cp-row">
+      <div class="cp-label required">Betriebsmittel / Hilfsmittel gemäß BA vorhanden</div>
+      <div class="toggle-group" data-key="betriebsmittel">
+        <button class="toggle-btn" onclick="select(this,'io','betriebsmittel')">✓ i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'bio','betriebsmittel')">⚠ b.i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'nio','betriebsmittel')">✗ n.i.O.</button>
+      </div>
+    </div>
+    <div class="cp-row">
+      <div class="cp-label required">Painting Cabin 1 – Zustand & Funktion</div>
+      <div class="toggle-group" data-key="cabin1">
+        <button class="toggle-btn" onclick="select(this,'io','cabin1')">✓ i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'bio','cabin1')">⚠ b.i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'nio','cabin1')">✗ n.i.O.</button>
+      </div>
+    </div>
+    <div class="cp-row">
+      <div class="cp-label required">Painting Cabin 2 – Zustand & Funktion</div>
+      <div class="toggle-group" data-key="cabin2">
+        <button class="toggle-btn" onclick="select(this,'io','cabin2')">✓ i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'bio','cabin2')">⚠ b.i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'nio','cabin2')">✗ n.i.O.</button>
+      </div>
+    </div>
+    <div class="cp-row">
+      <div class="cp-label required">Painting Cabin 3 – Zustand & Funktion</div>
+      <div class="toggle-group" data-key="cabin3">
+        <button class="toggle-btn" onclick="select(this,'io','cabin3')">✓ i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'bio','cabin3')">⚠ b.i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'nio','cabin3')">✗ n.i.O.</button>
+      </div>
+    </div>
+    <div class="cp-row">
+      <div class="cp-label required">Painting Cabin 4 – Zustand & Funktion</div>
+      <div class="toggle-group" data-key="cabin4">
+        <button class="toggle-btn" onclick="select(this,'io','cabin4')">✓ i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'bio','cabin4')">⚠ b.i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'nio','cabin4')">✗ n.i.O.</button>
+      </div>
+    </div>
+    <div class="cp-row">
+      <div class="cp-label required">Dryer 1 – Funktion & Dichtheit</div>
+      <div class="toggle-group" data-key="dryer1">
+        <button class="toggle-btn" onclick="select(this,'io','dryer1')">✓ i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'bio','dryer1')">⚠ b.i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'nio','dryer1')">✗ n.i.O.</button>
+      </div>
+    </div>
+    <div class="cp-row">
+      <div class="cp-label required">Dryer 2 – Funktion & Dichtheit</div>
+      <div class="toggle-group" data-key="dryer2">
+        <button class="toggle-btn" onclick="select(this,'io','dryer2')">✓ i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'bio','dryer2')">⚠ b.i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'nio','dryer2')">✗ n.i.O.</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- II. Prozessbedingungen -->
+  <div class="section">
+    <div class="section-head"><span class="sec-icon">🌡</span> II. Prozessbedingungen</div>
+    <div class="cp-row">
+      <div class="cp-label required">Sauberkeit, Ergonomie, Lichtverhältnisse ok?</div>
+      <div class="toggle-group" data-key="sauberkeit">
+        <button class="toggle-btn" onclick="select(this,'io','sauberkeit')">✓ i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'bio','sauberkeit')">⚠ b.i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'nio','sauberkeit')">✗ n.i.O.</button>
+      </div>
+    </div>
+    <div class="cp-row">
+      <div class="cp-label required">Druckluft-Qualität geprüft (öl-/wasserfrei)</div>
+      <div class="toggle-group" data-key="druckluft">
+        <button class="toggle-btn" onclick="select(this,'io','druckluft')">✓ i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'bio','druckluft')">⚠ b.i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'nio','druckluft')">✗ n.i.O.</button>
+      </div>
+    </div>
+    <div class="cp-row">
+      <div class="cp-label required">Arbeitsplatzfreigabe (Ordnung & Sauberkeit) + Funktionsfreigabe</div>
+      <div class="toggle-group" data-key="arbeitsplatz">
+        <button class="toggle-btn" onclick="select(this,'io','arbeitsplatz')">✓ i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'bio','arbeitsplatz')">⚠ b.i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'nio','arbeitsplatz')">✗ n.i.O.</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- III. Kabinentemperatur -->
+  <div class="section">
+    <div class="section-head"><span class="sec-icon">🌡</span> III. Kabinentemperatur SOLL / IST</div>
+    <div class="cp-row">
+      <div class="cp-label required">Primer [°C]</div>
+      <div class="soll-ist-row">
+        <span class="soll-badge">SOLL: 20–23 °C</span>
+        <input type="number" class="ist-input" id="f-primer" placeholder="IST °C">
+      </div>
+      <div class="toggle-group" data-key="primer">
+        <button class="toggle-btn" onclick="select(this,'io','primer')">✓ i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'bio','primer')">⚠ b.i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'nio','primer')">✗ n.i.O.</button>
+      </div>
+    </div>
+    <div class="cp-row">
+      <div class="cp-label required">Basislack [°C]</div>
+      <div class="soll-ist-row">
+        <span class="soll-badge">SOLL: 20–23 °C</span>
+        <input type="number" class="ist-input" id="f-basis" placeholder="IST °C">
+      </div>
+      <div class="toggle-group" data-key="basislack">
+        <button class="toggle-btn" onclick="select(this,'io','basislack')">✓ i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'bio','basislack')">⚠ b.i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'nio','basislack')">✗ n.i.O.</button>
+      </div>
+    </div>
+    <div class="cp-row">
+      <div class="cp-label required">Klarlack [°C]</div>
+      <div class="soll-ist-row">
+        <span class="soll-badge">SOLL: 20–23 °C</span>
+        <input type="number" class="ist-input" id="f-klar" placeholder="IST °C">
+      </div>
+      <div class="toggle-group" data-key="klarlack">
+        <button class="toggle-btn" onclick="select(this,'io','klarlack')">✓ i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'bio','klarlack')">⚠ b.i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'nio','klarlack')">✗ n.i.O.</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- IV. Trocknertemperatur -->
+  <div class="section">
+    <div class="section-head"><span class="sec-icon">🔥</span> IV. Trocknertemperatur SOLL / IST</div>
+    <div class="cp-row">
+      <div class="cp-label required">Großraumtrockner [°C]</div>
+      <div class="soll-ist-row">
+        <span class="soll-badge">SOLL: 80–90 °C</span>
+        <input type="number" class="ist-input" id="f-grtrockner" placeholder="IST °C">
+      </div>
+      <div class="toggle-group" data-key="grtrockner">
+        <button class="toggle-btn" onclick="select(this,'io','grtrockner')">✓ i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'bio','grtrockner')">⚠ b.i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'nio','grtrockner')">✗ n.i.O.</button>
+      </div>
+    </div>
+    <div class="cp-row">
+      <div class="cp-label required">Trockner Kabine 4 [°C]</div>
+      <div class="soll-ist-row">
+        <span class="soll-badge">SOLL: 80–90 °C</span>
+        <input type="number" class="ist-input" id="f-kab4" placeholder="IST °C">
+      </div>
+      <div class="toggle-group" data-key="kab4trockner">
+        <button class="toggle-btn" onclick="select(this,'io','kab4trockner')">✓ i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'bio','kab4trockner')">⚠ b.i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'nio','kab4trockner')">✗ n.i.O.</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- V. Lack-Informationen -->
+  <div class="section">
+    <div class="section-head"><span class="sec-icon">🎨</span> V. Lack-Informationen</div>
+    <div class="cp-row">
+      <div class="cp-label required">Chargennummer Lack</div>
+      <input type="text" class="text-input" id="f-charge" placeholder="z.B. 2026-A451">
+    </div>
+    <div class="cp-row">
+      <div class="cp-label required">Viskosität (DIN-Cup 4, Sekunden)</div>
+      <div class="soll-ist-row">
+        <span class="soll-badge">SOLL: 18–22 Sek.</span>
+        <input type="number" class="ist-input" id="f-viskos" placeholder="IST Sek.">
+      </div>
+      <div class="toggle-group" data-key="viskositat">
+        <button class="toggle-btn" onclick="select(this,'io','viskositat')">✓ i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'bio','viskositat')">⚠ b.i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'nio','viskositat')">✗ n.i.O.</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- VI. Arbeitssicherheit -->
+  <div class="section">
+    <div class="section-head"><span class="sec-icon">🦺</span> VI. Arbeitssicherheit</div>
+    <div class="cp-row">
+      <div class="cp-label required">PSA vollständig & in Ordnung</div>
+      <div class="toggle-group" data-key="psa">
+        <button class="toggle-btn" onclick="select(this,'io','psa')">✓ i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'bio','psa')">⚠ b.i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'nio','psa')">✗ n.i.O.</button>
+      </div>
+    </div>
+    <div class="cp-row">
+      <div class="cp-label required">ATEX-Einrichtungen geprüft & ok</div>
+      <div class="toggle-group" data-key="atex">
+        <button class="toggle-btn" onclick="select(this,'io','atex')">✓ i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'bio','atex')">⚠ b.i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'nio','atex')">✗ n.i.O.</button>
+      </div>
+    </div>
+    <div class="cp-row">
+      <div class="cp-label required">Entsorgungsbehälter beschriftet & dicht</div>
+      <div class="toggle-group" data-key="entsorgung">
+        <button class="toggle-btn" onclick="select(this,'io','entsorgung')">✓ i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'bio','entsorgung')">⚠ b.i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'nio','entsorgung')">✗ n.i.O.</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- VII. Qualitätssicherung -->
+  <div class="section">
+    <div class="section-head"><span class="sec-icon">✅</span> VII. Qualitätssicherung</div>
+    <div class="cp-row">
+      <div class="cp-label required">Erstmuster / Probeteil bewertet & freigegeben</div>
+      <div class="toggle-group" data-key="erstmuster">
+        <button class="toggle-btn" onclick="select(this,'io','erstmuster')">✓ i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'bio','erstmuster')">⚠ b.i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'nio','erstmuster')">✗ n.i.O.</button>
+      </div>
+    </div>
+    <div class="cp-row">
+      <div class="cp-label required">Farbton-Freigabe dokumentiert</div>
+      <div class="toggle-group" data-key="farbton">
+        <button class="toggle-btn" onclick="select(this,'io','farbton')">✓ i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'bio','farbton')">⚠ b.i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'nio','farbton')">✗ n.i.O.</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bemerkung -->
+  <div class="bemerkung-area">
+    <div class="field-label">Bemerkung / Maßnahme (optional)</div>
+    <textarea class="textarea" id="f-bemerkung" placeholder="z.B. Kabine 2 Düse getauscht..."></textarea>
+  </div>
+
+  <!-- Absenden -->
+  <p class="required-note">* Alle Pflichtfelder müssen ausgefüllt sein</p>
+  <button class="submit-btn" onclick="submitForm()">
+    <span>✓</span> Rüstfreigabe absenden
+  </button>
+
+</div>
+</div>
+
+<!-- ── Success Screen ── -->
+<div id="success-screen" style="display:none;">
+  <div class="success-icon">✅</div>
+  <div class="success-title">Freigabe erteilt!</div>
+  <p class="success-sub">Die Rüstfreigabe wurde erfolgreich übermittelt und automatisch in SharePoint gespeichert.</p>
+
+  <div class="success-detail" id="success-detail"></div>
+  <div class="nio-alert" id="nio-alert">🚨 n.i.O. erkannt — E-Mail an Schichtleiter wurde automatisch versendet.</div>
+
+  <button class="btn-new" onclick="resetForm()">+ Neue Rüstfreigabe</button>
+</div>
+
+<!-- ── QR FAB ── -->
+<button class="qr-fab" onclick="openQR()" title="QR-Code zum Teilen">⬡</button>
+
+<!-- ── QR Modal ── -->
+<div class="qr-modal-overlay" id="qrOverlay" onclick="closeQR(event)">
+  <div class="qr-modal">
+    <h2>📱 Formular teilen</h2>
+    <p>So öffnet der Schichtführer das Formular täglich auf dem Handy:</p>
+    <canvas id="qr-canvas" width="180" height="180"></canvas>
+    <ol class="qr-steps">
+      <li><strong>QR-Code scannen</strong> mit der Handy-Kamera</li>
+      <li>Link im Browser öffnen</li>
+      <li>Auf dem Homescreen speichern:<br>
+        iOS: <em>Teilen → Zum Home-Bildschirm</em><br>
+        Android: <em>Menü → Zum Startbildschirm</em></li>
+      <li>App-Symbol direkt antippen – fertig ✓</li>
+    </ol>
+    <p style="font-size:12px;color:#888;margin-bottom:14px;">💡 Oder Link per <strong>Teams</strong> an den Schichtführer schicken</p>
+    <button class="btn-close-qr" onclick="closeQR()">Schließen</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════════════════════
+//  ⚙️  POWER AUTOMATE URL — nach Einrichtung des Flows hier eintragen
+// ═══════════════════════════════════════════════════════════════════════
+const POWER_AUTOMATE_URL = 'https://default2d72196a437b42cda6064f0ad60544.1e.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/2fdb5fa34ce34d2aa779d538d975f0e4/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=UA_J_FDeJBeiNl_u7G8rOQRa_z0HvOjfCNGiIn1brh4';
+// ═══════════════════════════════════════════════════════════════════════
+
+// ── Init ─────────────────────────────────────────────────────────────
+const values = {};
+const KEYS = ['betriebsmittel','cabin1','cabin2','cabin3','cabin4','dryer1','dryer2',
+              'sauberkeit','druckluft','arbeitsplatz','primer','basislack','klarlack',
+              'grtrockner','kab4trockner','viskositat','psa','atex','entsorgung',
+              'erstmuster','farbton'];
+const TOTAL = KEYS.length;
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('f-datum').value = new Date().toISOString().split('T')[0];
+  updateProgress();
+});
+
+// ── Toggle select ────────────────────────────────────────────────────
+function select(btn, val, key) {
+  const group = btn.closest('.toggle-group');
+  group.querySelectorAll('.toggle-btn').forEach(b => b.className = 'toggle-btn');
+  btn.classList.add('sel-' + val);
+  values[key] = val;
+  updateProgress();
+}
+
+// ── Progress ─────────────────────────────────────────────────────────
+function updateProgress() {
+  const done = Object.keys(values).length;
+  const pruefer = document.getElementById('f-pruefer').value ? 1 : 0;
+  const pct = Math.round(((done + pruefer) / (TOTAL + 1)) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+}
+document.getElementById('f-pruefer').addEventListener('change', updateProgress);
+
+// ── Submit ───────────────────────────────────────────────────────────
+async function submitForm() {
+  const pruefer = document.getElementById('f-pruefer').value;
+  if (!pruefer) { alert('Bitte Prüfer auswählen.'); return; }
+
+  const missing = KEYS.filter(k => !values[k]);
+  if (missing.length > 0) {
+    alert(`Bitte noch ${missing.length} Punkt(e) bewerten:\n${missing.slice(0,3).join(', ')}${missing.length>3?'...':''}`);
+    return;
+  }
+
+  const datum   = document.getElementById('f-datum').value;
+  const nio     = KEYS.filter(k => values[k] === 'nio').length;
+  const bio     = KEYS.filter(k => values[k] === 'bio').length;
+  const io      = KEYS.filter(k => values[k] === 'io').length;
+  const gesamt  = nio > 0 ? 'n.i.O.' : bio > 0 ? 'b.i.O.' : 'i.O.';
+
+  // ── JSON-Payload für Power Automate / SharePoint ──────────────────
+  const payload = {
+    Datum:               datum,
+    Pruefer:             pruefer,
+    Gesamtergebnis:      gesamt,
+    IO_Anzahl:           io,
+    BIO_Anzahl:          bio,
+    NIO_Anzahl:          nio,
+    // I. Anlagenprüfung
+    Betriebsmittel:      values.betriebsmittel  || '',
+    Cabin1:              values.cabin1           || '',
+    Cabin2:              values.cabin2           || '',
+    Cabin3:              values.cabin3           || '',
+    Cabin4:              values.cabin4           || '',
+    Dryer1:              values.dryer1           || '',
+    Dryer2:              values.dryer2           || '',
+    // II. Prozessbedingungen
+    Sauberkeit:          values.sauberkeit       || '',
+    Druckluft:           values.druckluft        || '',
+    Arbeitsplatz:        values.arbeitsplatz     || '',
+    // III. Kabinentemperatur
+    Primer_Status:       values.primer           || '',
+    Primer_IST:          parseFloat(document.getElementById('f-primer').value)     || null,
+    Basislack_Status:    values.basislack        || '',
+    Basislack_IST:       parseFloat(document.getElementById('f-basis').value)      || null,
+    Klarlack_Status:     values.klarlack         || '',
+    Klarlack_IST:        parseFloat(document.getElementById('f-klar').value)       || null,
+    // IV. Trocknertemperatur
+    Grtrockner_Status:   values.grtrockner       || '',
+    Grtrockner_IST:      parseFloat(document.getElementById('f-grtrockner').value) || null,
+    Kab4Trockner_Status: values.kab4trockner     || '',
+    Kab4Trockner_IST:    parseFloat(document.getElementById('f-kab4').value)       || null,
+    // V. Lack-Informationen
+    Lack_Charge:         document.getElementById('f-charge').value  || '',
+    Viskositat_Status:   values.viskositat       || '',
+    Viskositat_IST:      parseFloat(document.getElementById('f-viskos').value)     || null,
+    // VI. Arbeitssicherheit
+    PSA:                 values.psa              || '',
+    ATEX:                values.atex             || '',
+    Entsorgung:          values.entsorgung       || '',
+    // VII. Qualitätssicherung
+    Erstmuster:          values.erstmuster       || '',
+    Farbton:             values.farbton          || '',
+    // Allgemein
+    Bemerkung:           document.getElementById('f-bemerkung').value || ''
+  };
+
+  // ── Loading-Zustand ───────────────────────────────────────────────
+  const btn = document.querySelector('.submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span>⏳</span> Wird übermittelt…';
+
+  // ── Noch nicht konfiguriert? ──────────────────────────────────────
+  if (POWER_AUTOMATE_URL === 'HIER_POWER_AUTOMATE_URL_EINFÜGEN') {
+    // Demo-Modus: direkt Erfolgsbildschirm zeigen
+    await new Promise(r => setTimeout(r, 800));
+    zeigErfolg(datum, pruefer, io, bio, nio, gesamt);
+    btn.disabled = false;
+    btn.innerHTML = '<span>✓</span> Rüstfreigabe absenden';
+    return;
+  }
+
+  // ── Echter POST an Power Automate ─────────────────────────────────
+  try {
+    const res = await fetch(POWER_AUTOMATE_URL, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    zeigErfolg(datum, pruefer, io, bio, nio, gesamt);
+  } catch (err) {
+    alert('⚠️ Übertragung fehlgeschlagen.\n\nBitte Internetverbindung prüfen oder Schichtleiter informieren.\n\nFehler: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<span>✓</span> Rüstfreigabe absenden';
+  }
+}
+
+// ── Erfolgsbildschirm ────────────────────────────────────────────────
+function zeigErfolg(datum, pruefer, io, bio, nio, gesamt) {
+  const ds = new Date(datum).toLocaleDateString('de-DE');
+  document.getElementById('success-detail').innerHTML = `
+    <div class="success-detail-row"><span class="success-detail-label">Datum:</span>   <span class="success-detail-val">${ds}</span></div>
+    <div class="success-detail-row"><span class="success-detail-label">Prüfer:</span>  <span class="success-detail-val">${pruefer}</span></div>
+    <div class="success-detail-row"><span class="success-detail-label">i.O.:</span>    <span class="success-detail-val">${io} / ${KEYS.length} Punkte</span></div>
+    <div class="success-detail-row"><span class="success-detail-label">Ergebnis:</span><span class="success-detail-val">${gesamt}</span></div>
+    <div class="success-detail-row"><span class="success-detail-label">Charge:</span>  <span class="success-detail-val">${document.getElementById('f-charge').value || '—'}</span></div>
+  `;
+  if (nio > 0) document.getElementById('nio-alert').style.display = 'block';
+  document.getElementById('form-screen').style.display  = 'none';
+  document.getElementById('success-screen').style.display = 'flex';
+  window.scrollTo(0, 0);
+}
+
+// ── Reset ────────────────────────────────────────────────────────────
+function resetForm() {
+  Object.keys(values).forEach(k => delete values[k]);
+  document.querySelectorAll('.toggle-btn').forEach(b => b.className = 'toggle-btn');
+  document.getElementById('f-datum').value    = new Date().toISOString().split('T')[0];
+  document.getElementById('f-pruefer').value  = '';
+  ['f-primer','f-basis','f-klar','f-grtrockner','f-kab4','f-viskos','f-charge','f-bemerkung']
+    .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  document.getElementById('nio-alert').style.display      = 'none';
+  document.getElementById('form-screen').style.display    = 'block';
+  document.getElementById('success-screen').style.display = 'none';
+  const btn = document.querySelector('.submit-btn');
+  btn.disabled = false;
+  btn.innerHTML = '<span>✓</span> Rüstfreigabe absenden';
+  updateProgress();
+  window.scrollTo(0, 0);
+}
+
+// ── QR Code ──────────────────────────────────────────────────────────
+function openQR() {
+  document.getElementById('qrOverlay').classList.add('open');
+  const url = window.location.href.split('?')[0];
+  QRCode.toCanvas(document.getElementById('qr-canvas'), url, {
+    width: 180, margin: 1,
+    color: { dark: '#1F4E79', light: '#FFFFFF' }
+  });
+}
+function closeQR(e) {
+  if (!e || e.target === document.getElementById('qrOverlay') || e.type === 'click')
+    document.getElementById('qrOverlay').classList.remove('open');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+﻿2026-06-05 11:30:11  [INFO]  ============================================================
+2026-06-05 11:30:11  [INFO]  EINHAUS Lackierung - Wartungserinnerung gestartet
+2026-06-05 11:30:11  [INFO]  8 Anlage(n) geladen - Vorlauf: 90 Tage - Heute: 05.06.2026
+2026-06-05 11:30:11  [INFO]  Kein Meilenstein: Lackierroboter 1 - noch 118 Tage
+2026-06-05 11:30:11  [INFO]  Senden: Lackierroboter 2 - UEBERFAELLIG (4 Tage)
+2026-06-05 11:30:11  [INFO]  Senden: Beflammroboter - UEBERFAELLIG (51 Tage)
+2026-06-05 11:30:11  [INFO]  Senden: Absauganlage - UEBERFAELLIG (4 Tage)
+2026-06-05 11:30:11  [INFO]  Kein Meilenstein: Farbversorgungsanlage - noch 88 Tage
+2026-06-05 11:30:11  [INFO]  Kein Meilenstein: Drucklufttrockner - noch 71 Tage
+2026-06-05 11:30:11  [INFO]  Senden: Kabinen-Belüftung - UEBERFAELLIG (4 Tage)
+2026-06-05 11:30:11  [INFO]  Senden: Kabine 1/2/3/4 - UEBERFAELLIG (8 Tage)
+2026-06-05 11:30:11  [INFO]  5 Wartung(en) faellig - starte E-Mail-Versand
+2026-06-05 11:30:11  [FEHLER]  Outlook nicht verfuegbar: Die COM-Klassenfactory für die Komponente mit CLSID {0006F03A-0000-0000-C000-000000000046} konnte aufgrund des folgenden Fehlers nicht abgerufen werden: 80080005 Starten des Servers fehlgeschlagen (Ausnahme von HRESULT: 0x80080005 (CO_E_SERVER_EXEC_FAILURE)).
