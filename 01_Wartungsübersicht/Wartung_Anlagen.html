@@ -224,6 +224,13 @@
     header { padding: 14px 16px; gap: 14px; }
     main { padding: 20px 12px; }
   }
+  .btn-back {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,.15); color: #fff; text-decoration: none;
+    border-radius: 6px; padding: 6px 14px; font-size: 13px; font-weight: bold;
+    border: 1px solid rgba(255,255,255,.3); transition: background .2s;
+  }
+  .btn-back:hover { background: rgba(255,255,255,.25); }
 </style>
 </head>
 <body>
@@ -231,6 +238,7 @@
 <!-- ══════════ HEADER ══════════ -->
 <div class="topbar">
   <div class="topbar-left">
+    <a class="btn-back" href="../index.html">← Zurück</a>
     <div>
       <div class="topbar-logo">EINHAUS <span>Oberflächenveredelung GmbH</span></div>
       <div class="topbar-sub">Industrielackierung · 55411 Bingen-Dietersheim</div>

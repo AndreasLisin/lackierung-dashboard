@@ -351,7 +351,7 @@
     const kpiOEE = document.getElementById('kpiOEE');
     const oeeKlasseKPI = oee === null ? '' : oee >= 75 ? 'gruen' : oee >= 60 ? 'gelb' : 'rot';
     kpiOEE.className = 'kpi ' + oeeKlasseKPI;
-    const oeeLabel = oee === null ? '–' : oee >= 85 ? 'Weltklasse' : oee >= 75 ? 'Sehr gut' : oee >= 60 ? 'Solide' : 'Potenzial';
+    const oeeLabel = oee === null ? '–' : oee >= 85 ? 'Exzellenz' : oee >= 75 ? 'Zielwert erreicht' : oee >= 60 ? 'Mindestanforderung' : 'Verbesserungsbedarf';
     document.getElementById('kpiOEEWert').textContent = oee !== null ? oee.toFixed(1) + ' %' : '–';
     document.getElementById('kpiOEESub').textContent  = daten.length + ' Schichten · ' + oeeLabel;
 
@@ -389,28 +389,28 @@
           fill: true,
           order: 1,
         }, {
-          label: 'Weltklasse 85 %',
+          label: 'Exzellenz  85 %',
           data: Array(n).fill(85),
           borderColor: '#1a7a3c',
-          borderDash: [6, 3],
+          borderDash: [8, 4],
           pointRadius: 0,
-          borderWidth: 1.5,
+          borderWidth: 2,
           order: 2,
         }, {
-          label: 'Sehr gut 75 %',
+          label: 'Zielwert  75 %',
           data: Array(n).fill(75),
           borderColor: '#2E75B6',
-          borderDash: [4, 3],
+          borderDash: [8, 4],
           pointRadius: 0,
-          borderWidth: 1.5,
+          borderWidth: 2,
           order: 3,
         }, {
-          label: 'Solide 60 %',
+          label: 'Mindestanforderung  60 %',
           data: Array(n).fill(60),
           borderColor: '#c47a00',
-          borderDash: [4, 3],
+          borderDash: [8, 4],
           pointRadius: 0,
-          borderWidth: 1.5,
+          borderWidth: 2,
           order: 4,
         }]
       },
