@@ -21,32 +21,25 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 
-    /* Header */
-    header {
-      background: var(--blau);
-      color: #fff;
-      padding: 14px 24px;
-      display: flex;
-      align-items: center;
-      gap: 16px;
+    /* ── Topbar ── */
+    .topbar {
+      background: #1F4E79; color: #fff;
+      padding: 0 28px; display: flex; align-items: center;
+      justify-content: space-between; height: 62px;
+      position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,.3);
     }
+    .topbar-left { display: flex; align-items: center; gap: 16px; }
+    .topbar-logo { font-size: 22px; font-weight: 700; letter-spacing: .5px; color: #fff; }
+    .topbar-logo span { color: #BDD7EE; }
+    .topbar-sub  { font-size: 12px; color: rgba(255,255,255,.7); margin-top: 2px; }
+    .topbar-right { display: flex; align-items: center; gap: 12px; }
     .btn-back {
-      background: rgba(255,255,255,0.15);
-      border: none;
-      border-radius: 8px;
-      color: #fff;
-      padding: 8px 14px;
-      font-size: 0.88rem;
-      font-weight: 600;
-      cursor: pointer;
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3);
+      color: #fff; padding: 5px 14px; border-radius: 6px; font-size: 13px;
+      text-decoration: none; display: flex; align-items: center; gap: 6px;
     }
-    .btn-back:hover { background: rgba(255,255,255,0.25); }
-    header h1 { font-size: 1.1rem; font-weight: 700; }
-    header .sub { font-size: 0.8rem; opacity: .7; }
+    .btn-back:hover { background: rgba(255,255,255,.25); }
     .header-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
 
     /* Filter-Leiste */
@@ -167,16 +160,21 @@
 </head>
 <body>
 
-<header>
-  <a class="btn-back" href="../index.html">← Zurück</a>
-  <div>
-    <h1>OEE Auswertung – Kabine 1</h1>
-    <div class="sub">Lackierroboter · Frühschicht</div>
+<div class="topbar">
+  <div class="topbar-left">
+    <div>
+      <div class="topbar-logo">EINHAUS <span>Oberflächenveredelung GmbH</span></div>
+      <div class="topbar-sub">Industrielackierung · 55411 Bingen-Dietersheim</div>
+    </div>
   </div>
-  <div class="header-right">
-    <span id="letzteAktualisierung" style="font-size:.8rem;opacity:.7;"></span>
+  <div style="text-align:center;">
+    <div style="font-size:17px;font-weight:700;letter-spacing:.5px;">📊 OEE Auswertung – Kabine 1</div>
+    <div style="font-size:11px;opacity:.7;">Lackierung | <span id="letzteAktualisierung"></span></div>
   </div>
-</header>
+  <div class="topbar-right">
+    <a class="btn-back" href="../index.html">← Zurück</a>
+  </div>
+</div>
 
 <div class="filter-bar">
   <label>Zeitraum</label>
@@ -351,9 +349,11 @@
     const st  = avg(daten, 'stoerung_min');
 
     const kpiOEE = document.getElementById('kpiOEE');
-    kpiOEE.className = 'kpi ' + (oee === null ? '' : oee >= 80 ? 'gruen' : oee >= 60 ? 'gelb' : 'rot');
+    const oeeKlasseKPI = oee === null ? '' : oee >= 75 ? 'gruen' : oee >= 60 ? 'gelb' : 'rot';
+    kpiOEE.className = 'kpi ' + oeeKlasseKPI;
+    const oeeLabel = oee === null ? '–' : oee >= 85 ? 'Weltklasse' : oee >= 75 ? 'Sehr gut' : oee >= 60 ? 'Solide' : 'Potenzial';
     document.getElementById('kpiOEEWert').textContent = oee !== null ? oee.toFixed(1) + ' %' : '–';
-    document.getElementById('kpiOEESub').textContent  = daten.length + ' Schichten';
+    document.getElementById('kpiOEESub').textContent  = daten.length + ' Schichten · ' + oeeLabel;
 
     document.getElementById('kpiVWert').textContent = v !== null ? v.toFixed(1) + ' %' : '–';
     document.getElementById('kpiQWert').textContent = q !== null ? q.toFixed(1) + ' %' : '–';
@@ -373,6 +373,7 @@
     destroyChart('oee');
     const labels = daten.map(r => new Date(r.datum).toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit' }));
     const oeeVals = daten.map(r => r.oee);
+    const n = daten.length || 2;
     charts['oee'] = new Chart(document.getElementById('chartOEE'), {
       type: 'line',
       data: {
@@ -381,25 +382,50 @@
           label: 'OEE %',
           data: oeeVals,
           borderColor: '#2E75B6',
-          backgroundColor: 'rgba(46,117,182,0.1)',
-          pointBackgroundColor: oeeVals.map(v => v === null ? '#ccc' : v >= 80 ? '#1a7a3c' : v >= 60 ? '#c47a00' : '#c0392b'),
+          backgroundColor: 'rgba(46,117,182,0.08)',
+          pointBackgroundColor: oeeVals.map(v => v === null ? '#ccc' : v >= 85 ? '#1a7a3c' : v >= 75 ? '#2E75B6' : v >= 60 ? '#c47a00' : '#c0392b'),
           pointRadius: 5,
           tension: 0.3,
           fill: true,
+          order: 1,
         }, {
-          label: 'Ziel 80%',
-          data: daten.map(() => 80),
+          label: 'Weltklasse 85 %',
+          data: Array(n).fill(85),
           borderColor: '#1a7a3c',
-          borderDash: [6, 4],
+          borderDash: [6, 3],
           pointRadius: 0,
           borderWidth: 1.5,
+          order: 2,
+        }, {
+          label: 'Sehr gut 75 %',
+          data: Array(n).fill(75),
+          borderColor: '#2E75B6',
+          borderDash: [4, 3],
+          pointRadius: 0,
+          borderWidth: 1.5,
+          order: 3,
+        }, {
+          label: 'Solide 60 %',
+          data: Array(n).fill(60),
+          borderColor: '#c47a00',
+          borderDash: [4, 3],
+          pointRadius: 0,
+          borderWidth: 1.5,
+          order: 4,
         }]
       },
       options: {
         responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
+        plugins: {
+          legend: { display: true, position: 'bottom', labels: { boxWidth: 12, font: { size: 11 }, filter: i => i.datasetIndex > 0 } },
+          tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + ctx.parsed.y + ' %' } }
+        },
         scales: {
-          y: { min: 0, max: 100, ticks: { callback: v => v + '%' } },
+          y: {
+            min: 0, max: 100,
+            ticks: { callback: v => v + '%' },
+            grid: { color: ctx => [60,75,85].includes(ctx.tick.value) ? 'rgba(0,0,0,0.08)' : 'rgba(0,0,0,0.04)' }
+          },
           x: { ticks: { maxTicksLimit: 10 } }
         }
       }
@@ -488,7 +514,7 @@
 
   function oeeKlasse(v) {
     if (v === null || v === undefined) return '';
-    return v >= 80 ? 'gruen' : v >= 60 ? 'gelb' : 'rot';
+    return v >= 75 ? 'gruen' : v >= 60 ? 'gelb' : 'rot';
   }
 
   function renderTabelle(daten) {
