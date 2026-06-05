@@ -351,7 +351,7 @@
     const kpiOEE = document.getElementById('kpiOEE');
     const oeeKlasseKPI = oee === null ? '' : oee >= 75 ? 'gruen' : oee >= 60 ? 'gelb' : 'rot';
     kpiOEE.className = 'kpi ' + oeeKlasseKPI;
-    const oeeLabel = oee === null ? '–' : oee >= 85 ? 'Weltklasse' : oee >= 75 ? 'Sehr gut' : oee >= 60 ? 'Solide' : 'Potenzial';
+    const oeeLabel = oee === null ? '–' : oee >= 85 ? 'Exzellenz' : oee >= 75 ? 'Sollwert erreicht' : oee >= 60 ? 'Untergrenze' : 'Unter Untergrenze';
     document.getElementById('kpiOEEWert').textContent = oee !== null ? oee.toFixed(1) + ' %' : '–';
     document.getElementById('kpiOEESub').textContent  = daten.length + ' Schichten · ' + oeeLabel;
 
@@ -389,36 +389,36 @@
           fill: true,
           order: 1,
         }, {
-          label: 'Weltklasse 85 %',
+          label: '',
           data: Array(n).fill(85),
           borderColor: '#1a7a3c',
-          borderDash: [6, 3],
+          borderDash: [8, 4],
           pointRadius: 0,
-          borderWidth: 1.5,
+          borderWidth: 2,
           order: 2,
         }, {
-          label: 'Sehr gut 75 %',
+          label: '',
           data: Array(n).fill(75),
-          borderColor: '#2E75B6',
-          borderDash: [4, 3],
+          borderColor: '#f39c12',
+          borderDash: [8, 4],
           pointRadius: 0,
-          borderWidth: 1.5,
+          borderWidth: 2,
           order: 3,
         }, {
-          label: 'Solide 60 %',
+          label: '',
           data: Array(n).fill(60),
-          borderColor: '#c47a00',
-          borderDash: [4, 3],
+          borderColor: '#c0392b',
+          borderDash: [8, 4],
           pointRadius: 0,
-          borderWidth: 1.5,
+          borderWidth: 2,
           order: 4,
         }]
       },
       options: {
         responsive: true, maintainAspectRatio: false,
         plugins: {
-          legend: { display: true, position: 'bottom', labels: { boxWidth: 12, font: { size: 11 }, filter: i => i.datasetIndex > 0 } },
-          tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + ctx.parsed.y + ' %' } }
+          legend: { display: false },
+          tooltip: { callbacks: { label: ctx => ctx.parsed.y !== undefined && ctx.datasetIndex === 0 ? 'OEE: ' + ctx.parsed.y + ' %' : '' } }
         },
         scales: {
           y: {
