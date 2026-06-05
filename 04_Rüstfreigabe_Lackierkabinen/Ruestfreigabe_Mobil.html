@@ -203,6 +203,13 @@ body {
   background: var(--primary); color: #fff; border: none; border-radius: 8px;
   padding: 12px 28px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; width: 100%;
 }
+  .btn-back {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,.15); color: #fff; text-decoration: none;
+    border-radius: 6px; padding: 6px 14px; font-size: 13px; font-weight: bold;
+    border: 1px solid rgba(255,255,255,.3); transition: background .2s;
+  }
+  .btn-back:hover { background: rgba(255,255,255,.25); }
 </style>
 </head>
 <body>
@@ -210,6 +217,7 @@ body {
 <!-- ── Header ── -->
 <div class="app-header">
   <div class="app-header-top">
+    <a class="btn-back" href="../index.html">← Zurück</a>
     <div class="app-logo">EINHAUS Oberflächenveredelung GmbH</div>
     <span style="font-size:11px;color:rgba(255,255,255,.5);">FB-64</span>
   </div>
