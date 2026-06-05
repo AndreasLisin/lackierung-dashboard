@@ -414,11 +414,19 @@
 
     /* bottom spacer */
     .spacer { height: 20px; }
+  .btn-back {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,.15); color: #fff; text-decoration: none;
+    border-radius: 6px; padding: 6px 14px; font-size: 13px; font-weight: bold;
+    border: 1px solid rgba(255,255,255,.3); transition: background .2s;
+  }
+  .btn-back:hover { background: rgba(255,255,255,.25); }
   </style>
 </head>
 <body>
 
 <header>
+  <a class="btn-back" href="../index.html">← Zurück</a>
   <h1>OEE Eingabe Lackierroboter</h1>
   <span class="datum" id="headerDatum"></span>
 </header>
