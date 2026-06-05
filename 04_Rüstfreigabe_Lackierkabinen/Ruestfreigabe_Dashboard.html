@@ -11,13 +11,9 @@
     --blue-med:   #2E75B6;
     --blue-light: #BDD7EE;
     --green:      #70AD47;
-    --green-light:#E2EFDA;
     --yellow:     #FFB300;
-    --yellow-light:#FFF3CD;
     --red:        #C00000;
-    --red-light:  #FCE4D6;
     --gray:       #6C757D;
-    --gray-light: #F8F9FA;
     --white:      #FFFFFF;
     --radius:     10px;
     --shadow:     0 2px 12px rgba(0,0,0,.10);
@@ -27,13 +23,9 @@
 
   /* ── Header ── */
   .topbar {
-    background: var(--blue-dark);
-    color: #fff;
-    padding: 0 28px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 62px;
+    background: var(--blue-dark); color: #fff;
+    padding: 0 28px; display: flex; align-items: center;
+    justify-content: space-between; height: 62px;
     position: sticky; top: 0; z-index: 100;
     box-shadow: 0 2px 8px rgba(0,0,0,.3);
   }
@@ -48,6 +40,15 @@
     color: #fff; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px;
     transition: background .2s; }
   .btn-print:hover { background: rgba(255,255,255,.35); }
+  .btn-back {
+    background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3);
+    color: #fff; padding: 5px 14px; border-radius: 6px; cursor: pointer; font-size: 13px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .btn-connect { background: var(--blue-med); border: 1px solid var(--blue-dark);
+    color: #fff; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px;
+    transition: background .2s; }
+  .btn-connect:hover { background: #1a5fa0; }
 
   /* ── Layout ── */
   .main { padding: 20px 24px; max-width: 1440px; margin: 0 auto; }
@@ -56,13 +57,12 @@
   .month-bar {
     display: flex; align-items: center; gap: 10px;
     background: #fff; border-radius: var(--radius); padding: 12px 20px;
-    margin-bottom: 18px; box-shadow: var(--shadow);
+    margin-bottom: 18px; box-shadow: var(--shadow); flex-wrap: wrap;
   }
   .month-bar label { font-weight: 600; color: var(--blue-dark); font-size: 13px; }
   .month-bar select {
     border: 1.5px solid var(--blue-light); border-radius: 6px;
-    padding: 5px 12px; font-size: 13px; color: var(--blue-dark); background: #fff;
-    cursor: pointer;
+    padding: 5px 12px; font-size: 13px; color: var(--blue-dark); background: #fff; cursor: pointer;
   }
   .month-bar .status-dot { width:10px; height:10px; border-radius:50%; display:inline-block; }
   .month-bar .info { margin-left: auto; font-size: 12px; color: var(--gray); }
@@ -73,19 +73,19 @@
     background: #fff; border-radius: var(--radius); padding: 18px 20px;
     box-shadow: var(--shadow); border-left: 5px solid transparent; position: relative; overflow: hidden;
   }
-  .kpi-card.kpi-total   { border-color: var(--blue-med); }
-  .kpi-card.kpi-io      { border-color: var(--green); }
-  .kpi-card.kpi-bio     { border-color: var(--yellow); }
-  .kpi-card.kpi-nio     { border-color: var(--red); }
-  .kpi-card.kpi-offen   { border-color: #9E9E9E; }
+  .kpi-card.kpi-total { border-color: var(--blue-med); }
+  .kpi-card.kpi-io    { border-color: var(--green); }
+  .kpi-card.kpi-bio   { border-color: var(--yellow); }
+  .kpi-card.kpi-nio   { border-color: var(--red); }
+  .kpi-card.kpi-offen { border-color: #9E9E9E; }
   .kpi-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .7px; color: var(--gray); }
   .kpi-value { font-size: 34px; font-weight: 700; margin: 4px 0 2px; line-height: 1; }
-  .kpi-card.kpi-total   .kpi-value { color: var(--blue-med); }
-  .kpi-card.kpi-io      .kpi-value { color: var(--green); }
-  .kpi-card.kpi-bio     .kpi-value { color: var(--yellow); }
-  .kpi-card.kpi-nio     .kpi-value { color: var(--red); }
-  .kpi-card.kpi-offen   .kpi-value { color: var(--gray); }
-  .kpi-sub { font-size: 11px; color: var(--gray); }
+  .kpi-card.kpi-total .kpi-value { color: var(--blue-med); }
+  .kpi-card.kpi-io    .kpi-value { color: var(--green); }
+  .kpi-card.kpi-bio   .kpi-value { color: var(--yellow); }
+  .kpi-card.kpi-nio   .kpi-value { color: var(--red); }
+  .kpi-card.kpi-offen .kpi-value { color: var(--gray); }
+  .kpi-sub  { font-size: 11px; color: var(--gray); }
   .kpi-icon { position:absolute; right:16px; top:14px; font-size:28px; opacity:.15; }
 
   /* ── Charts Row ── */
@@ -99,24 +99,23 @@
   /* ── Calendar ── */
   .calendar-section { margin-bottom: 18px; }
   .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
-  .cal-header { font-size: 11px; font-weight: 700; text-align: center; color: var(--blue-dark);
-    padding: 6px 0; }
+  .cal-header { font-size: 11px; font-weight: 700; text-align: center; color: var(--blue-dark); padding: 6px 0; }
   .cal-day {
     border-radius: 8px; padding: 8px 4px 6px; text-align: center; cursor: default;
     transition: transform .15s;
     min-height: 58px; display: flex; flex-direction: column; align-items: center; justify-content: center;
   }
   .cal-day:not(.cal-empty):not(.cal-weekend):hover { transform: scale(1.06); z-index:2; }
-  .cal-day .day-num { font-size: 15px; font-weight: 700; }
+  .cal-day .day-num    { font-size: 15px; font-weight: 700; }
   .cal-day .day-status { font-size: 10px; font-weight: 600; margin-top: 3px; }
-  .cal-day .day-name  { font-size: 9px; color: rgba(0,0,0,.45); margin-top:1px; }
-  .cal-empty    { background: transparent; }
-  .cal-weekend  { background: #F0F0F0; opacity:.5; }
-  .cal-io       { background: #C6EFCE; color: #1B5E1F; }
-  .cal-bio      { background: #FFEB9C; color: #7B5800; }
-  .cal-nio      { background: #FFC7CE; color: #9B0006; }
-  .cal-future   { background: #E9ECEF; color: #9E9E9E; border: 1.5px dashed #CED4DA; }
-  .cal-today    { box-shadow: 0 0 0 3px var(--blue-med); }
+  .cal-day .day-name   { font-size: 9px; color: rgba(0,0,0,.45); margin-top:1px; }
+  .cal-empty   { background: transparent; }
+  .cal-weekend { background: #F0F0F0; opacity:.5; }
+  .cal-io      { background: #C6EFCE; color: #1B5E1F; }
+  .cal-bio     { background: #FFEB9C; color: #7B5800; }
+  .cal-nio     { background: #FFC7CE; color: #9B0006; }
+  .cal-future  { background: #E9ECEF; color: #9E9E9E; border: 1.5px dashed #CED4DA; }
+  .cal-today   { box-shadow: 0 0 0 3px var(--blue-med); }
 
   /* ── Bottom Row ── */
   .bottom-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
@@ -135,12 +134,11 @@
 
   /* ── Section Bar Chart ── */
   .section-list { display: flex; flex-direction: column; gap: 10px; }
-  .sec-item { }
   .sec-header { display:flex; justify-content:space-between; font-size:12px; margin-bottom:3px; }
   .sec-name { font-weight:600; color: #333; }
   .sec-pct  { font-size: 11px; color: var(--gray); }
   .bar-bg   { background: #E9ECF0; border-radius: 6px; height: 10px; overflow:hidden; }
-  .bar-fill { height:100%; border-radius: 6px; transition: width .6s ease; display:flex; }
+  .bar-fill { height:100%; border-radius: 6px; display:flex; }
   .bar-io   { background: var(--green); }
   .bar-bio  { background: var(--yellow); }
   .bar-nio  { background: var(--red); }
@@ -154,11 +152,81 @@
   .tl { display:flex; align-items:center; gap:5px; font-size:11px; color:var(--gray); }
   .tl-dot { width:12px; height:12px; border-radius:2px; }
 
+  /* ── Day Detail Modal ── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 1000;
+    background: rgba(0,0,0,.52);
+    align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-card {
+    background: #fff; border-radius: 14px;
+    box-shadow: 0 10px 48px rgba(0,0,0,.28);
+    max-width: 700px; width: 100%; max-height: 90vh; overflow-y: auto;
+    animation: modalIn .18s ease;
+  }
+  @keyframes modalIn {
+    from { transform: translateY(14px) scale(.97); opacity: 0; }
+    to   { transform: none; opacity: 1; }
+  }
+  .modal-header {
+    background: var(--blue-dark); color: #fff;
+    padding: 18px 24px; border-radius: 14px 14px 0 0;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  }
+  .modal-date    { font-size: 17px; font-weight: 700; }
+  .modal-pruefer { font-size: 12px; opacity: .72; margin-top: 3px; }
+  .modal-result-badge {
+    padding: 6px 16px; border-radius: 20px;
+    font-size: 14px; font-weight: 700; white-space: nowrap;
+  }
+  .modal-result-io  { background: #C6EFCE; color: #1B5E1F; }
+  .modal-result-bio { background: #FFEB9C; color: #7B5800; }
+  .modal-result-nio { background: #FFC7CE; color: #9B0006; }
+  .modal-close {
+    background: rgba(255,255,255,.18); border: none; color: #fff;
+    font-size: 18px; cursor: pointer; width: 32px; height: 32px;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: background .15s;
+  }
+  .modal-close:hover { background: rgba(255,255,255,.35); }
+  .modal-body { padding: 20px 24px 24px; }
+  .modal-sec-title {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .7px; color: var(--gray);
+    margin: 16px 0 8px; padding-bottom: 5px;
+    border-bottom: 1.5px solid #E9ECF0;
+  }
+  .modal-sec-title:first-child { margin-top: 0; }
+  .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 14px; }
+  .modal-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 6px 10px; background: #F8FAFC; border-radius: 6px; font-size: 12.5px;
+  }
+  .modal-item-label { color: #444; font-weight: 500; }
+  .modal-item-right { display: flex; align-items: center; gap: 6px; }
+  .modal-item-ist   { font-size: 11px; color: var(--gray); }
+  .modal-item-badge { padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+  .badge-io  { background: #C6EFCE; color: #1B5E1F; }
+  .badge-bio { background: #FFEB9C; color: #7B5800; }
+  .badge-nio { background: #FFC7CE; color: #9B0006; }
+  .modal-charge {
+    margin-top: 10px; padding: 9px 14px;
+    background: #EEF4FB; border-left: 3px solid var(--blue-med);
+    border-radius: 0 6px 6px 0; font-size: 12.5px; color: #333;
+  }
+  .modal-remark {
+    margin-top: 10px; padding: 9px 14px;
+    background: #FFF9EC; border-left: 3px solid var(--yellow);
+    border-radius: 0 6px 6px 0; font-size: 12.5px; color: #333;
+  }
+
   @media print {
     .topbar { position:static; }
-    .btn-print { display:none; }
+    .btn-print, .btn-back { display:none; }
     body { background:#fff; }
     .card, .month-bar { box-shadow:none; border:1px solid #ddd; }
+    .modal-overlay { display:none !important; }
   }
   @media (max-width:1100px) {
     .kpi-row { grid-template-columns: repeat(3,1fr); }
@@ -175,6 +243,9 @@
       <div class="topbar-logo">EINHAUS <span>Oberflächenveredelung GmbH</span></div>
       <div class="topbar-sub">Industrielackierung · 55411 Bingen-Dietersheim</div>
     </div>
+    <button class="btn-back" onclick="window.location.href='../Lackierung_Dashboard.html'">
+      ‹ Zurück
+    </button>
   </div>
   <div style="text-align:center;">
     <div style="font-size:17px;font-weight:700;letter-spacing:.5px;">🏭 Rüstfreigabe Dashboard</div>
@@ -207,9 +278,11 @@
       <option value="10">November 2026</option>
       <option value="11">Dezember 2026</option>
     </select>
-    <span id="monthStatusDot" class="status-dot" style="background:var(--green)"></span>
-    <span id="monthStatusText" style="font-size:13px;font-weight:600;color:var(--green);">Monat abgeschlossen</span>
-    <div class="info">Letztes Update: <strong id="lastUpdate">29.05.2026 – 07:14 Uhr</strong> &nbsp;|&nbsp; Prüfer: <strong>A. Lisin</strong></div>
+    <span id="monthStatusDot" class="status-dot" style="background:var(--gray)"></span>
+    <span id="monthStatusText" style="font-size:13px;font-weight:600;color:var(--gray);">Noch keine Einträge</span>
+    <button class="btn-connect" id="btnConnect" onclick="verbindeOrdner()">📁 Ordner verbinden</button>
+    <span id="connectStatus" style="font-size:12px;color:var(--gray);">Keine Verbindung</span>
+    <div class="info">Letztes Update: <strong id="lastUpdate">–</strong> &nbsp;|&nbsp; Prüfer: <strong id="lastPruefer">–</strong></div>
   </div>
 
   <!-- KPI Cards -->
@@ -259,7 +332,7 @@
       </div>
     </div>
     <div class="card">
-      <div class="card-title">Compliance-Rate 2026 (Jan–Mai)</div>
+      <div class="card-title" id="donutTitle">Compliance-Rate 2026 (YTD)</div>
       <canvas id="chartDonut" height="180"></canvas>
     </div>
   </div>
@@ -284,28 +357,25 @@
       <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--gray);">
         <div style="width:14px;height:14px;border-radius:3px;background:#F0F0F0;opacity:.6;"></div> Wochenende
       </div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--gray);">
+        💡 Klick auf farbige Tage für Details
+      </div>
     </div>
   </div>
 
   <!-- Bottom Row -->
   <div class="bottom-row">
-    <!-- Section Analysis -->
     <div class="card">
       <div class="card-title">Prüfabschnitt-Analyse (YTD 2026)</div>
       <div class="section-list" id="sectionList"></div>
     </div>
-
-    <!-- Events Table -->
     <div class="card">
       <div class="card-title">Abweichungen & Maßnahmen (b.i.O. / n.i.O.)</div>
       <div style="overflow-x:auto;">
         <table>
           <thead>
             <tr>
-              <th>Datum</th>
-              <th>Abschnitt</th>
-              <th>Status</th>
-              <th>Maßnahme</th>
+              <th>Datum</th><th>Abschnitt</th><th>Status</th><th>Maßnahme</th>
             </tr>
           </thead>
           <tbody id="eventsTable"></tbody>
@@ -318,94 +388,169 @@
 
 <div class="footer">
   Dashboard · EINHAUS Oberflächenveredelung GmbH · Industrielackierung · FB-64 Pre-Release Rüstfreigabe ·
-  Gespeichert unter: <a href="#">Lackierung – Dokumente / 25. Rüstfreigabe / Lackierung</a>
-  &nbsp;|&nbsp; Synchronisiert via SharePoint OneDrive
+  Synchronisiert via SharePoint OneDrive
+</div>
+
+<!-- ══════════ DAY DETAIL MODAL ══════════ -->
+<div class="modal-overlay" id="dayModal" onclick="if(event.target===this)closeDayModal()">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div>
+        <div class="modal-date"    id="modal-date">—</div>
+        <div class="modal-pruefer" id="modal-pruefer">Prüfer: —</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span class="modal-result-badge" id="modal-result-badge">—</span>
+        <button class="modal-close" onclick="closeDayModal()">✕</button>
+      </div>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
 </div>
 
 <!-- ══════════ SCRIPT ══════════ -->
 <script>
-// ── DATA ────────────────────────────────────────────────────────────────────
-const MONTHS = ['Januar','Februar','März','April','Mai','Juni',
-                'Juli','August','September','Oktober','November','Dezember'];
+// ── CONSTANTS & GLOBALS ─────────────────────────────────────────────────────
+const FILE_NAME   = 'Ruestfreigabe_Lackierkabinen.json';
+const JSON_SP_URL = "https://einhausgmbhde.sharepoint.com/sites/Lackierung/_api/web/GetFileByServerRelativeUrl('/sites/Lackierung/Freigegebene%20Dokumente/25.%20R%C3%BCstfreigabe%20Lackierung/Lackierkabinen/Ruestfreigabe_Lackierkabinen.json')/$value";
+let allEntries = [];
+
+const MONTHS   = ['Januar','Februar','März','April','Mai','Juni',
+                  'Juli','August','September','Oktober','November','Dezember'];
 const DAY_NAMES = ['Mo','Di','Mi','Do','Fr','Sa','So'];
+const WORKDAYS  = [23,20,23,22,21,22,23,21,22,23,21,23];
 
-// Monthly data (actual data Jan-Mai from Excel; Jun onward = template)
-// { workdays, io, bio, nio } — offen is calculated
-const MONTHLY_DATA = [
-  { workdays:23, io:21, bio:2, nio:0 }, // Jan
-  { workdays:20, io:19, bio:1, nio:0 }, // Feb
-  { workdays:23, io:22, bio:1, nio:0 }, // Mar
-  { workdays:22, io:20, bio:2, nio:0 }, // Apr
-  { workdays:21, io:19, bio:1, nio:1 }, // Mai
-  { workdays:22, io:14, bio:0, nio:0 }, // Jun (in progress, 14 done as of ~today Jun 25)
-  { workdays:23, io:0,  bio:0, nio:0 }, // Jul
-  { workdays:21, io:0,  bio:0, nio:0 }, // Aug
-  { workdays:22, io:0,  bio:0, nio:0 }, // Sep
-  { workdays:23, io:0,  bio:0, nio:0 }, // Okt
-  { workdays:21, io:0,  bio:0, nio:0 }, // Nov
-  { workdays:23, io:0,  bio:0, nio:0 }, // Dez
-];
+// ── INDEXEDDB – ORDNER-HANDLE DAUERHAFT SPEICHERN ────────────────────────────
+function openIDB() {
+  return new Promise((res, rej) => {
+    const r = indexedDB.open('RuestfreigabeDashboard', 1);
+    r.onupgradeneeded = e => e.target.result.createObjectStore('handles');
+    r.onsuccess = e => res(e.target.result);
+    r.onerror   = e => rej(e.target.error);
+  });
+}
+async function saveDirHandle(h) {
+  const db = await openIDB();
+  return new Promise((res, rej) => {
+    const tx = db.transaction('handles', 'readwrite');
+    tx.objectStore('handles').put(h, 'dir');
+    tx.oncomplete = res; tx.onerror = rej;
+  });
+}
+async function getSavedHandle() {
+  const db = await openIDB();
+  return new Promise((res, rej) => {
+    const tx = db.transaction('handles', 'readonly');
+    const r  = tx.objectStore('handles').get('dir');
+    r.onsuccess = e => res(e.target.result);
+    r.onerror   = rej;
+  });
+}
 
-// Day-level data per month [day_of_month → status: 'io'|'bio'|'nio'|'future'|null(weekend)]
-// Jan (index 0)
-const DAY_DATA = [
-  // Jan
-  {5:'io',6:'io',7:'io',8:'io',9:'io',12:'io',13:'io',14:'io',15:'io',16:'io',
-   19:'io',20:'io',21:'io',22:'io',23:'io',26:'io',27:'io',28:'io',29:'io',30:'io',
-   2:'bio',27:'bio'},  // override 2 days
-  // Feb
-  {2:'io',3:'io',4:'io',5:'io',6:'io',9:'io',10:'io',11:'io',12:'io',13:'io',
-   16:'io',17:'io',18:'io',19:'io',20:'io',23:'io',24:'io',25:'bio',26:'io',27:'io'},
-  // Mar
-  {2:'io',3:'io',4:'io',5:'io',6:'io',9:'io',10:'io',11:'io',12:'io',13:'io',
-   16:'io',17:'io',18:'io',19:'io',20:'io',23:'io',24:'io',25:'io',26:'io',27:'io',
-   30:'io',31:'io'},
-  // Apr
-  {1:'io',2:'io',3:'io',6:'io',7:'io',8:'io',9:'io',13:'io',14:'io',15:'io',
-   16:'io',17:'io',20:'io',21:'bio',22:'io',23:'io',24:'io',27:'io',28:'bio',29:'io',30:'io'},
-  // Mai
-  {2:'io',4:'io',5:'io',6:'io',7:'io',8:'io',11:'io',12:'io',13:'io',14:'io',
-   15:'io',18:'io',19:'nio',20:'bio',21:'io',22:'io',25:'io',26:'io',27:'io',28:'io',29:'io'},
-  // Jun (today = 29.05, so Jun is future ... let's say 1-25 Jun are completed)
-  {2:'io',3:'io',4:'io',5:'io',8:'io',9:'io',10:'io',11:'io',12:'io',
-   15:'io',16:'io',17:'io',18:'io',19:'io',22:'io',23:'io',24:'io',
-   25:'future',26:'future',29:'future',30:'future'},
-  // Jul-Dez: all future
-  {},{},{},{},{},{}
-];
+// ── DATEN VERARBEITEN ────────────────────────────────────────────────────────
+async function processEntries(text) {
+  allEntries = JSON.parse(text).map(e => ({
+    ...e,
+    gesamtergebnis: (e.Gesamtergebnis || e.gesamtergebnis || '').toLowerCase().replace(/\./g, ''),
+    bemerkung:      e.Bemerkung      || e.bemerkung      || '',
+    date:           e.date || (e.Datum ? e.Datum.slice(0, 10) : ''),
+    dateDisplay:    e.dateDisplay || (e.Datum ? new Date(e.Datum + 'T12:00:00').toLocaleDateString('de-DE') : '')
+  }));
 
-// Section analysis (YTD %)
-const SECTIONS = [
-  { name: 'I. Anlagenprüfung & Serienstand',  io:96, bio:3, nio:1 },
-  { name: 'II. Prozessbedingungen',            io:98, bio:2, nio:0 },
-  { name: 'III. Rüst-Freigabeprozess',         io:100,bio:0, nio:0 },
-  { name: 'IV. Kabinentemperatur',             io:91, bio:8, nio:1 },
-  { name: 'V. Trocknertemperatur',             io:95, bio:5, nio:0 },
-  { name: 'VI. Lack-Informationen ★',         io:100,bio:0, nio:0 },
-  { name: 'VII. Arbeitssicherheit ★',         io:100,bio:0, nio:0 },
-  { name: 'VIII. Qualitätssicherung ★',       io:97, bio:3, nio:0 },
-];
+  const count = allEntries.length;
+  document.getElementById('connectStatus').textContent = count
+    ? `✅ ${count} Einträge geladen` : '✅ Verbunden (keine Einträge)';
+  document.getElementById('btnConnect').textContent = '🔄 Aktualisieren';
+  document.getElementById('lastUpdate').textContent =
+    new Date().toLocaleDateString('de-DE') + ' – ' +
+    new Date().toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'}) + ' Uhr';
 
-// Events log
-const EVENTS = [
-  { datum:'19.05.2026', abschnitt:'Kabinentemperatur', cp:'Primer Kab.temp.', status:'nio',
-    massnahme:'Heizung reguliert → nach 30 Min. Freigabe erteilt (A. Lisin)' },
-  { datum:'20.05.2026', abschnitt:'Kabinentemperatur', cp:'Primer Kab.temp.', status:'bio',
-    massnahme:'Temperatur knapp unter SOLL – Monitoring, Produktion fortgesetzt' },
-  { datum:'28.04.2026', abschnitt:'Anlagenprüfung', cp:'Dryer 2', status:'bio',
-    massnahme:'Türdichtung leicht beschädigt → Wartungsauftrag erstellt (MA-2026-042)' },
-  { datum:'21.04.2026', abschnitt:'Kabinentemperatur', cp:'Klarlack Kab.temp.', status:'bio',
-    massnahme:'Abweichung +2°C, Produktion nach Abstimmung freigegeben' },
-  { datum:'25.02.2026', abschnitt:'Prozessbedingungen', cp:'Sauberkeit/Hygiene', status:'bio',
-    massnahme:'Kabinenreinigung nachgeholt, 5S-Protokoll erstellt' },
-  { datum:'02.01.2026', abschnitt:'Anlagenprüfung', cp:'Painting Cabin 3', status:'bio',
-    massnahme:'Kleinreparatur Düse – Ersatzteil eingebaut, Funktion ok' },
-];
+  // Letzter Prüfer
+  if (count) {
+    const last = allEntries[allEntries.length - 1];
+    document.getElementById('lastPruefer').textContent = last.Pruefer || last.pruefer || '–';
+  }
+
+  updateDashboard();
+  updateCharts();
+  buildSections();
+  buildEvents();
+}
+
+// ── WEG 1: SHAREPOINT REST API ────────────────────────────────────────────────
+async function loadFromSharePoint() {
+  const resp = await fetch(JSON_SP_URL, { credentials: 'include' });
+  if (!resp.ok) throw new Error('HTTP ' + resp.status);
+  await processEntries(await resp.text());
+}
+
+// ── WEG 2: LOKALER ORDNER ────────────────────────────────────────────────────
+async function loadFromHandle(dirHandle) {
+  window._dirHandle = dirHandle;
+  const fh = await dirHandle.getFileHandle(FILE_NAME);
+  await processEntries(await (await fh.getFile()).text());
+}
+
+// ── ORDNER VERBINDEN ─────────────────────────────────────────────────────────
+async function verbindeOrdner() {
+  try { await loadFromSharePoint(); return; } catch(e) {}
+  if (window.self !== window.top) return;
+  try {
+    const dirHandle = await window.showDirectoryPicker();
+    await saveDirHandle(dirHandle);
+    await loadFromHandle(dirHandle);
+  } catch(e) {
+    if (e.name !== 'AbortError') alert('Fehler beim Laden: ' + e.message);
+  }
+}
+
+// ── AUTO-VERBINDUNG BEIM LADEN ────────────────────────────────────────────────
+async function autoConnect() {
+  try { await loadFromSharePoint(); return; } catch(e) {}
+  if (window.self !== window.top) return;
+  try {
+    const handle = await getSavedHandle();
+    if (!handle) return;
+    const perm = await handle.queryPermission({ mode: 'read' });
+    if (perm === 'granted') { await loadFromHandle(handle); return; }
+    if (perm === 'prompt') {
+      const granted = await handle.requestPermission({ mode: 'read' });
+      if (granted === 'granted') await loadFromHandle(handle);
+    }
+  } catch(e) {}
+}
+
+// ── DATEN-BERECHNUNG ─────────────────────────────────────────────────────────
+function calcMonthlyData() {
+  const data = WORKDAYS.map(w => ({workdays:w, io:0, bio:0, nio:0}));
+  allEntries.forEach(e => {
+    const d = new Date(e.date);
+    if (isNaN(d.getTime())) return;
+    const mi = d.getMonth();
+    const r = e.gesamtergebnis || '';
+    if      (r === 'io')  data[mi].io++;
+    else if (r === 'bio') data[mi].bio++;
+    else if (r === 'nio') data[mi].nio++;
+  });
+  return data;
+}
+
+function calcDayData() {
+  const data = Array(12).fill(null).map(() => ({}));
+  allEntries.forEach(e => {
+    const d = new Date(e.date);
+    if (isNaN(d.getTime())) return;
+    data[d.getMonth()][d.getDate()] = e.gesamtergebnis || 'io';
+  });
+  return data;
+}
 
 // ── CHARTS ──────────────────────────────────────────────────────────────────
 let chartMonthly, chartDonut;
 
 function initCharts() {
+  const emptyMD = WORKDAYS.map(w => ({workdays:w, io:0, bio:0, nio:0}));
+
   // Monthly bar chart
   const mCtx = document.getElementById('chartMonthly').getContext('2d');
   chartMonthly = new Chart(mCtx, {
@@ -413,73 +558,42 @@ function initCharts() {
     data: {
       labels: MONTHS,
       datasets: [
-        {
-          label: 'i.O.',
-          data: MONTHLY_DATA.map(m => m.io),
-          backgroundColor: '#70AD47',
-          borderRadius: 3,
-        },
-        {
-          label: 'b.i.O.',
-          data: MONTHLY_DATA.map(m => m.bio),
-          backgroundColor: '#FFB300',
-          borderRadius: 3,
-        },
-        {
-          label: 'n.i.O.',
-          data: MONTHLY_DATA.map(m => m.nio),
-          backgroundColor: '#C00000',
-          borderRadius: 3,
-        },
-        {
-          label: 'Offen',
-          data: MONTHLY_DATA.map(m => Math.max(0, m.workdays - m.io - m.bio - m.nio)),
-          backgroundColor: '#CED4DA',
-          borderRadius: 3,
-        },
+        { label:'i.O.',   data: emptyMD.map(m=>m.io),  backgroundColor:'#70AD47', borderRadius:3 },
+        { label:'b.i.O.', data: emptyMD.map(m=>m.bio), backgroundColor:'#FFB300', borderRadius:3 },
+        { label:'n.i.O.', data: emptyMD.map(m=>m.nio), backgroundColor:'#C00000', borderRadius:3 },
+        { label:'Offen',  data: emptyMD.map(m=>Math.max(0,m.workdays-m.io-m.bio-m.nio)),
+          backgroundColor:'#CED4DA', borderRadius:3 },
       ]
     },
     options: {
       responsive: true,
-      plugins: {
-        legend: { display: false },
-        tooltip: { mode: 'index', intersect: false }
-      },
+      plugins: { legend:{ display:false }, tooltip:{ mode:'index', intersect:false } },
       scales: {
-        x: { stacked: true, grid: { display: false }, ticks: { font: { size: 11 } } },
-        y: { stacked: true, grid: { color: '#F0F0F0' }, ticks: { font: { size: 11 }, stepSize: 5 },
-             title: { display: true, text: 'Arbeitstage', font: { size: 11 }, color: '#888' } }
+        x: { stacked:true, grid:{ display:false }, ticks:{ font:{ size:11 } } },
+        y: { stacked:true, grid:{ color:'#F0F0F0' }, ticks:{ font:{ size:11 }, stepSize:5 },
+             title:{ display:true, text:'Arbeitstage', font:{ size:11 }, color:'#888' } }
       }
     }
   });
 
-  // Donut (YTD Jan-Mai)
-  const ytdIO  = MONTHLY_DATA.slice(0,5).reduce((s,m)=>s+m.io,  0);
-  const ytdBIO = MONTHLY_DATA.slice(0,5).reduce((s,m)=>s+m.bio, 0);
-  const ytdNIO = MONTHLY_DATA.slice(0,5).reduce((s,m)=>s+m.nio, 0);
+  // Donut
   const dCtx = document.getElementById('chartDonut').getContext('2d');
   chartDonut = new Chart(dCtx, {
     type: 'doughnut',
     data: {
       labels: ['i.O.', 'b.i.O.', 'n.i.O.'],
-      datasets: [{
-        data: [ytdIO, ytdBIO, ytdNIO],
-        backgroundColor: ['#70AD47','#FFB300','#C00000'],
-        borderWidth: 2,
-        borderColor: '#fff',
-        hoverOffset: 6
-      }]
+      datasets: [{ data:[0,0,0], backgroundColor:['#70AD47','#FFB300','#C00000'],
+        borderWidth:2, borderColor:'#fff', hoverOffset:6 }]
     },
     options: {
-      responsive: true,
-      cutout: '65%',
+      responsive: true, cutout:'65%',
       plugins: {
-        legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 14 } },
+        legend: { position:'bottom', labels:{ font:{ size:11 }, padding:14 } },
         tooltip: {
           callbacks: {
             label: ctx => {
-              const total = ytdIO + ytdBIO + ytdNIO;
-              return ` ${ctx.label}: ${ctx.parsed} Tage (${((ctx.parsed/total)*100).toFixed(1)}%)`;
+              const total = ctx.chart.data.datasets[0].data.reduce((a,b)=>a+b,0);
+              return ` ${ctx.label}: ${ctx.parsed} Tage (${total?((ctx.parsed/total)*100).toFixed(1):0}%)`;
             }
           }
         }
@@ -488,61 +602,65 @@ function initCharts() {
     plugins: [{
       id: 'centerText',
       beforeDraw(chart) {
-        const {ctx, chartArea: {width, height, top}} = chart;
-        const total = ytdIO + ytdBIO + ytdNIO;
-        const pct = ((ytdIO/total)*100).toFixed(0);
+        const {ctx, chartArea:{width,height,top}} = chart;
+        const ds    = chart.data.datasets[0].data;
+        const total = ds.reduce((a,b)=>a+b,0);
+        const ioVal = ds[0]||0;
+        const pct   = total ? ((ioVal/total)*100).toFixed(0) : '0';
         ctx.save();
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         const cx = chart.getDatasetMeta(0).data[0]?.x || (width/2);
-        const cy = chart.getDatasetMeta(0).data[0]?.y || (top + height/2);
-        ctx.font = 'bold 26px Arial';
-        ctx.fillStyle = '#1B5E1F';
-        ctx.fillText(pct + '%', cx, cy - 8);
-        ctx.font = '11px Arial';
-        ctx.fillStyle = '#888';
-        ctx.fillText('i.O. Rate', cx, cy + 14);
+        const cy = chart.getDatasetMeta(0).data[0]?.y || (top+height/2);
+        ctx.font = 'bold 26px Arial'; ctx.fillStyle = '#1B5E1F';
+        ctx.fillText(pct+'%', cx, cy-8);
+        ctx.font = '11px Arial'; ctx.fillStyle = '#888';
+        ctx.fillText('i.O. Rate', cx, cy+14);
         ctx.restore();
       }
     }]
   });
 }
 
+function updateCharts() {
+  const md = calcMonthlyData();
+  chartMonthly.data.datasets[0].data = md.map(m=>m.io);
+  chartMonthly.data.datasets[1].data = md.map(m=>m.bio);
+  chartMonthly.data.datasets[2].data = md.map(m=>m.nio);
+  chartMonthly.data.datasets[3].data = md.map(m=>Math.max(0,m.workdays-m.io-m.bio-m.nio));
+  chartMonthly.update();
+
+  const now = new Date();
+  const ytdIO  = md.slice(0,now.getMonth()+1).reduce((s,m)=>s+m.io, 0);
+  const ytdBIO = md.slice(0,now.getMonth()+1).reduce((s,m)=>s+m.bio,0);
+  const ytdNIO = md.slice(0,now.getMonth()+1).reduce((s,m)=>s+m.nio,0);
+  chartDonut.data.datasets[0].data = [ytdIO,ytdBIO,ytdNIO];
+  chartDonut.update();
+}
+
 // ── KPIs ────────────────────────────────────────────────────────────────────
 function updateKPIs(mi) {
-  const m = MONTHLY_DATA[mi];
+  const md    = allEntries.length ? calcMonthlyData() : WORKDAYS.map(w=>({workdays:w,io:0,bio:0,nio:0}));
+  const m     = md[mi];
   const offen = Math.max(0, m.workdays - m.io - m.bio - m.nio);
-  document.getElementById('kpi-total').textContent = m.workdays;
-  document.getElementById('kpi-io').textContent = m.io;
-  document.getElementById('kpi-bio').textContent = m.bio;
-  document.getElementById('kpi-nio').textContent = m.nio;
-  document.getElementById('kpi-offen').textContent = offen;
+  document.getElementById('kpi-total').textContent  = m.workdays;
+  document.getElementById('kpi-io').textContent     = m.io;
+  document.getElementById('kpi-bio').textContent    = m.bio;
+  document.getElementById('kpi-nio').textContent    = m.nio;
+  document.getElementById('kpi-offen').textContent  = offen;
   const done = m.io + m.bio + m.nio;
   const rate = done ? ((m.io/done)*100).toFixed(0) : '–';
-  document.getElementById('kpi-io-sub').textContent = done ? `${rate}% Compliance` : 'In Ordnung';
-  document.getElementById('kpi-bio-sub').textContent = m.bio > 0 ? 'Maßnahme erforderlich' : 'Bedingt i.O.';
-  document.getElementById('kpi-nio-sub').textContent = m.nio > 0 ? '⚠ Eskalation!' : 'Nicht i.O.';
-  document.getElementById('kpi-offen-sub').textContent = offen > 0 ? 'Noch zu erfassen' : '✔ Vollständig';
+  document.getElementById('kpi-io-sub').textContent    = done ? `${rate}% Compliance` : 'In Ordnung';
+  document.getElementById('kpi-bio-sub').textContent   = m.bio>0 ? 'Maßnahme erforderlich' : 'Bedingt i.O.';
+  document.getElementById('kpi-nio-sub').textContent   = m.nio>0 ? '⚠ Eskalation!' : 'Nicht i.O.';
+  document.getElementById('kpi-offen-sub').textContent = offen>0 ? 'Noch zu erfassen' : '✔ Vollständig';
 
-  // Status text
   const statusText = document.getElementById('monthStatusText');
   const statusDot  = document.getElementById('monthStatusDot');
-  if (m.nio > 0) {
-    statusText.textContent = 'Abweichungen vorhanden'; statusText.style.color='var(--red)';
-    statusDot.style.background='var(--red)';
-  } else if (offen > 0) {
-    statusText.textContent = 'In Bearbeitung'; statusText.style.color='var(--yellow)';
-    statusDot.style.background='var(--yellow)';
-  } else if (m.io === 0 && m.bio === 0) {
-    statusText.textContent = 'Noch keine Einträge'; statusText.style.color='var(--gray)';
-    statusDot.style.background='var(--gray)';
-  } else if (m.bio > 0) {
-    statusText.textContent = 'Bedingt freigegeben'; statusText.style.color='var(--yellow)';
-    statusDot.style.background='var(--yellow)';
-  } else {
-    statusText.textContent = 'Vollständig freigegeben'; statusText.style.color='var(--green)';
-    statusDot.style.background='var(--green)';
-  }
+  if (m.nio>0)            { statusText.textContent='Abweichungen vorhanden'; statusText.style.color='var(--red)';    statusDot.style.background='var(--red)';    }
+  else if (offen>0)       { statusText.textContent='In Bearbeitung';          statusText.style.color='var(--yellow)'; statusDot.style.background='var(--yellow)'; }
+  else if (!done)         { statusText.textContent='Noch keine Einträge';     statusText.style.color='var(--gray)';   statusDot.style.background='var(--gray)';   }
+  else if (m.bio>0)       { statusText.textContent='Bedingt freigegeben';     statusText.style.color='var(--yellow)'; statusDot.style.background='var(--yellow)'; }
+  else                    { statusText.textContent='Vollständig freigegeben'; statusText.style.color='var(--green)';  statusDot.style.background='var(--green)';  }
 }
 
 // ── CALENDAR ────────────────────────────────────────────────────────────────
@@ -552,79 +670,99 @@ function buildCalendar(mi) {
   grid.innerHTML = '';
   document.getElementById('calTitle').textContent = `Monatskalender – ${MONTHS[mi]} ${year}`;
 
-  // Headers
   DAY_NAMES.forEach(d => {
     const h = document.createElement('div');
-    h.className = 'cal-header';
-    h.textContent = d;
+    h.className = 'cal-header'; h.textContent = d;
     grid.appendChild(h);
   });
 
-  // First day offset (Mon=0)
-  const firstDay = new Date(year, month-1, 1).getDay(); // 0=Sun
-  const offset = (firstDay === 0) ? 6 : firstDay - 1;
-  for (let i = 0; i < offset; i++) {
+  const firstDay = new Date(year, month-1, 1).getDay();
+  const offset   = (firstDay===0) ? 6 : firstDay-1;
+  for (let i=0; i<offset; i++) {
     const e = document.createElement('div'); e.className='cal-empty'; grid.appendChild(e);
   }
 
   const daysInMonth = new Date(year, month, 0).getDate();
-  const dayData = DAY_DATA[mi] || {};
-  const todayRef = new Date(2026, 4, 29); // May 29 = "today"
+  const DAY_DATA    = allEntries.length ? calcDayData() : Array(12).fill(null).map(()=>({}));
+  const dayData     = DAY_DATA[mi] || {};
+  const todayRef    = new Date();
 
-  for (let d = 1; d <= daysInMonth; d++) {
-    const dow = new Date(year, month-1, d).getDay(); // 0=Sun,6=Sat
-    const isWE = (dow === 0 || dow === 6);
-    const thisDate = new Date(year, month-1, d);
-    const isFuture = thisDate > todayRef;
-
-    const cell = document.createElement('div');
+  for (let d=1; d<=daysInMonth; d++) {
+    const dow    = new Date(year, month-1, d).getDay();
+    const isWE   = (dow===0||dow===6);
+    const isFuture = new Date(year, month-1, d) > todayRef;
     const dayNames = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+    const cell   = document.createElement('div');
 
     if (isWE) {
       cell.className = 'cal-day cal-weekend';
     } else {
       const st = dayData[d];
-      if (st === 'io')          cell.className = 'cal-day cal-io';
-      else if (st === 'bio')    cell.className = 'cal-day cal-bio';
-      else if (st === 'nio')    cell.className = 'cal-day cal-nio';
-      else if (isFuture || !st) cell.className = 'cal-day cal-future';
-      else                      cell.className = 'cal-day cal-io';
+      if      (st==='io')           cell.className = 'cal-day cal-io';
+      else if (st==='bio')          cell.className = 'cal-day cal-bio';
+      else if (st==='nio')          cell.className = 'cal-day cal-nio';
+      else if (isFuture||!st)       cell.className = 'cal-day cal-future';
+      else                          cell.className = 'cal-day cal-io';
     }
 
     cell.innerHTML = `<div class="day-num">${d}</div>
       <div class="day-name">${dayNames[dow]}</div>
-      ${!isWE ? `<div class="day-status">${
-        dayData[d]==='io' ? '✓ i.O.' :
-        dayData[d]==='bio' ? '⚠ b.i.O.' :
-        dayData[d]==='nio' ? '✗ n.i.O.' :
-        isFuture ? '–' : '–'
-      }</div>` : ''}`;
+      ${!isWE?`<div class="day-status">${
+        dayData[d]==='io'?'✓ i.O.':dayData[d]==='bio'?'⚠ b.i.O.':dayData[d]==='nio'?'✗ n.i.O.':'–'
+      }</div>`:''}`;
+
+    if (!isWE && dayData[d]) {
+      const dateStr = `${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      cell.style.cursor = 'pointer';
+      cell.title = 'Klicken für Details';
+      cell.onclick = () => showDayDetail(dateStr);
+    }
     grid.appendChild(cell);
   }
 }
 
-// ── SECTION LIST ────────────────────────────────────────────────────────────
+// ── SECTION LIST (dynamisch aus Echtzeitdaten) ────────────────────────────────
+const SECTION_DEFS = [
+  { name:'🏭 Kabinen',               fields:['Cabin1','Cabin2','Cabin3','Cabin4'] },
+  { name:'🔧 Anlagen & Sauberkeit',  fields:['Betriebsmittel','Dryer1','Dryer2','Sauberkeit','Druckluft','Arbeitsplatz'] },
+  { name:'🎨 Lacke & Viskosität',    fields:['Primer_Status','Basislack_Status','Klarlack_Status','Viskositat_Status'] },
+  { name:'🌡️ Trockner-Temperaturen', fields:['Grtrockner_Status','Kab4Trockner_Status'] },
+  { name:'🛡️ Sicherheit & Qualität', fields:['PSA','ATEX','Entsorgung','Erstmuster','Farbton'] },
+];
+
 function buildSections() {
   const list = document.getElementById('sectionList');
   list.innerHTML = '';
-  SECTIONS.forEach(s => {
-    const total = s.io + s.bio + s.nio;
-    const ioW = (s.io/total*100).toFixed(0);
-    const bioW = (s.bio/total*100).toFixed(0);
-    const nioW = (s.nio/total*100).toFixed(0);
+  if (!allEntries.length) {
+    list.innerHTML = '<div style="color:var(--gray);font-size:12px;text-align:center;padding:20px 0;">Keine Daten – Verbindung herstellen</div>';
+    return;
+  }
+  SECTION_DEFS.forEach(sec => {
+    let io=0, bio=0, nio=0;
+    allEntries.forEach(e => {
+      sec.fields.forEach(f => {
+        const v = normVal(e[f]||'');
+        if      (v==='io')  io++;
+        else if (v==='bio') bio++;
+        else if (v==='nio') nio++;
+      });
+    });
+    const total = io+bio+nio;
+    if (!total) return;
+    const ioW  = Math.round(io /total*100);
+    const bioW = Math.round(bio/total*100);
+    const nioW = Math.round(nio/total*100);
     list.innerHTML += `
       <div class="sec-item">
         <div class="sec-header">
-          <span class="sec-name">${s.name}</span>
-          <span class="sec-pct">${ioW}% i.O.</span>
+          <span class="sec-name">${sec.name}</span>
+          <span class="sec-pct">${ioW}% i.O. <span style="color:var(--gray);font-size:10px;">(${total} Prüfpunkte)</span></span>
         </div>
-        <div class="bar-bg">
-          <div class="bar-fill">
-            <div class="bar-io" style="width:${ioW}%"></div>
-            <div class="bar-bio" style="width:${bioW}%"></div>
-            <div class="bar-nio" style="width:${nioW}%"></div>
-          </div>
-        </div>
+        <div class="bar-bg"><div class="bar-fill">
+          <div class="bar-io"  style="width:${ioW}%"></div>
+          <div class="bar-bio" style="width:${bioW}%"></div>
+          <div class="bar-nio" style="width:${nioW}%"></div>
+        </div></div>
       </div>`;
   });
 }
@@ -633,16 +771,108 @@ function buildSections() {
 function buildEvents() {
   const tb = document.getElementById('eventsTable');
   tb.innerHTML = '';
-  EVENTS.forEach(e => {
-    const cls = e.status === 'nio' ? 'tag-nio' : 'tag-bio';
-    const label = e.status === 'nio' ? 'n.i.O.' : 'b.i.O.';
+  if (!allEntries.length) {
+    tb.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--gray);padding:16px;">Keine Abweichungen ✅</td></tr>';
+    return;
+  }
+  const events = allEntries
+    .filter(e => ['bio','nio'].includes(e.gesamtergebnis||''))
+    .sort((a,b) => new Date(b.date) - new Date(a.date))
+    .slice(0,10);
+  if (!events.length) {
+    tb.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--gray);padding:16px;">Keine Abweichungen ✅</td></tr>';
+    return;
+  }
+  events.forEach(e => {
+    const cls   = e.gesamtergebnis==='nio'?'tag-nio':'tag-bio';
+    const label = e.gesamtergebnis==='nio'?'n.i.O.':'b.i.O.';
     tb.innerHTML += `<tr>
-      <td><strong>${e.datum}</strong></td>
-      <td>${e.abschnitt}<br><span style="font-size:11px;color:#888;">${e.cp}</span></td>
+      <td><strong>${e.dateDisplay||e.date}</strong></td>
+      <td>Rüstfreigabe Lackierkabinen</td>
       <td><span class="tag ${cls}">${label}</span></td>
-      <td style="font-size:12px;">${e.massnahme}</td>
+      <td style="font-size:12px;">${e.bemerkung||'–'}</td>
     </tr>`;
   });
+}
+
+// ── DAY DETAIL MODAL ─────────────────────────────────────────────────────────
+function normVal(v) {
+  return (v||'').toString().toLowerCase().replace(/\./g,'');
+}
+function statusBadge(v) {
+  const n = normVal(v);
+  if (n==='io')  return '<span class="modal-item-badge badge-io">i.O.</span>';
+  if (n==='bio') return '<span class="modal-item-badge badge-bio">b.i.O.</span>';
+  if (n==='nio') return '<span class="modal-item-badge badge-nio">n.i.O.</span>';
+  return `<span class="modal-item-badge" style="background:#eee;color:#666;">${v||'–'}</span>`;
+}
+function modalItem(label, statusVal, istVal) {
+  const ist = (istVal!=null&&istVal!=='') ? `<span class="modal-item-ist">${istVal}</span>` : '';
+  return `<div class="modal-item">
+    <span class="modal-item-label">${label}</span>
+    <div class="modal-item-right">${ist}${statusBadge(statusVal)}</div>
+  </div>`;
+}
+
+function showDayDetail(dateStr) {
+  const entry = allEntries.find(e => (e.date||'').slice(0,10)===dateStr);
+  if (!entry) return;
+
+  const d = new Date(dateStr+'T12:00:00');
+  document.getElementById('modal-date').textContent    = d.toLocaleDateString('de-DE',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('modal-pruefer').textContent = 'Prüfer: '+(entry.Pruefer||entry.pruefer||'–');
+
+  const ges   = normVal(entry.gesamtergebnis||'');
+  const badge = document.getElementById('modal-result-badge');
+  if      (ges==='io')  { badge.textContent='✓ i.O.';     badge.className='modal-result-badge modal-result-io';  }
+  else if (ges==='bio') { badge.textContent='⚠ b.i.O.';  badge.className='modal-result-badge modal-result-bio'; }
+  else if (ges==='nio') { badge.textContent='✗ n.i.O.';  badge.className='modal-result-badge modal-result-nio'; }
+  else                  { badge.textContent='–';           badge.className='modal-result-badge'; }
+
+  let html = '';
+  html += '<div class="modal-sec-title">🏭 Kabinen & Anlagen</div><div class="modal-grid">';
+  html += modalItem('Betriebsmittel', entry.Betriebsmittel);
+  html += modalItem('Kabine 1',       entry.Cabin1);
+  html += modalItem('Kabine 2',       entry.Cabin2);
+  html += modalItem('Kabine 3',       entry.Cabin3);
+  html += modalItem('Kabine 4',       entry.Cabin4);
+  html += modalItem('Trockner 1',     entry.Dryer1);
+  html += modalItem('Trockner 2',     entry.Dryer2);
+  html += modalItem('Sauberkeit',     entry.Sauberkeit);
+  html += modalItem('Druckluft',      entry.Druckluft);
+  html += modalItem('Arbeitsplatz',   entry.Arbeitsplatz);
+  html += '</div>';
+
+  html += '<div class="modal-sec-title">🎨 Lacke & Temperaturen</div><div class="modal-grid">';
+  html += modalItem('Primer',     entry.Primer_Status,    entry.Primer_IST     !=null ? entry.Primer_IST     +' °C':'');
+  html += modalItem('Basislack',  entry.Basislack_Status, entry.Basislack_IST  !=null ? entry.Basislack_IST  +' °C':'');
+  html += modalItem('Klarlack',   entry.Klarlack_Status,  entry.Klarlack_IST   !=null ? entry.Klarlack_IST   +' °C':'');
+  html += modalItem('Viskosität', entry.Viskositat_Status,entry.Viskositat_IST !=null ? entry.Viskositat_IST +' s' :'');
+  html += '</div>';
+
+  html += '<div class="modal-sec-title">🌡️ Trockner-Temperaturen</div><div class="modal-grid">';
+  html += modalItem('Großtrockner',     entry.Grtrockner_Status,   entry.Grtrockner_IST   !=null ? entry.Grtrockner_IST   +' °C':'');
+  html += modalItem('Kab. 4 Trockner', entry.Kab4Trockner_Status, entry.Kab4Trockner_IST !=null ? entry.Kab4Trockner_IST +' °C':'');
+  html += '</div>';
+
+  html += '<div class="modal-sec-title">🛡️ Sicherheit & Qualität</div><div class="modal-grid">';
+  html += modalItem('PSA',        entry.PSA);
+  html += modalItem('ATEX',       entry.ATEX);
+  html += modalItem('Entsorgung', entry.Entsorgung);
+  html += modalItem('Erstmuster', entry.Erstmuster);
+  html += modalItem('Farbton',    entry.Farbton);
+  html += '</div>';
+
+  const charge = entry.Lack_Charge||'';
+  if (charge) html += `<div class="modal-charge">🏷️ <strong>Lack-Charge:</strong> ${charge}</div>`;
+  const bem = entry.bemerkung||'';
+  if (bem)    html += `<div class="modal-remark">💬 <strong>Bemerkung:</strong> ${bem}</div>`;
+
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('dayModal').classList.add('open');
+}
+function closeDayModal() {
+  document.getElementById('dayModal').classList.remove('open');
 }
 
 // ── MAIN UPDATE ─────────────────────────────────────────────────────────────
@@ -658,7 +888,9 @@ document.addEventListener('DOMContentLoaded', () => {
   updateDashboard();
   buildSections();
   buildEvents();
+  autoConnect();
 });
+document.addEventListener('keydown', e => { if (e.key==='Escape') closeDayModal(); });
 </script>
 </body>
 </html>
