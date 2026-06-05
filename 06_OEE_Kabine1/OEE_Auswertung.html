@@ -351,7 +351,7 @@
     const kpiOEE = document.getElementById('kpiOEE');
     const oeeKlasseKPI = oee === null ? '' : oee >= 75 ? 'gruen' : oee >= 60 ? 'gelb' : 'rot';
     kpiOEE.className = 'kpi ' + oeeKlasseKPI;
-    const oeeLabel = oee === null ? '–' : oee >= 85 ? 'Exzellenz' : oee >= 75 ? 'Zielwert erreicht' : oee >= 60 ? 'Mindestanforderung' : 'Verbesserungsbedarf';
+    const oeeLabel = oee === null ? '–' : oee >= 85 ? 'Exzellenz' : oee >= 75 ? 'Sollwert erreicht' : oee >= 60 ? 'Untergrenze' : 'Unter Untergrenze';
     document.getElementById('kpiOEEWert').textContent = oee !== null ? oee.toFixed(1) + ' %' : '–';
     document.getElementById('kpiOEESub').textContent  = daten.length + ' Schichten · ' + oeeLabel;
 
@@ -397,7 +397,7 @@
           borderWidth: 2,
           order: 2,
         }, {
-          label: 'Zielwert  75 %',
+          label: 'Sollwert  75 %',
           data: Array(n).fill(75),
           borderColor: '#2E75B6',
           borderDash: [8, 4],
@@ -405,7 +405,7 @@
           borderWidth: 2,
           order: 3,
         }, {
-          label: 'Mindestanforderung  60 %',
+          label: 'Untergrenze  60 %',
           data: Array(n).fill(60),
           borderColor: '#c47a00',
           borderDash: [8, 4],
