@@ -64,8 +64,8 @@
       border-bottom: 3px solid #8AAFD0;
     }
 
-    /* ── Folder status bar ── */
-    .folder-bar {
+    /* ── Status bar ── */
+    .status-bar {
       background: #F0F4F8;
       border-bottom: 1px solid var(--border);
       padding: 8px 16px;
@@ -74,41 +74,21 @@
       gap: 10px;
       flex-wrap: wrap;
     }
-    .folder-dot {
+    .status-dot {
       width: 10px;
       height: 10px;
       border-radius: 50%;
       flex-shrink: 0;
       background: #BDC3C7;
-      transition: background 0.2s;
+      transition: background 0.3s;
     }
-    .folder-dot.connected { background: var(--io); }
-    .folder-dot.error     { background: var(--nio); }
-    .folder-dot.info      { background: var(--tab); }
-    .folder-info {
-      flex: 1;
-      font-size: 0.82rem;
-      color: var(--grey);
-      min-width: 0;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .folder-info strong { color: var(--text); }
-    .btn-connect {
-      padding: 5px 14px;
-      background: var(--tab);
-      color: white;
-      border: none;
-      border-radius: 6px;
-      font-size: 0.82rem;
-      font-weight: bold;
-      cursor: pointer;
-      font-family: Arial, sans-serif;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-    .btn-connect:active { opacity: 0.85; }
+    .status-dot.online  { background: var(--io); }
+    .status-dot.offline { background: var(--grey); }
+    .status-dot.error   { background: var(--nio); }
+    .status-dot.pulse   { animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+    .status-info { flex: 1; font-size: 0.82rem; color: var(--grey); min-width: 0; }
+    .status-info strong { color: var(--text); }
 
     /* ── Info row ── */
     .info-row {
@@ -136,17 +116,8 @@
     /* ── Content ── */
     .content { padding: 16px; max-width: 960px; margin: 0 auto; }
 
-    .section-label {
-      font-size: 0.9rem;
-      font-weight: bold;
-      color: var(--hdr);
-      margin-bottom: 5px;
-    }
-    .section-hint {
-      font-size: 0.82rem;
-      color: var(--grey);
-      margin-bottom: 14px;
-    }
+    .section-label { font-size: 0.9rem; font-weight: bold; color: var(--hdr); margin-bottom: 5px; }
+    .section-hint  { font-size: 0.82rem; color: var(--grey); margin-bottom: 14px; }
 
     /* ── Checklist ── */
     .checklist {
@@ -167,7 +138,6 @@
     }
     .check-item:last-child { border-bottom: none; }
     .check-item:nth-child(even) { background: #F8FBFF; }
-
     .check-idx  { color: var(--grey); font-size: 0.85rem; min-width: 22px; }
     .check-name { flex: 1; font-size: 1rem; font-weight: 500; }
 
@@ -189,7 +159,7 @@
     .btn-io.active  { background: var(--io); }
     .btn-nio.active { background: var(--nio); }
 
-    .status-badge {
+    .check-badge {
       min-width: 86px;
       text-align: center;
       font-size: 0.85rem;
@@ -199,8 +169,8 @@
       color: var(--grey);
       flex-shrink: 0;
     }
-    .status-badge.io  { background: var(--io-bg);  color: var(--io); }
-    .status-badge.nio { background: var(--nio-bg); color: var(--nio); }
+    .check-badge.io  { background: var(--io-bg);  color: var(--io); }
+    .check-badge.nio { background: var(--nio-bg); color: var(--nio); }
 
     /* ── Action buttons ── */
     .actions { display: flex; gap: 12px; margin-bottom: 28px; flex-wrap: wrap; }
@@ -218,7 +188,8 @@
       font-family: Arial, sans-serif;
       box-shadow: 0 2px 8px rgba(30,132,73,0.3);
     }
-    .btn-save:active { opacity: 0.88; }
+    .btn-save:active  { opacity: 0.88; }
+    .btn-save:disabled { background: #BDC3C7; box-shadow: none; cursor: not-allowed; }
     .btn-reset {
       padding: 15px 20px;
       background: var(--grey);
@@ -239,13 +210,7 @@
       flex-wrap: wrap;
       gap: 10px;
     }
-    .filter-bar {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 12px;
-    }
+    .filter-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
     .filter-bar label { font-size: 0.85rem; font-weight: bold; color: var(--grey); }
     .filter-bar select {
       padding: 6px 10px;
@@ -257,11 +222,7 @@
       font-family: Arial, sans-serif;
       cursor: pointer;
     }
-    .filter-count {
-      font-size: 0.82rem;
-      color: var(--grey);
-      margin-left: auto;
-    }
+    .filter-count { font-size: 0.82rem; color: var(--grey); margin-left: auto; }
     .btn-export {
       padding: 10px 18px;
       background: var(--hdr);
@@ -284,18 +245,8 @@
       font-size: 0.85rem;
       white-space: nowrap;
     }
-    .history-table th {
-      background: var(--hdr);
-      color: white;
-      padding: 10px 10px;
-      text-align: center;
-      font-weight: bold;
-    }
-    .history-table td {
-      padding: 9px 10px;
-      text-align: center;
-      border-bottom: 1px solid var(--border);
-    }
+    .history-table th { background: var(--hdr); color: white; padding: 10px; text-align: center; font-weight: bold; }
+    .history-table td { padding: 9px 10px; text-align: center; border-bottom: 1px solid var(--border); }
     .history-table tr:last-child td { border-bottom: none; }
     .history-table tr:nth-child(even) td { background: #F8FBFF; }
     .cell-io  { color: var(--io);  font-weight: bold; }
@@ -328,21 +279,15 @@
     .toast.ok   { background: var(--io); }
 
     /* ── Footer ── */
-    .footer {
-      text-align: center;
-      padding: 14px;
-      color: #AAB7B8;
-      font-size: 0.75rem;
-      margin-top: 8px;
-    }
+    .footer { text-align: center; padding: 14px; color: #AAB7B8; font-size: 0.75rem; margin-top: 8px; }
 
     /* ── Responsive ── */
     @media (max-width: 580px) {
-      .check-item   { flex-wrap: wrap; gap: 10px; }
-      .status-badge { display: none; }
-      .btn-group    { margin-left: auto; }
-      #inp-name     { width: 170px; }
-      #inp-date     { width: 145px; }
+      .check-item  { flex-wrap: wrap; gap: 10px; }
+      .check-badge { display: none; }
+      .btn-group   { margin-left: auto; }
+      #inp-name    { width: 170px; }
+      #inp-date    { width: 145px; }
     }
   </style>
 </head>
@@ -361,11 +306,10 @@
   <button class="tab-btn"        id="tab-beflam"  onclick="switchRobot('Beflammroboter')">Beflammroboter</button>
 </div>
 
-<!-- ── Folder status bar ── -->
-<div class="folder-bar">
-  <div class="folder-dot" id="folder-dot"></div>
-  <div class="folder-info" id="folder-info">Kein Speicherordner verbunden – Daten werden lokal im Browser gespeichert.</div>
-  <button class="btn-connect" id="btn-connect" onclick="connectFolder()">Ordner verbinden</button>
+<!-- ── Status bar ── -->
+<div class="status-bar">
+  <div class="status-dot pulse" id="status-dot"></div>
+  <div class="status-info" id="status-info">Verbindung wird geprüft …</div>
 </div>
 
 <!-- ── Date / Name ── -->
@@ -392,7 +336,7 @@
   <div class="checklist" id="checklist"></div>
 
   <div class="actions">
-    <button class="btn-save"  onclick="saveEntry()">✔&nbsp; Rüstfreigabe dokumentieren</button>
+    <button class="btn-save" id="btn-save" onclick="saveEntry()">✔&nbsp; Rüstfreigabe dokumentieren</button>
     <button class="btn-reset" onclick="resetForm()">↺&nbsp; Zurücksetzen</button>
   </div>
 
@@ -434,180 +378,145 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// ── Robot config ──────────────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════════════════════
+//  SUPABASE KONFIGURATION
+// ════════════════════════════════════════════════════════════════════════════
+const SB_URL = 'https://tldkqifblxkdligypffr.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsZGtxaWZibHhrZGxpZ3lwZmZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1NjkwMzEsImV4cCI6MjA5NjE0NTAzMX0.Zg0Yy9uAIvuFwNfYVzfLWqmQUvTnXivYmGIXLCOa6TM';
+// ════════════════════════════════════════════════════════════════════════════
+
+const TABLE = 'ruestfreigabe';
+
 const ROBOTS = {
   'Lackierroboter': {
     fb: 'FB-96',
     model: 'Fa. Lesta / Fa. Industra',
-    checks: ['Anlage bereit', 'Kalibrierung', 'Pistole', 'Sichtprüfung Farbbehälter', 'Luftdruck'],
-    folderHint: 'Lackierung - Dokumente\\25. Rüstfreigabe Lackierung\\Lackierroboter'
+    checks: ['Anlage bereit', 'Kalibrierung', 'Pistole', 'Sichtprüfung Farbbehälter', 'Luftdruck']
   },
   'Beflammroboter': {
     fb: 'FB-95',
     model: 'Fa. Lesta / Fa. Arcotec',
-    checks: ['Anlage bereit', 'Brenner bereit', 'Luftdruck', 'Gasdruck', 'Kalibrierung'],
-    folderHint: 'Lackierung - Dokumente\\25. Rüstfreigabe Lackierung\\Beflammroboter'
+    checks: ['Anlage bereit', 'Brenner bereit', 'Luftdruck', 'Gasdruck', 'Kalibrierung']
   }
-};
-
-const FILE_NAMES = {
-  'Lackierroboter': 'Ruestfreigabe_Lackierroboter.json',
-  'Beflammroboter': 'Ruestfreigabe_Beflammroboter.json'
 };
 
 let currentRobot = 'Lackierroboter';
 let checkValues  = {};
+let sbOnline     = false;
+let _allEntries  = [];
 
-// ── IndexedDB – persist directory handles ─────────────────────────────────
-let _db = null;
-
-function openDB() {
-  if (_db) return Promise.resolve(_db);
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open('ruestfreigabe_fs', 1);
-    req.onupgradeneeded = e => e.target.result.createObjectStore('handles');
-    req.onsuccess  = e => { _db = e.target.result; resolve(_db); };
-    req.onerror    = () => reject(new Error('IndexedDB error'));
+// ── Supabase REST helper ──────────────────────────────────────────────────
+async function sbFetch(path, options = {}) {
+  const res = await fetch(`${SB_URL}/rest/v1/${path}`, {
+    ...options,
+    headers: {
+      'apikey':        SB_KEY,
+      'Authorization': `Bearer ${SB_KEY}`,
+      'Content-Type':  'application/json',
+      ...(options.headers || {})
+    }
   });
+  if (!res.ok) throw new Error(`Supabase ${res.status}`);
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
 }
 
-async function dbGet(key) {
-  const db = await openDB();
-  return new Promise(resolve => {
-    db.transaction('handles', 'readonly')
-      .objectStore('handles').get(key)
-      .onsuccess = e => resolve(e.target.result || null);
-  });
-}
-
-async function dbPut(key, value) {
-  const db = await openDB();
-  return new Promise(resolve => {
-    db.transaction('handles', 'readwrite')
-      .objectStore('handles').put(value, key)
-      .onsuccess = () => resolve();
-  });
-}
-
-// ── File System Access API helpers ────────────────────────────────────────
-const FS_SUPPORTED = ('showDirectoryPicker' in window);
-
-async function getVerifiedHandle(robot) {
-  if (!FS_SUPPORTED) return null;
+// ── Connection check ──────────────────────────────────────────────────────
+async function checkConnection() {
+  const dot  = document.getElementById('status-dot');
+  const info = document.getElementById('status-info');
   try {
-    const handle = await dbGet(robot);
-    if (!handle) return null;
-    const perm = await handle.queryPermission({ mode: 'readwrite' });
-    if (perm === 'granted') return handle;
-    const req = await handle.requestPermission({ mode: 'readwrite' });
-    return req === 'granted' ? handle : null;
-  } catch { return null; }
-}
-
-async function readJsonFile(dirHandle, fileName) {
-  try {
-    const fh   = await dirHandle.getFileHandle(fileName);
-    const file = await fh.getFile();
-    const text = await file.text();
-    return JSON.parse(text);
-  } catch { return []; }
-}
-
-async function writeJsonFile(dirHandle, fileName, data) {
-  const fh       = await dirHandle.getFileHandle(fileName, { create: true });
-  const writable = await fh.createWritable();
-  await writable.write(JSON.stringify(data, null, 2));
-  await writable.close();
+    await sbFetch(`${TABLE}?limit=1`);
+    sbOnline      = true;
+    dot.className = 'status-dot online';
+    info.innerHTML = '☁️ <strong>Verbunden</strong> – Einträge werden zentral gespeichert. Von überall erreichbar.';
+  } catch {
+    sbOnline      = false;
+    dot.className = 'status-dot offline';
+    info.innerHTML = 'ℹ️ <strong>Offline-Modus</strong> – Einträge werden lokal gespeichert und beim nächsten Online-Start übertragen.';
+  }
 }
 
 // ── localStorage fallback ─────────────────────────────────────────────────
-function lsKey(robot) {
-  return `ruestfreigabe_all_${robot.replace(' ', '_')}`;
-}
-function lsLoad(robot) {
-  try { return JSON.parse(localStorage.getItem(lsKey(robot)) || '[]'); }
-  catch { return []; }
-}
-function lsSave(robot, entries) {
-  localStorage.setItem(lsKey(robot), JSON.stringify(entries));
-}
+function lsKey(robot)           { return `ruestfreigabe_all_${robot.replace(' ', '_')}`; }
+function lsLoad(robot)          { try { return JSON.parse(localStorage.getItem(lsKey(robot)) || '[]'); } catch { return []; } }
+function lsSave(robot, entries) { localStorage.setItem(lsKey(robot), JSON.stringify(entries)); }
 
-// ── Load / Save entries ───────────────────────────────────────────────────
+// ── Load entries ──────────────────────────────────────────────────────────
 async function loadEntries() {
-  const handle = await getVerifiedHandle(currentRobot);
-  if (handle) {
-    return await readJsonFile(handle, FILE_NAMES[currentRobot]);
+  if (sbOnline) {
+    try {
+      const rows = await sbFetch(
+        `${TABLE}?robot=eq.${encodeURIComponent(currentRobot)}&order=date.asc,timestamp.asc`
+      );
+      return (rows || []).map(r => ({
+        date:        r.date,
+        dateDisplay: r.date_display,
+        prüfer:      r.pruefer,
+        checks:      r.checks,
+        timestamp:   r.timestamp
+      }));
+    } catch {
+      sbOnline = false;
+      document.getElementById('status-dot').className = 'status-dot offline';
+      document.getElementById('status-info').innerHTML = 'ℹ️ <strong>Verbindung unterbrochen</strong> – Offline-Modus aktiv.';
+    }
   }
   return lsLoad(currentRobot);
 }
 
-async function persistEntries(entries) {
-  const handle = await getVerifiedHandle(currentRobot);
-  if (handle) {
-    await writeJsonFile(handle, FILE_NAMES[currentRobot], entries);
-  } else {
-    lsSave(currentRobot, entries);
+// ── Save single entry ─────────────────────────────────────────────────────
+async function persistEntry(entry) {
+  if (sbOnline) {
+    try {
+      await sbFetch(TABLE, {
+        method:  'POST',
+        headers: { 'Prefer': 'return=minimal' },
+        body: JSON.stringify({
+          robot:        currentRobot,
+          date:         entry.date,
+          date_display: entry.dateDisplay,
+          pruefer:      entry.prüfer,
+          checks:       entry.checks,
+          timestamp:    entry.timestamp
+        })
+      });
+      await syncOfflineQueue();
+      return true;
+    } catch { sbOnline = false; }
   }
+  const queue = lsLoad(currentRobot);
+  queue.push(entry);
+  lsSave(currentRobot, queue);
+  showToast('⚠ Offline – lokal gespeichert.\nWird automatisch hochgeladen sobald Verbindung besteht.', 'warn', 5000);
+  return false;
 }
 
-// ── Folder status bar ─────────────────────────────────────────────────────
-async function updateFolderBar() {
-  const dot  = document.getElementById('folder-dot');
-  const info = document.getElementById('folder-info');
-  const btn  = document.getElementById('btn-connect');
-
-  if (!FS_SUPPORTED) {
-    dot.className  = 'folder-dot info';
-    info.innerHTML = 'ℹ️ <strong>Tablet-Modus</strong> – Einträge werden lokal gespeichert. Excel-Export verfügbar.';
-    btn.style.display = 'none';
-    return;
+// ── Sync offline queue ────────────────────────────────────────────────────
+async function syncOfflineQueue() {
+  const queue = lsLoad(currentRobot);
+  if (queue.length === 0) return;
+  let synced = 0;
+  for (const entry of queue) {
+    try {
+      await sbFetch(TABLE, {
+        method:  'POST',
+        headers: { 'Prefer': 'return=minimal' },
+        body: JSON.stringify({
+          robot:        currentRobot,
+          date:         entry.date,
+          date_display: entry.dateDisplay,
+          pruefer:      entry.prüfer,
+          checks:       entry.checks,
+          timestamp:    entry.timestamp
+        })
+      });
+      synced++;
+    } catch { break; }
   }
-
-  const handle = await getVerifiedHandle(currentRobot);
-  if (handle) {
-    dot.className  = 'folder-dot connected';
-    info.innerHTML = `<strong>Verbunden:</strong> ${handle.name}  ·  Datei: ${FILE_NAMES[currentRobot]}`;
-    btn.textContent = 'Ordner ändern';
-  } else {
-    dot.className  = 'folder-dot';
-    info.innerHTML = `Kein Ordner verbunden  ·  Zielpfad: <em>${ROBOTS[currentRobot].folderHint}</em>`;
-    btn.textContent = 'Ordner verbinden';
-  }
-}
-
-async function connectFolder() {
-  if (!FS_SUPPORTED) {
-    alert('Dein Browser unterstützt diese Funktion nicht.\nBitte Microsoft Edge oder Google Chrome verwenden.');
-    return;
-  }
-  const hint = ROBOTS[currentRobot].folderHint;
-  try {
-    const handle = await window.showDirectoryPicker({
-      id: `ruestfreigabe_${currentRobot}`,
-      mode: 'readwrite',
-      startIn: 'documents'
-    });
-    await dbPut(currentRobot, handle);
-    await updateFolderBar();
-
-    // Migrate existing localStorage data into the file if file is empty
-    const existing = await readJsonFile(handle, FILE_NAMES[currentRobot]);
-    if (existing.length === 0) {
-      const local = lsLoad(currentRobot);
-      if (local.length > 0) {
-        await writeJsonFile(handle, FILE_NAMES[currentRobot], local);
-        showToast(`✔ Ordner verbunden!\n${local.length} vorhandene Einträge übertragen.`, 'ok', 4000);
-      } else {
-        showToast('✔ Ordner verbunden!', 'ok', 3000);
-      }
-    } else {
-      showToast(`✔ Ordner verbunden!\n${existing.length} vorhandene Einträge geladen.`, 'ok', 3500);
-    }
-    await renderHistory();
-  } catch (e) {
-    if (e.name !== 'AbortError') {
-      showToast('Fehler beim Verbinden des Ordners.', 'warn');
-    }
+  if (synced > 0) {
+    lsSave(currentRobot, queue.slice(synced));
+    showToast(`☁ ${synced} offline gespeicherte Einträge übertragen.`, 'ok', 4000);
   }
 }
 
@@ -615,25 +524,20 @@ async function connectFolder() {
 document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('inp-date').value = isoToday();
   buildChecklist();
-  await updateFolderBar();
+  await checkConnection();
+  if (sbOnline) await syncOfflineQueue();
   await renderHistory();
 });
 
-function isoToday() {
-  return new Date().toISOString().slice(0, 10);
-}
-function formatDate(iso) {
-  const [y, m, d] = iso.split('-');
-  return `${d}.${m}.${y}`;
-}
+function isoToday() { return new Date().toISOString().slice(0, 10); }
+function formatDate(iso) { const [y, m, d] = iso.split('-'); return `${d}.${m}.${y}`; }
 
-// ── Switch robot type ─────────────────────────────────────────────────────
+// ── Switch robot ──────────────────────────────────────────────────────────
 async function switchRobot(robot) {
   currentRobot = robot;
   document.getElementById('tab-lackier').classList.toggle('active', robot === 'Lackierroboter');
   document.getElementById('tab-beflam' ).classList.toggle('active', robot === 'Beflammroboter');
   buildChecklist();
-  await updateFolderBar();
   await renderHistory();
 }
 
@@ -642,10 +546,8 @@ function buildChecklist() {
   const robot = ROBOTS[currentRobot];
   checkValues = {};
   robot.checks.forEach(c => { checkValues[c] = null; });
-
   document.getElementById('section-title').textContent =
     `Checkpunkte  ·  ${currentRobot}  ·  ${robot.fb}  ·  ${robot.model}`;
-
   document.getElementById('checklist').innerHTML =
     robot.checks.map((check, i) => `
       <div class="check-item">
@@ -655,7 +557,7 @@ function buildChecklist() {
           <button class="btn-io"  id="io-${i}"  onclick="setCheck(${i},'i.O.')">i.O.</button>
           <button class="btn-nio" id="nio-${i}" onclick="setCheck(${i},'n.i.O.')">n.i.O.</button>
         </div>
-        <span class="status-badge" id="badge-${i}">–</span>
+        <span class="check-badge" id="badge-${i}">–</span>
       </div>`).join('');
 }
 
@@ -663,17 +565,15 @@ function buildChecklist() {
 function setCheck(idx, value) {
   const check = ROBOTS[currentRobot].checks[idx];
   checkValues[check] = value;
-
   const io    = document.getElementById(`io-${idx}`);
   const nio   = document.getElementById(`nio-${idx}`);
   const badge = document.getElementById(`badge-${idx}`);
-
   if (value === 'i.O.') {
     io.classList.add('active');    nio.classList.remove('active');
-    badge.textContent = '✔ i.O.';  badge.className = 'status-badge io';
+    badge.textContent = '✔ i.O.';  badge.className = 'check-badge io';
   } else {
     nio.classList.add('active');   io.classList.remove('active');
-    badge.textContent = '✗ n.i.O.'; badge.className = 'status-badge nio';
+    badge.textContent = '✗ n.i.O.'; badge.className = 'check-badge nio';
   }
 }
 
@@ -681,7 +581,6 @@ function setCheck(idx, value) {
 async function saveEntry() {
   const name    = document.getElementById('inp-name').value.trim();
   const dateVal = document.getElementById('inp-date').value;
-
   if (!name)    { showToast('Bitte Namen des Prüfers eingeben.', 'warn'); return; }
   if (!dateVal) { showToast('Bitte Datum eingeben.', 'warn'); return; }
 
@@ -691,23 +590,25 @@ async function saveEntry() {
   }
 
   const nioItems = Object.entries(checkValues).filter(([, v]) => v === 'n.i.O.').map(([k]) => k);
+  const btn = document.getElementById('btn-save');
+  btn.disabled    = true;
+  btn.textContent = '⏳ Wird gespeichert …';
 
-  const entries = await loadEntries();
-  entries.push({
+  await persistEntry({
     date:        dateVal,
     dateDisplay: formatDate(dateVal),
     prüfer:      name,
     checks:      { ...checkValues },
     timestamp:   Date.now()
   });
-  entries.sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
 
-  await persistEntries(entries);
+  btn.disabled   = false;
+  btn.innerHTML  = '✔&nbsp; Rüstfreigabe dokumentieren';
 
   if (nioItems.length > 0) {
     showToast(`⚠ n.i.O. dokumentiert!\n${nioItems.map(i => '• ' + i).join('\n')}\n→ QS / Schichtführer informieren!`, 'warn', 6000);
-  } else {
-    showToast('✔ Rüstfreigabe dokumentiert!', 'ok', 3000);
+  } else if (sbOnline) {
+    showToast('✔ Rüstfreigabe gespeichert!', 'ok', 3000);
   }
 
   resetForm();
@@ -722,39 +623,30 @@ function resetForm() {
 }
 
 // ── History table ─────────────────────────────────────────────────────────
-let _allEntries = [];
-
 async function renderHistory() {
-  _allEntries = (await loadEntries()).sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
-
-  // Populate year dropdown from available entries
-  const years    = [...new Set(_allEntries.map(e => e.date.slice(0, 4)))].sort();
-  const selYear  = document.getElementById('filter-year');
-  const prevYear = selYear.value;
+  _allEntries = await loadEntries();
+  const years   = [...new Set(_allEntries.map(e => e.date.slice(0, 4)))].sort();
+  const selYear = document.getElementById('filter-year');
+  const prevY   = selYear.value;
   selYear.innerHTML = '<option value="">Alle</option>' +
-    years.map(y => `<option value="${y}"${y === prevYear ? ' selected' : ''}>${y}</option>`).join('');
-
+    years.map(y => `<option value="${y}"${y === prevY ? ' selected' : ''}>${y}</option>`).join('');
   document.getElementById('history-title').textContent =
     `Alle Einträge  ·  ${currentRobot}  (${_allEntries.length})`;
-
   applyFilter();
 }
 
 function applyFilter() {
-  const year  = document.getElementById('filter-year').value;
-  const month = document.getElementById('filter-month').value;
-  const robot = ROBOTS[currentRobot];
-
+  const year     = document.getElementById('filter-year').value;
+  const month    = document.getElementById('filter-month').value;
+  const robot    = ROBOTS[currentRobot];
   const filtered = _allEntries.filter(e => {
     if (year  && e.date.slice(0, 4) !== year)  return false;
     if (month && e.date.slice(5, 7) !== month) return false;
     return true;
   });
 
-  const countEl = document.getElementById('filter-count');
-  countEl.textContent = (year || month)
-    ? `${filtered.length} von ${_allEntries.length} Einträgen`
-    : '';
+  document.getElementById('filter-count').textContent =
+    (year || month) ? `${filtered.length} von ${_allEntries.length} Einträgen` : '';
 
   const box = document.getElementById('history-container');
   if (_allEntries.length === 0) {
@@ -794,7 +686,6 @@ function applyFilter() {
 async function exportExcel() {
   const entries = await loadEntries();
   if (entries.length === 0) { showToast('Keine Einträge vorhanden.', 'warn'); return; }
-
   const robot = ROBOTS[currentRobot];
   const now   = new Date();
   const ts    = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
@@ -817,14 +708,12 @@ async function exportExcel() {
     ['Nr.', 'Datum', ...robot.checks.map(c => `${c}\ni.O. / n.i.O.`), 'Name Prüfer'],
     ...entries.map((e, i) => [i + 1, e.dateDisplay, ...robot.checks.map(c => e.checks[c] || ''), e.prüfer])
   ];
-
   const ws = XLSX.utils.aoa_to_sheet(wsData);
   ws['!merges'] = [
     { s: { r: 0, c: 0 }, e: { r: 0, c: ncols - 1 } },
     { s: { r: 1, c: 0 }, e: { r: 1, c: ncols - 1 } }
   ];
   ws['!cols'] = [{ wch: 8 }, { wch: 14 }, ...robot.checks.map(() => ({ wch: 20 })), { wch: 24 }];
-
   const wb    = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Rüstfreigabe');
   const fname = `${ts}_${currentRobot.replace(' ', '_')}_${robot.fb}.xlsx`;
