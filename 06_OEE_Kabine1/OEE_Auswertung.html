@@ -371,9 +371,10 @@
 
   function renderTrendChart(daten) {
     destroyChart('oee');
-    const labels = daten.map(r => new Date(r.datum).toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit' }));
-    const oeeVals = daten.map(r => r.oee);
-    const n = daten.length || 2;
+    const hatDaten = daten.length > 0;
+    const labels   = hatDaten ? daten.map(r => new Date(r.datum).toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit' })) : ['', ''];
+    const oeeVals  = hatDaten ? daten.map(r => r.oee) : [null, null];
+    const n        = labels.length;
     charts['oee'] = new Chart(document.getElementById('chartOEE'), {
       type: 'line',
       data: {
