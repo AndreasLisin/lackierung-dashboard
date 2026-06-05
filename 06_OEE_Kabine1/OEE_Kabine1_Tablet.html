@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>OEE Kabine 1</title>
+  <title>OEE Eingabe Lackierroboter</title>
   <style>
     :root {
       --blau: #1F4E79;
@@ -414,12 +414,20 @@
 
     /* bottom spacer */
     .spacer { height: 20px; }
+  .btn-back {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,.15); color: #fff; text-decoration: none;
+    border-radius: 6px; padding: 6px 14px; font-size: 13px; font-weight: bold;
+    border: 1px solid rgba(255,255,255,.3); transition: background .2s;
+  }
+  .btn-back:hover { background: rgba(255,255,255,.25); }
   </style>
 </head>
 <body>
 
 <header>
-  <h1>OEE · Kabine 1</h1>
+  <a class="btn-back" href="../index.html">← Zurück</a>
+  <h1>OEE Eingabe Lackierroboter</h1>
   <span class="datum" id="headerDatum"></span>
 </header>
 
@@ -503,6 +511,9 @@
       <button class="btn-grund" onclick="grundWaehlen('Düse verstopft')">Düse verstopft</button>
       <button class="btn-grund" onclick="grundWaehlen('Druckluft-Ausfall')">Druckluft-Ausfall</button>
       <button class="btn-grund" onclick="grundWaehlen('Farbwechsel / Spülen')">Farbwechsel /<br>Spülen</button>
+      <button class="btn-grund" onclick="grundWaehlen('Max. Lackdruck')">Max. Lackdruck</button>
+      <button class="btn-grund" onclick="grundWaehlen('Max. Drehzahl')">Max. Drehzahl</button>
+      <button class="btn-grund" onclick="grundWaehlen('Max. Vordruck')">Max. Vordruck</button>
     </div>
 
     <div class="grund-kategorie">Material / Werkstück</div>
