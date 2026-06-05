@@ -492,8 +492,8 @@ async function loadFromHandle(dirHandle) {
 }
 
 // ── ORDNER VERBINDEN ─────────────────────────────────────────────────────────
+// Direkt Datei-Picker öffnen (kein SharePoint-await davor, sonst läuft User-Gesture ab)
 async function verbindeOrdner() {
-  try { await loadFromSharePoint(); return; } catch(e) {}
   if (window.self !== window.top) return;
   try {
     const dirHandle = await window.showDirectoryPicker();
