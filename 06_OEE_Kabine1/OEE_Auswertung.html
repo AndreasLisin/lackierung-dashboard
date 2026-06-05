@@ -21,32 +21,25 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 
-    /* Header */
-    header {
-      background: var(--blau);
-      color: #fff;
-      padding: 14px 24px;
-      display: flex;
-      align-items: center;
-      gap: 16px;
+    /* ── Topbar ── */
+    .topbar {
+      background: #1F4E79; color: #fff;
+      padding: 0 28px; display: flex; align-items: center;
+      justify-content: space-between; height: 62px;
+      position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,.3);
     }
+    .topbar-left { display: flex; align-items: center; gap: 16px; }
+    .topbar-logo { font-size: 22px; font-weight: 700; letter-spacing: .5px; color: #fff; }
+    .topbar-logo span { color: #BDD7EE; }
+    .topbar-sub  { font-size: 12px; color: rgba(255,255,255,.7); margin-top: 2px; }
+    .topbar-right { display: flex; align-items: center; gap: 12px; }
     .btn-back {
-      background: rgba(255,255,255,0.15);
-      border: none;
-      border-radius: 8px;
-      color: #fff;
-      padding: 8px 14px;
-      font-size: 0.88rem;
-      font-weight: 600;
-      cursor: pointer;
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3);
+      color: #fff; padding: 5px 14px; border-radius: 6px; font-size: 13px;
+      text-decoration: none; display: flex; align-items: center; gap: 6px;
     }
-    .btn-back:hover { background: rgba(255,255,255,0.25); }
-    header h1 { font-size: 1.1rem; font-weight: 700; }
-    header .sub { font-size: 0.8rem; opacity: .7; }
+    .btn-back:hover { background: rgba(255,255,255,.25); }
     .header-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
 
     /* Filter-Leiste */
@@ -167,16 +160,21 @@
 </head>
 <body>
 
-<header>
-  <a class="btn-back" href="../index.html">← Zurück</a>
-  <div>
-    <h1>OEE Auswertung – Kabine 1</h1>
-    <div class="sub">Lackierroboter · Frühschicht</div>
+<div class="topbar">
+  <div class="topbar-left">
+    <div>
+      <div class="topbar-logo">EINHAUS <span>Oberflächenveredelung GmbH</span></div>
+      <div class="topbar-sub">Industrielackierung · 55411 Bingen-Dietersheim</div>
+    </div>
   </div>
-  <div class="header-right">
-    <span id="letzteAktualisierung" style="font-size:.8rem;opacity:.7;"></span>
+  <div style="text-align:center;">
+    <div style="font-size:17px;font-weight:700;letter-spacing:.5px;">📊 OEE Auswertung – Kabine 1</div>
+    <div style="font-size:11px;opacity:.7;">Lackierung | <span id="letzteAktualisierung"></span></div>
   </div>
-</header>
+  <div class="topbar-right">
+    <a class="btn-back" href="../index.html">← Zurück</a>
+  </div>
+</div>
 
 <div class="filter-bar">
   <label>Zeitraum</label>

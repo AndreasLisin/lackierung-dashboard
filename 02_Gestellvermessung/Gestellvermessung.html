@@ -20,9 +20,24 @@
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: Arial, Helvetica, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
-  header { background: var(--primary); color: white; padding: 14px 24px; display: flex; align-items: center; gap: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
-  header .logo { font-size: 22px; font-weight: bold; letter-spacing: 1px; }
-  header .subtitle { font-size: 13px; opacity: 0.75; margin-top: 2px; }
+  .topbar {
+    background: #1F4E79; color: #fff;
+    padding: 0 28px; display: flex; align-items: center;
+    justify-content: space-between; height: 62px;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,.3);
+  }
+  .topbar-left { display: flex; align-items: center; gap: 16px; }
+  .topbar-logo { font-size: 22px; font-weight: 700; letter-spacing: .5px; color: #fff; }
+  .topbar-logo span { color: #BDD7EE; }
+  .topbar-sub  { font-size: 12px; color: rgba(255,255,255,.7); margin-top: 2px; }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .btn-back {
+    background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3);
+    color: #fff; padding: 5px 14px; border-radius: 6px; font-size: 13px;
+    text-decoration: none; display: flex; align-items: center; gap: 6px;
+  }
+  .btn-back:hover { background: rgba(255,255,255,.25); }
   .screen { display: none; flex: 1; padding: 32px 20px; max-width: 820px; margin: 0 auto; width: 100%; }
   .screen.active { display: flex; flex-direction: column; gap: 24px; }
   .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 28px 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
@@ -120,12 +135,21 @@
 </head>
 <body>
 
-<header>
-  <div>
-    <div class="logo">Gestellvermessung</div>
-    <div class="subtitle">Qualitätsprüfung · Sollvorgaben-Bewertung</div>
+<div class="topbar">
+  <div class="topbar-left">
+    <div>
+      <div class="topbar-logo">EINHAUS <span>Oberflächenveredelung GmbH</span></div>
+      <div class="topbar-sub">Industrielackierung · 55411 Bingen-Dietersheim</div>
+    </div>
   </div>
-</header>
+  <div style="text-align:center;">
+    <div style="font-size:17px;font-weight:700;letter-spacing:.5px;">📐 Gestellvermessung</div>
+    <div style="font-size:11px;opacity:.7;">Lackierung | Qualitätsprüfung · Sollvorgaben-Bewertung</div>
+  </div>
+  <div class="topbar-right">
+    <a class="btn-back" href="../index.html">← Zurück</a>
+  </div>
+</div>
 
 <div class="screen active" id="screen-select">
   <div class="card">
