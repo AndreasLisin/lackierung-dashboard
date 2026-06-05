@@ -14,14 +14,38 @@ $EMPFAENGER = @(
     'andreas.lisin@einhaus-gmbh.de'
 )
 
-$DASHBOARD_URL = 'https://andreaslisin.github.io/lackierung-dashboard/06_OEE_Kabine1/OEE_Auswertung.html'
-
 function Write-Log {
     param([string]$Msg, [string]$Level = 'INFO')
     $ts   = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
     $line = "$ts  [$Level]  $Msg"
     $line | Add-Content -Path $LogPfad -Encoding UTF8
     Write-Host $line
+}
+
+function Bar {
+    param([int]$Pct, [string]$Farbe, [string]$Bg = '#e8eef7')
+    $p = [math]::Max(0, [math]::Min($Pct, 100))
+    $r = 100 - $p
+    if ($p -eq 0) {
+        return "<table width='100%' cellpadding='0' cellspacing='0' border='0'><tr><td bgcolor='$Bg' style='height:8px;border-radius:4px;font-size:1px;'>&nbsp;</td></tr></table>"
+    } elseif ($r -eq 0) {
+        return "<table width='100%' cellpadding='0' cellspacing='0' border='0'><tr><td bgcolor='$Farbe' style='height:8px;border-radius:4px;font-size:1px;'>&nbsp;</td></tr></table>"
+    } else {
+        return "<table width='100%' cellpadding='0' cellspacing='0' border='0'><tr><td width='$p%' bgcolor='$Farbe' style='height:8px;border-radius:4px 0 0 4px;font-size:1px;'>&nbsp;</td><td width='$r%' bgcolor='$Bg' style='height:8px;border-radius:0 4px 4px 0;font-size:1px;'>&nbsp;</td></tr></table>"
+    }
+}
+
+function OeeFarbe { param($v)
+    if ($null -eq $v) { return '#888888' }
+    if ($v -ge 80) { return '#1a7a3c' }
+    if ($v -ge 60) { return '#c47a00' }
+    return '#c0392b'
+}
+function OeeBg { param($v)
+    if ($null -eq $v) { return '#f0f0f0' }
+    if ($v -ge 80) { return '#e8f8ee' }
+    if ($v -ge 60) { return '#fff8e1' }
+    return '#fde8e6'
 }
 
 Write-Log ('=' * 60)
@@ -31,7 +55,6 @@ $gestern   = (Get-Date).AddDays(-1).ToString('yyyy-MM-dd')
 $gestDatum = (Get-Date).AddDays(-1).ToString('dd.MM.yyyy')
 Write-Log "Datum: $gestDatum"
 
-# Supabase abfragen
 try {
     $url = "$SUPABASE_URL/rest/v1/oee_erfassung?datum=eq.$gestern&order=created_at.asc"
     $response = Invoke-RestMethod -Uri $url -Headers @{
@@ -47,44 +70,43 @@ try {
 $hatDaten = ($response.Count -gt 0)
 
 if ($hatDaten) {
-    $schicht   = $response[0]
-    $oee       = if ($null -ne $schicht.oee)               { [math]::Round($schicht.oee, 1) }               else { $null }
-    $verfueg   = if ($null -ne $schicht.verfuegbarkeit)     { [math]::Round($schicht.verfuegbarkeit, 1) }    else { $null }
-    $qualit    = if ($null -ne $schicht.qualitaet)          { [math]::Round($schicht.qualitaet, 1) }         else { $null }
-    $stoerung  = if ($null -ne $schicht.stoerung_min)       { $schicht.stoerung_min }                        else { 0 }
-    $menge     = if ($null -ne $schicht.gesamtmenge)        { $schicht.gesamtmenge }                         else { 0 }
-    $ausschuss = if ($null -ne $schicht.ausschuss)          { $schicht.ausschuss }                           else { 0 }
-    $notiz     = if ($schicht.notiz)                        { $schicht.notiz }                               else { '' }
-    $belegung  = if ($null -ne $schicht.belegungszeit_min)  { $schicht.belegungszeit_min }                   else { 0 }
+    $s         = $response[0]
+    $oee       = if ($null -ne $s.oee)              { [math]::Round($s.oee, 1) }              else { $null }
+    $verfueg   = if ($null -ne $s.verfuegbarkeit)   { [math]::Round($s.verfuegbarkeit, 1) }   else { $null }
+    $qualit    = if ($null -ne $s.qualitaet)        { [math]::Round($s.qualitaet, 1) }        else { $null }
+    $stoerung  = if ($null -ne $s.stoerung_min)     { $s.stoerung_min }                       else { 0 }
+    $menge     = if ($null -ne $s.gesamtmenge)      { $s.gesamtmenge }                        else { 0 }
+    $ausschuss = if ($null -ne $s.ausschuss)        { $s.ausschuss }                          else { 0 }
+    $notiz     = if ($s.notiz)                      { $s.notiz }                              else { '' }
+    $belegung  = if ($null -ne $s.belegungszeit_min){ $s.belegungszeit_min }                  else { 0 }
 
-    # Farben + Bewertung
-    if ($null -eq $oee -or $belegung -eq 0) {
-        $oeeFarbe  = '#888888'; $oeeBg = '#f0f0f0'; $bewertung = 'Kein Produktionstag'; $oeeText = '-'
-    } elseif ($oee -ge 80) {
-        $oeeFarbe  = '#1a7a3c'; $oeeBg = '#e8f8ee'; $bewertung = 'GUT';      $oeeText = "$oee %"
-    } elseif ($oee -ge 60) {
-        $oeeFarbe  = '#c47a00'; $oeeBg = '#fff8e1'; $bewertung = 'MITTEL';   $oeeText = "$oee %"
-    } else {
-        $oeeFarbe  = '#c0392b'; $oeeBg = '#fde8e6'; $bewertung = 'KRITISCH'; $oeeText = "$oee %"
-    }
+    $oeeF  = OeeFarbe $oee;  $oeeBg  = OeeBg $oee
+    $vF    = OeeFarbe $verfueg
+    $qF    = OeeFarbe $qualit
+    $stF   = if ($stoerung -gt 45) { '#c0392b' } elseif ($stoerung -gt 20) { '#c47a00' } else { '#1a7a3c' }
 
-    $verfText  = if ($null -ne $verfueg) { "$verfueg %" } else { '-' }
-    $qualText  = if ($null -ne $qualit)  { "$qualit %" }  else { '-' }
+    $oeeV  = if ($null -ne $oee)    { [int]$oee }    else { 0 }
+    $vV    = if ($null -ne $verfueg){ [int]$verfueg } else { 0 }
+    $qV    = if ($null -ne $qualit) { [int]$qualit }  else { 0 }
 
-    # Balkenbreiten (0-100) fuer CSS
-    $oeeBalken  = if ($null -ne $oee)    { [math]::Min([math]::Max([int]$oee,    0), 100) } else { 0 }
-    $verfBalken = if ($null -ne $verfueg){ [math]::Min([math]::Max([int]$verfueg, 0), 100) } else { 0 }
-    $qualBalken = if ($null -ne $qualit) { [math]::Min([math]::Max([int]$qualit,  0), 100) } else { 0 }
-    $oeeRest    = 100 - $oeeBalken
-    $verfRest   = 100 - $verfBalken
-    $qualRest   = 100 - $qualBalken
+    $oeeT  = if ($null -ne $oee)    { "$oee %" }    else { '-' }
+    $vT    = if ($null -ne $verfueg){ "$verfueg %" } else { '-' }
+    $qT    = if ($null -ne $qualit) { "$qualit %" }  else { '-' }
+    $bewertung = if ($null -eq $oee -or $belegung -eq 0) { 'Kein Produktionstag' } elseif ($oee -ge 80) { 'GUT' } elseif ($oee -ge 60) { 'MITTEL' } else { 'KRITISCH' }
 
-    $stFarbe    = if ($stoerung -gt 45) { '#c0392b' } elseif ($stoerung -gt 20) { '#c47a00' } else { '#1a7a3c' }
+    $oeeBar = Bar $oeeV $oeeF
+    $vBar   = Bar $vV   $vF
+    $qBar   = Bar $qV   $qF
+
+    # Stillstand-Balken relativ zu Belegungszeit
+    $stPct  = if ($belegung -gt 0) { [math]::Min([int](($stoerung / $belegung) * 100), 100) } else { 0 }
+    $stBar  = Bar $stPct $stF
+
     $notizZeile = if ($notiz) {
-        "<tr><td colspan='3' style='padding:0;'><table width='100%' cellpadding='0' cellspacing='0' border='0'><tr><td width='180' style='padding:8px 16px;font-size:12px;color:#666;border-top:1px solid #eee;'>Notiz / Storungsgrund</td><td style='padding:8px 16px;font-size:12px;font-weight:600;color:#333;border-top:1px solid #eee;'>$notiz</td></tr></table></td></tr>"
+        "<tr><td bgcolor='#f8fafc' style='padding:9px 12px;font-size:12px;color:#666;border-top:1px solid #eee;'>Notiz / Stoerungsgrund</td><td bgcolor='#f8fafc' style='padding:9px 12px;font-size:12px;font-weight:bold;color:#333;border-top:1px solid #eee;'>$notiz</td><td bgcolor='#f8fafc' style='padding:9px 12px;border-top:1px solid #eee;'></td><td bgcolor='#f8fafc' style='padding:9px 12px;border-top:1px solid #eee;'></td><td bgcolor='#f8fafc' style='padding:9px 12px;border-top:1px solid #eee;'></td><td bgcolor='#f8fafc' style='padding:9px 12px;border-top:1px solid #eee;'></td><td bgcolor='#f8fafc' style='padding:9px 12px;border-top:1px solid #eee;'></td><td bgcolor='#f8fafc' style='padding:9px 12px;border-top:1px solid #eee;'></td></tr>"
     } else { '' }
 
-    $betreff = "OEE Tagesbericht $gestDatum - Kabine 1: $oeeText [$bewertung]"
+    $betreff  = "OEE Tagesbericht $gestDatum - Kabine 1: $oeeT [$bewertung]"
 
     $htmlBody = @"
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -93,90 +115,191 @@ if ($hatDaten) {
 <body style="margin:0;padding:0;background-color:#eef1f5;">
 <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#eef1f5">
 <tr><td align="center" style="padding:20px 10px;">
+<table width="680" cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,sans-serif;">
 
-<table width="600" cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,sans-serif;">
+<!-- HEADER -->
+<tr><td bgcolor="#1F4E79" style="padding:16px 24px;border-radius:10px 10px 0 0;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+    <td style="color:#fff;font-size:17px;font-weight:bold;">EINHAUS Lackierung &ndash; OEE Tagesbericht</td>
+    <td align="right" style="color:rgba(255,255,255,0.75);font-size:12px;">Lackierroboter Kabine 1 &ndash; $gestDatum</td>
+  </tr></table>
+</td></tr>
 
-  <!-- HEADER -->
-  <tr><td bgcolor="#1F4E79" style="padding:20px 28px;border-radius:10px 10px 0 0;">
-    <table width="100%" cellpadding="0" cellspacing="0" border="0">
-      <tr>
-        <td style="color:#ffffff;font-size:20px;font-weight:bold;">EINHAUS Lackierung</td>
-        <td align="right" style="color:rgba(255,255,255,0.7);font-size:12px;">$gestDatum</td>
-      </tr>
-      <tr><td colspan="2" style="color:rgba(255,255,255,0.75);font-size:12px;padding-top:4px;">OEE Tagesbericht &ndash; Lackierroboter Kabine 1</td></tr>
-    </table>
-  </td></tr>
+<!-- KPI KACHELN -->
+<tr><td bgcolor="#ffffff" style="padding:14px 12px 0 12px;border-top:3px solid #dce1e7;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr>
+    <!-- OEE -->
+    <td width="20%" style="padding:0 4px 14px 4px;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr><td bgcolor="#ffffff" style="padding:14px 12px;border:2px solid $oeeF;border-radius:8px;">
+        <div style="font-size:9px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#7a8a9a;margin-bottom:6px;">OEE</div>
+        <div style="font-size:22px;font-weight:900;color:$oeeF;">$oeeT</div>
+        <div style="font-size:9px;color:#7a8a9a;margin-top:4px;">$bewertung</div>
+      </td></tr>
+      </table>
+    </td>
+    <!-- Verfuegbarkeit -->
+    <td width="20%" style="padding:0 4px 14px 4px;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr><td bgcolor="#ffffff" style="padding:14px 12px;border:2px solid #2E75B6;border-radius:8px;">
+        <div style="font-size:9px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#7a8a9a;margin-bottom:6px;">Verfuegbarkeit</div>
+        <div style="font-size:22px;font-weight:900;color:#2E75B6;">$vT</div>
+        <div style="font-size:9px;color:#7a8a9a;margin-top:4px;">&nbsp;</div>
+      </td></tr>
+      </table>
+    </td>
+    <!-- Qualitaet -->
+    <td width="20%" style="padding:0 4px 14px 4px;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr><td bgcolor="#ffffff" style="padding:14px 12px;border:2px solid #2E75B6;border-radius:8px;">
+        <div style="font-size:9px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#7a8a9a;margin-bottom:6px;">Qualitaet</div>
+        <div style="font-size:22px;font-weight:900;color:#2E75B6;">$qT</div>
+        <div style="font-size:9px;color:#7a8a9a;margin-top:4px;">&nbsp;</div>
+      </td></tr>
+      </table>
+    </td>
+    <!-- Stillstand -->
+    <td width="20%" style="padding:0 4px 14px 4px;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr><td bgcolor="#ffffff" style="padding:14px 12px;border:2px solid $stF;border-radius:8px;">
+        <div style="font-size:9px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#7a8a9a;margin-bottom:6px;">Stillstand</div>
+        <div style="font-size:22px;font-weight:900;color:$stF;">$stoerung min</div>
+        <div style="font-size:9px;color:#7a8a9a;margin-top:4px;">min / Schicht</div>
+      </td></tr>
+      </table>
+    </td>
+    <!-- Schichten -->
+    <td width="20%" style="padding:0 4px 14px 4px;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr><td bgcolor="#ffffff" style="padding:14px 12px;border:2px solid #2E75B6;border-radius:8px;">
+        <div style="font-size:9px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#7a8a9a;margin-bottom:6px;">Schichten gesamt</div>
+        <div style="font-size:22px;font-weight:900;color:#2E75B6;">1</div>
+        <div style="font-size:9px;color:#7a8a9a;margin-top:4px;">im Zeitraum</div>
+      </td></tr>
+      </table>
+    </td>
+  </tr>
+  </table>
+</td></tr>
 
-  <!-- OEE HAUPTWERT -->
-  <tr><td bgcolor="$oeeBg" style="padding:28px;text-align:center;border-left:4px solid $oeeFarbe;border-right:4px solid $oeeFarbe;">
-    <div style="font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:2px;color:#888;margin-bottom:6px;">OEE Gesamt</div>
-    <div style="font-size:64px;font-weight:900;color:$oeeFarbe;line-height:1.1;">$oeeText</div>
-    <div style="font-size:13px;font-weight:bold;color:$oeeFarbe;margin-top:6px;letter-spacing:1px;">$bewertung</div>
-    <!-- OEE Balken -->
-    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:14px;">
-      <tr>
-        <td width="${oeeBalken}%" bgcolor="$oeeFarbe" style="height:10px;border-radius:5px 0 0 5px;font-size:1px;">&nbsp;</td>
-        <td width="${oeeRest}%" bgcolor="#dce1e7" style="height:10px;border-radius:0 5px 5px 0;font-size:1px;">&nbsp;</td>
-      </tr>
-    </table>
-    <div style="font-size:10px;color:#888;margin-top:4px;">Ziel: 80 %</div>
-  </td></tr>
+<!-- CHARTS ZEILE 1: OEE VERLAUF + STOERUNGSGRUENDE -->
+<tr><td bgcolor="#ffffff" style="padding:0 12px 12px 12px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+    <!-- OEE Verlauf -->
+    <td width="60%" style="padding-right:6px;" valign="top">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr><td bgcolor="#ffffff" style="padding:16px;border:1px solid #dce1e7;border-radius:8px;">
+        <div style="font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#1F4E79;margin-bottom:12px;">OEE VERLAUF</div>
+        <!-- Achse 100% -->
+        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+          <tr><td style="font-size:9px;color:#bbb;padding-bottom:2px;">100%</td></tr>
+          <tr><td bgcolor="#f0f0f0" style="height:1px;font-size:1px;">&nbsp;</td></tr>
+          <tr><td style="height:$([math]::Max(0, 100 - $oeeV))px;font-size:1px;">&nbsp;</td></tr>
+          <tr><td style="padding:0;">
+            <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+              <td width="60" align="center" style="padding:0 20px;">
+                <table cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
+                  <tr><td bgcolor="$oeeF" width="40" style="height:${oeeV}px;border-radius:4px 4px 0 0;font-size:1px;">&nbsp;</td></tr>
+                </table>
+              </td>
+              <td>&nbsp;</td>
+            </tr></table>
+          </td></tr>
+          <tr><td bgcolor="#dce1e7" style="height:2px;font-size:1px;">&nbsp;</td></tr>
+          <tr><td style="font-size:9px;color:#888;padding-top:4px;text-align:center;">$gestDatum &mdash; $oeeT</td></tr>
+        </table>
+        <!-- Ziel-Linie Hinweis -->
+        <div style="font-size:9px;color:#1a7a3c;margin-top:8px;">&#9632; Ziel: 80 %</div>
+      </td></tr>
+      </table>
+    </td>
+    <!-- Stoerungsgruende -->
+    <td width="40%" style="padding-left:6px;" valign="top">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr><td bgcolor="#ffffff" style="padding:16px;border:1px solid #dce1e7;border-radius:8px;">
+        <div style="font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#1F4E79;margin-bottom:12px;">STOERUNGSGRUENDE</div>
+        $(if ($notiz) {
+            "<table width='100%' cellpadding='0' cellspacing='0' border='0'>" +
+            "<tr><td style='padding:6px 0;font-size:11px;color:#333;border-bottom:1px solid #eee;'>$notiz</td><td align='right' style='padding:6px 0;font-size:11px;font-weight:bold;color:#c0392b;border-bottom:1px solid #eee;'>$stoerung min</td></tr>" +
+            "</table>"
+        } else {
+            "<div style='font-size:12px;color:#aaa;text-align:center;padding:20px 0;'>Keine Stoerungsdaten</div>"
+        })
+      </td></tr>
+      </table>
+    </td>
+  </tr></table>
+</td></tr>
 
-  <!-- KPI KACHELN -->
-  <tr><td bgcolor="#ffffff" style="padding:0;border-top:1px solid #dce1e7;">
-    <table width="100%" cellpadding="0" cellspacing="0" border="0">
-      <tr>
-        <!-- Verfuegbarkeit -->
-        <td width="33%" style="padding:18px 16px;text-align:center;border-right:1px solid #dce1e7;">
-          <div style="font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:6px;">Verfuegbarkeit</div>
-          <div style="font-size:28px;font-weight:900;color:#2E75B6;">$verfText</div>
-          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:8px;">
-            <tr>
-              <td width="${verfBalken}%" bgcolor="#2E75B6" style="height:6px;border-radius:3px 0 0 3px;font-size:1px;">&nbsp;</td>
-              <td width="${verfRest}%"  bgcolor="#dce1e7" style="height:6px;border-radius:0 3px 3px 0;font-size:1px;">&nbsp;</td>
-            </tr>
-          </table>
-        </td>
-        <!-- Qualitaet -->
-        <td width="33%" style="padding:18px 16px;text-align:center;border-right:1px solid #dce1e7;">
-          <div style="font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:6px;">Qualitaet</div>
-          <div style="font-size:28px;font-weight:900;color:#2E75B6;">$qualText</div>
-          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:8px;">
-            <tr>
-              <td width="${qualBalken}%" bgcolor="#2E75B6" style="height:6px;border-radius:3px 0 0 3px;font-size:1px;">&nbsp;</td>
-              <td width="${qualRest}%"  bgcolor="#dce1e7" style="height:6px;border-radius:0 3px 3px 0;font-size:1px;">&nbsp;</td>
-            </tr>
-          </table>
-        </td>
-        <!-- Stillstand -->
-        <td width="34%" style="padding:18px 16px;text-align:center;">
-          <div style="font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:6px;">Stillstand</div>
-          <div style="font-size:28px;font-weight:900;color:$stFarbe;">$stoerung min</div>
-          <div style="font-size:10px;color:#aaa;margin-top:8px;">von $belegung min Belegung</div>
-        </td>
-      </tr>
-    </table>
-  </td></tr>
+<!-- CHARTS ZEILE 2: VERFUEGBARKEIT & QUALITAET + STILLSTAND -->
+<tr><td bgcolor="#ffffff" style="padding:0 12px 12px 12px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+    <!-- Verfuegbarkeit & Qualitaet -->
+    <td width="50%" style="padding-right:6px;" valign="top">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr><td bgcolor="#ffffff" style="padding:16px;border:1px solid #dce1e7;border-radius:8px;">
+        <div style="font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#1F4E79;margin-bottom:12px;">VERFUEGBARKEIT &amp; QUALITAET</div>
+        <div style="font-size:10px;color:#7a8a9a;margin-bottom:4px;">Verfuegbarkeit</div>
+        $vBar
+        <div style="font-size:13px;font-weight:bold;color:#2E75B6;margin-bottom:10px;">$vT</div>
+        <div style="font-size:10px;color:#7a8a9a;margin-bottom:4px;">Qualitaet</div>
+        $qBar
+        <div style="font-size:13px;font-weight:bold;color:#1a7a3c;margin-bottom:0;">$qT</div>
+      </td></tr>
+      </table>
+    </td>
+    <!-- Stillstand -->
+    <td width="50%" style="padding-left:6px;" valign="top">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr><td bgcolor="#ffffff" style="padding:16px;border:1px solid #dce1e7;border-radius:8px;">
+        <div style="font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#1F4E79;margin-bottom:12px;">STILLSTAND PRO SCHICHT (MIN)</div>
+        <div style="font-size:10px;color:#7a8a9a;margin-bottom:4px;">$gestDatum</div>
+        $stBar
+        <div style="font-size:13px;font-weight:bold;color:$stF;margin-bottom:0;">$stoerung min</div>
+        <div style="font-size:10px;color:#aaa;margin-top:4px;">von $belegung min Belegungszeit</div>
+      </td></tr>
+      </table>
+    </td>
+  </tr></table>
+</td></tr>
 
-  <!-- DETAILS TABELLE -->
-  <tr><td bgcolor="#f8fafc" style="padding:0;border-top:1px solid #dce1e7;">
+<!-- SCHICHTEN TABELLE -->
+<tr><td bgcolor="#ffffff" style="padding:0 12px 14px 12px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr><td bgcolor="#ffffff" style="padding:16px;border:1px solid #dce1e7;border-radius:8px;">
+    <div style="font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#1F4E79;margin-bottom:10px;">SCHICHTEN</div>
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr bgcolor="#1F4E79">
-        <td style="padding:10px 16px;font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#ffffff;">Kennzahl</td>
-        <td style="padding:10px 16px;font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#ffffff;">Wert</td>
+        <td style="padding:8px 10px;font-size:10px;font-weight:bold;color:#fff;text-transform:uppercase;letter-spacing:.5px;">Datum</td>
+        <td style="padding:8px 10px;font-size:10px;font-weight:bold;color:#fff;text-transform:uppercase;letter-spacing:.5px;">Belegung</td>
+        <td style="padding:8px 10px;font-size:10px;font-weight:bold;color:#fff;text-transform:uppercase;letter-spacing:.5px;">Stillstand</td>
+        <td style="padding:8px 10px;font-size:10px;font-weight:bold;color:#fff;text-transform:uppercase;letter-spacing:.5px;">Menge</td>
+        <td style="padding:8px 10px;font-size:10px;font-weight:bold;color:#fff;text-transform:uppercase;letter-spacing:.5px;">Ausschuss</td>
+        <td style="padding:8px 10px;font-size:10px;font-weight:bold;color:#fff;text-transform:uppercase;letter-spacing:.5px;">Verfueg.</td>
+        <td style="padding:8px 10px;font-size:10px;font-weight:bold;color:#fff;text-transform:uppercase;letter-spacing:.5px;">Qualitaet</td>
+        <td style="padding:8px 10px;font-size:10px;font-weight:bold;color:#fff;text-transform:uppercase;letter-spacing:.5px;">OEE</td>
       </tr>
-      <tr bgcolor="#ffffff"><td width="180" style="padding:10px 16px;font-size:13px;color:#555;border-bottom:1px solid #eee;">Belegungszeit</td><td style="padding:10px 16px;font-size:13px;font-weight:bold;color:#222;border-bottom:1px solid #eee;">$belegung min</td></tr>
-      <tr bgcolor="#f8fafc"><td width="180" style="padding:10px 16px;font-size:13px;color:#555;border-bottom:1px solid #eee;">Stoerung / Stillstand</td><td style="padding:10px 16px;font-size:13px;font-weight:bold;color:$stFarbe;border-bottom:1px solid #eee;">$stoerung min</td></tr>
-      <tr bgcolor="#ffffff"><td width="180" style="padding:10px 16px;font-size:13px;color:#555;border-bottom:1px solid #eee;">Gesamtmenge</td><td style="padding:10px 16px;font-size:13px;font-weight:bold;color:#222;border-bottom:1px solid #eee;">$menge Stueck</td></tr>
-      <tr bgcolor="#f8fafc"><td width="180" style="padding:10px 16px;font-size:13px;color:#555;$(if($notiz){'border-bottom:1px solid #eee;'})">Ausschuss + Nacharbeit</td><td style="padding:10px 16px;font-size:13px;font-weight:bold;color:#222;$(if($notiz){'border-bottom:1px solid #eee;'})">$ausschuss Stueck</td></tr>
-      $(if($notiz){"<tr bgcolor='#ffffff'><td width='180' style='padding:10px 16px;font-size:13px;color:#555;'>Notiz / Stoerungsgrund</td><td style='padding:10px 16px;font-size:13px;font-weight:bold;color:#222;'>$notiz</td></tr>"})
+      <tr bgcolor="#f8fafc">
+        <td style="padding:9px 10px;font-size:12px;color:#333;border-top:1px solid #eee;">$gestDatum</td>
+        <td style="padding:9px 10px;font-size:12px;color:#333;border-top:1px solid #eee;">$belegung min</td>
+        <td style="padding:9px 10px;font-size:12px;font-weight:bold;color:$stF;border-top:1px solid #eee;">$stoerung min</td>
+        <td style="padding:9px 10px;font-size:12px;color:#333;border-top:1px solid #eee;">$menge</td>
+        <td style="padding:9px 10px;font-size:12px;color:#333;border-top:1px solid #eee;">$ausschuss</td>
+        <td style="padding:9px 10px;font-size:12px;color:#2E75B6;border-top:1px solid #eee;">$vT</td>
+        <td style="padding:9px 10px;font-size:12px;color:#2E75B6;border-top:1px solid #eee;">$qT</td>
+        <td style="padding:9px 10px;font-size:12px;font-weight:bold;color:$oeeF;border-top:1px solid #eee;">$oeeT</td>
+      </tr>
+      $notizZeile
     </table>
   </td></tr>
+  </table>
+</td></tr>
 
-  <!-- FOOTER -->
-  <tr><td bgcolor="#ffffff" style="padding:16px 28px;text-align:center;border-top:1px solid #dce1e7;border-radius:0 0 10px 10px;">
-    <div style="font-size:11px;color:#aaa;">EINHAUS Oberflaechenveredelung GmbH &middot; Saarlandstr. 375a, 55411 Bingen</div>
-  </td></tr>
+<!-- FOOTER -->
+<tr><td bgcolor="#1F4E79" style="padding:12px 24px;border-radius:0 0 10px 10px;text-align:center;">
+  <div style="font-size:11px;color:rgba(255,255,255,0.6);">EINHAUS Oberflaechenveredelung GmbH &middot; Saarlandstr. 375a, 55411 Bingen</div>
+</td></tr>
 
 </table>
 </td></tr>
@@ -186,7 +309,7 @@ if ($hatDaten) {
 "@
 
 } else {
-    $betreff = "OEE Tagesbericht $gestDatum - Kabine 1: KEIN EINTRAG"
+    $betreff  = "OEE Tagesbericht $gestDatum - Kabine 1: KEIN EINTRAG"
     $htmlBody = @"
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -194,24 +317,21 @@ if ($hatDaten) {
 <body style="margin:0;padding:0;background-color:#eef1f5;">
 <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#eef1f5">
 <tr><td align="center" style="padding:20px 10px;">
-<table width="600" cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,sans-serif;">
-  <tr><td bgcolor="#1F4E79" style="padding:20px 28px;border-radius:10px 10px 0 0;">
-    <table width="100%" cellpadding="0" cellspacing="0" border="0">
-      <tr>
-        <td style="color:#ffffff;font-size:20px;font-weight:bold;">EINHAUS Lackierung</td>
-        <td align="right" style="color:rgba(255,255,255,0.7);font-size:12px;">$gestDatum</td>
-      </tr>
-      <tr><td colspan="2" style="color:rgba(255,255,255,0.75);font-size:12px;padding-top:4px;">OEE Tagesbericht &ndash; Lackierroboter Kabine 1</td></tr>
-    </table>
+<table width="680" cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,sans-serif;">
+  <tr><td bgcolor="#1F4E79" style="padding:16px 24px;border-radius:10px 10px 0 0;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+      <td style="color:#fff;font-size:17px;font-weight:bold;">EINHAUS Lackierung &ndash; OEE Tagesbericht</td>
+      <td align="right" style="color:rgba(255,255,255,0.75);font-size:12px;">Lackierroboter Kabine 1 &ndash; $gestDatum</td>
+    </tr></table>
   </td></tr>
   <tr><td bgcolor="#fde8e6" style="padding:36px 28px;text-align:center;border-left:4px solid #c0392b;border-right:4px solid #c0392b;">
     <div style="font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:2px;color:#c0392b;margin-bottom:10px;">OEE Gesamt</div>
-    <div style="font-size:52px;font-weight:900;color:#c0392b;line-height:1.1;">Kein Eintrag</div>
+    <div style="font-size:48px;font-weight:900;color:#c0392b;line-height:1.1;">Kein Eintrag</div>
     <div style="font-size:13px;color:#c0392b;margin-top:10px;">Fuer den $gestDatum wurde keine Schicht erfasst.</div>
     <div style="font-size:12px;color:#888;margin-top:8px;">Bitte pruefen ob die Schichterfassung am Tablet eingetragen wurde.</div>
   </td></tr>
-  <tr><td bgcolor="#ffffff" style="padding:16px 28px;text-align:center;border-top:1px solid #dce1e7;border-radius:0 0 10px 10px;">
-    <div style="font-size:11px;color:#aaa;">EINHAUS Oberflaechenveredelung GmbH &middot; Saarlandstr. 375a, 55411 Bingen</div>
+  <tr><td bgcolor="#1F4E79" style="padding:12px 24px;border-radius:0 0 10px 10px;text-align:center;">
+    <div style="font-size:11px;color:rgba(255,255,255,0.6);">EINHAUS Oberflaechenveredelung GmbH &middot; Saarlandstr. 375a, 55411 Bingen</div>
   </td></tr>
 </table>
 </td></tr>
@@ -237,10 +357,10 @@ $fehler   = 0
 
 foreach ($empfaenger in $EMPFAENGER) {
     try {
-        $mail            = $outlook.CreateItem(0)
-        $mail.To         = $empfaenger
-        $mail.Subject    = $betreff
-        $mail.HTMLBody   = $htmlBody
+        $mail          = $outlook.CreateItem(0)
+        $mail.To       = $empfaenger
+        $mail.Subject  = $betreff
+        $mail.HTMLBody = $htmlBody
         $mail.Send()
         $gesendet++
         Write-Log "Gesendet -> $empfaenger"
