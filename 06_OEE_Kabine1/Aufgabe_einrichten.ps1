@@ -28,7 +28,7 @@ try {
         -Execute  'powershell.exe' `
         -Argument "-ExecutionPolicy Bypass -NonInteractive -WindowStyle Hidden -File `"$ScriptPath`""
 
-    $trigger = New-ScheduledTaskTrigger -Daily -At '07:00AM'
+    $trigger = New-ScheduledTaskTrigger -Daily -At '08:20AM'
 
     $settings = New-ScheduledTaskSettingsSet `
         -ExecutionTimeLimit (New-TimeSpan -Minutes 10) `
@@ -46,7 +46,7 @@ try {
     Write-Host " Erfolgreich eingerichtet!" -ForegroundColor Green
     Write-Host ""
     Write-Host ("  Name:      " + $task.TaskName)
-    Write-Host  "  Zeitplan:  Taeglich um 07:00 Uhr"
+    Write-Host  "  Zeitplan:  Taeglich um 08:20 Uhr"
     Write-Host  "  Skript:    $ScriptPath"
     Write-Host  "  Status:    Bereit"
     Write-Host ""
