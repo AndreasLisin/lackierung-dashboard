@@ -51,6 +51,13 @@ function OeeBg { param($v)
 Write-Log ('=' * 60)
 Write-Log "EINHAUS OEE Tagesbericht gestartet"
 
+# Sonntag: kein Bericht
+if ((Get-Date).DayOfWeek -eq 'Sunday') {
+    Write-Log "Sonntag - kein Bericht wird gesendet."
+    Write-Log ('-' * 60)
+    exit 0
+}
+
 $gestern   = (Get-Date).AddDays(-1).ToString('yyyy-MM-dd')
 $gestDatum = (Get-Date).AddDays(-1).ToString('dd.MM.yyyy')
 Write-Log "Datum: $gestDatum"
