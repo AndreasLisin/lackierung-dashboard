@@ -60,15 +60,19 @@ if ((Get-Date).DayOfWeek -eq 'Sunday') {
 
 $gestern   = (Get-Date).AddDays(-1).ToString('yyyy-MM-dd')
 $gestDatum = (Get-Date).AddDays(-1).ToString('dd.MM.yyyy')
+$vor7tagen = (Get-Date).AddDays(-7).ToString('yyyy-MM-dd')
 Write-Log "Datum: $gestDatum"
 
 try {
+    # Gestern (Hauptdaten)
     $url = "$SUPABASE_URL/rest/v1/oee_erfassung?datum=eq.$gestern&order=created_at.asc"
-    $response = Invoke-RestMethod -Uri $url -Headers @{
-        'apikey'        = $SUPABASE_ANON
-        'Authorization' = "Bearer $SUPABASE_ANON"
-    }
+    $response = Invoke-RestMethod -Uri $url -Headers @{ 'apikey' = $SUPABASE_ANON; 'Authorization' = "Bearer $SUPABASE_ANON" }
     Write-Log "$($response.Count) Schicht(en) gefunden"
+
+    # Letzte 7 Tage fuer Verlauf
+    $url7 = "$SUPABASE_URL/rest/v1/oee_erfassung?datum=gte.$vor7tagen&datum=lte.$gestern&order=datum.asc"
+    $verlauf = Invoke-RestMethod -Uri $url7 -Headers @{ 'apikey' = $SUPABASE_ANON; 'Authorization' = "Bearer $SUPABASE_ANON" }
+    Write-Log "$($verlauf.Count) Eintraege fuer Verlauf"
 } catch {
     Write-Log "Supabase-Fehler: $($_.Exception.Message)" 'FEHLER'
     exit 1
@@ -82,6 +86,103 @@ if ($hatDaten) {
 } else {
     $s = [PSCustomObject]@{ oee=$null; verfuegbarkeit=$null; qualitaet=$null; stoerung_min=0; gesamtmenge=0; ausschuss=0; notiz=''; belegungszeit_min=0 }
 }
+
+# Verlauf-Chart HTML generieren
+function GenVerlaufChart {
+    param($daten)
+    # Charthoehe: 120px = 100%, jeder % = 1.2px
+    # Zonen (px von oben): 85% = 18px, 75% = 30px, 60% = 48px, 0% = 120px
+    $h = 120
+    if ($daten.Count -eq 0) {
+        # Leerer Chart mit nur Referenzlinien
+        return @"
+<table width='100%' cellpadding='0' cellspacing='0' border='0'>
+<tr>
+  <td width='28' style='font-size:1px;'>&nbsp;</td>
+  <td>
+    <table width='100%' cellpadding='0' cellspacing='0' border='0'>
+      <tr><td bgcolor='#f8f9fa' style='height:18px;font-size:1px;'>&nbsp;</td></tr>
+      <tr><td bgcolor='#1a7a3c' style='height:1px;font-size:1px;'>&nbsp;</td></tr>
+      <tr><td bgcolor='#f8f9fa' style='height:12px;font-size:1px;'>&nbsp;</td></tr>
+      <tr><td bgcolor='#f39c12' style='height:1px;font-size:1px;'>&nbsp;</td></tr>
+      <tr><td bgcolor='#f8f9fa' style='height:18px;font-size:1px;'>&nbsp;</td></tr>
+      <tr><td bgcolor='#c0392b' style='height:1px;font-size:1px;'>&nbsp;</td></tr>
+      <tr><td bgcolor='#f8f9fa' style='height:70px;font-size:1px;'>&nbsp;</td></tr>
+      <tr><td bgcolor='#dce1e7' style='height:1px;font-size:1px;'>&nbsp;</td></tr>
+    </table>
+  </td>
+</tr>
+</table>
+"@
+    }
+
+    # Spaltenbreite
+    $cols = $daten.Count
+    $colW = [math]::Floor(100 / $cols)
+
+    # Kopf-Zeile mit Prozent-Labels links
+    $chartRows = ''
+
+    # Aufbau: Zeilen von oben nach unten
+    # Jede Zeile hat: label-Zelle links + Datenzellen rechts
+    # Zonen-Hoehen: 18, 1(linie), 12, 1(linie), 18, 1(linie), 70, 1(achse)
+    $zoneH = @(18, 12, 18, 70)
+    $lineC = @('#1a7a3c', '#f39c12', '#c0392b')
+    $linePct = @(85, 75, 60)
+
+    # Fuer jede Zone und Linie Zeilen bauen
+    for ($z = 0; $z -lt 4; $z++) {
+        # Zone-Zeile
+        $cells = ''
+        foreach ($d in $daten) {
+            $v = if ($null -ne $d.oee) { [double]$d.oee } else { -1 }
+            # Untere Grenze der Zone
+            $unterG = switch ($z) { 0 { 85 } 1 { 75 } 2 { 60 } 3 { 0 } }
+            $obereG = switch ($z) { 0 { 100 } 1 { 85 } 2 { 75 } 3 { 60 } }
+            if ($v -ge $obereG) {
+                # Bar fuellt ganze Zone
+                $barC = if ($v -ge 85) { '#1a7a3c' } elseif ($v -ge 75) { '#2E75B6' } elseif ($v -ge 60) { '#f39c12' } else { '#c0392b' }
+                $cells += "<td bgcolor='$barC' style='height:$($zoneH[$z])px;font-size:1px;border-right:1px solid #fff;'>&nbsp;</td>"
+            } elseif ($v -gt $unterG -and $v -lt $obereG) {
+                # Bar fuellt Zone teilweise - zeige als halbe Hoehe
+                $barC = if ($v -ge 75) { '#2E75B6' } elseif ($v -ge 60) { '#f39c12' } else { '#c0392b' }
+                $fillH = [math]::Round(($v - $unterG) / ($obereG - $unterG) * $zoneH[$z])
+                $emptyH = $zoneH[$z] - $fillH
+                $cells += "<td style='padding:0;border-right:1px solid #fff;'><table width='100%' cellpadding='0' cellspacing='0' border='0'><tr><td bgcolor='#f8f9fa' style='height:${emptyH}px;font-size:1px;'>&nbsp;</td></tr><tr><td bgcolor='$barC' style='height:${fillH}px;font-size:1px;'>&nbsp;</td></tr></table></td>"
+            } else {
+                # Leer
+                $cells += "<td bgcolor='#f8f9fa' style='height:$($zoneH[$z])px;font-size:1px;border-right:1px solid #fff;'>&nbsp;</td>"
+            }
+        }
+        # Prozent-Label links (nur bei Linien)
+        $chartRows += "<tr><td width='28' style='font-size:1px;'>&nbsp;</td><td><table width='100%' cellpadding='0' cellspacing='0' border='0'><tr>$cells</tr></table></td></tr>"
+
+        # Referenzlinie (ausser nach letzter Zone)
+        if ($z -lt 3) {
+            $lc = $lineC[$z]; $lp = $linePct[$z]
+            $lCells = ''
+            foreach ($d in $daten) { $lCells += "<td bgcolor='$lc' style='height:1px;font-size:1px;border-right:1px solid #fff;'>&nbsp;</td>" }
+            $chartRows += "<tr><td width='28' style='font-size:8px;color:$lc;text-align:right;padding-right:3px;vertical-align:middle;'>${lp}%</td><td><table width='100%' cellpadding='0' cellspacing='0' border='0'><tr>$lCells</tr></table></td></tr>"
+        }
+    }
+
+    # Achse
+    $axisCells = ''
+    foreach ($d in $daten) { $axisCells += "<td bgcolor='#dce1e7' style='height:1px;font-size:1px;border-right:1px solid #fff;'>&nbsp;</td>" }
+    $chartRows += "<tr><td width='28' style='font-size:1px;'>&nbsp;</td><td><table width='100%' cellpadding='0' cellspacing='0' border='0'><tr>$axisCells</tr></table></td></tr>"
+
+    # Labels
+    $labelCells = ''
+    foreach ($d in $daten) {
+        $tag = [datetime]::Parse($d.datum).ToString('dd.MM')
+        $labelCells += "<td style='font-size:8px;color:#888;text-align:center;padding-top:3px;border-right:1px solid #fff;'>$tag</td>"
+    }
+    $chartRows += "<tr><td width='28' style='font-size:1px;'>&nbsp;</td><td><table width='100%' cellpadding='0' cellspacing='0' border='0'><tr>$labelCells</tr></table></td></tr>"
+
+    return "<table width='100%' cellpadding='0' cellspacing='0' border='0'>$chartRows</table>"
+}
+
+$verlaufChartHtml = GenVerlaufChart $verlauf
 
 if ($true) {
     $oee       = if ($null -ne $s.oee)              { [math]::Round($s.oee, 1) }              else { $null }
@@ -204,24 +305,7 @@ if ($true) {
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr><td bgcolor="#ffffff" style="padding:16px;border:1px solid #dce1e7;border-radius:8px;">
         <div style="font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#1F4E79;margin-bottom:12px;">OEE VERLAUF</div>
-        <!-- Chart mit duennen Ziellinien -->
-        <table width="100%" cellpadding="0" cellspacing="0" border="0">
-          <tr><td width="30" style="font-size:1px;">&nbsp;</td><td bgcolor="#f0f0f0" style="height:1px;font-size:1px;">&nbsp;</td></tr>
-          <tr><td width="30" style="font-size:1px;">&nbsp;</td><td style="height:13px;font-size:1px;">&nbsp;</td></tr>
-          <tr><td width="30" style="font-size:8px;color:#1a7a3c;text-align:right;padding-right:4px;">85%</td><td bgcolor="#1a7a3c" style="height:1px;font-size:1px;">&nbsp;</td></tr>
-          <tr><td width="30" style="font-size:1px;">&nbsp;</td><td style="height:13px;font-size:1px;">&nbsp;</td></tr>
-          <tr><td width="30" style="font-size:8px;color:#f39c12;text-align:right;padding-right:4px;">75%</td><td bgcolor="#f39c12" style="height:1px;font-size:1px;">&nbsp;</td></tr>
-          <tr><td width="30" style="font-size:1px;">&nbsp;</td><td style="height:20px;font-size:1px;">&nbsp;</td></tr>
-          <tr><td width="30" style="font-size:8px;color:#c0392b;text-align:right;padding-right:4px;">60%</td><td bgcolor="#c0392b" style="height:1px;font-size:1px;">&nbsp;</td></tr>
-          <tr><td width="30" style="font-size:1px;">&nbsp;</td><td style="height:40px;font-size:1px;">&nbsp;</td></tr>
-          <tr><td width="30" style="font-size:1px;">&nbsp;</td><td bgcolor="#dce1e7" style="height:1px;font-size:1px;">&nbsp;</td></tr>
-          <tr><td colspan="2" style="padding-top:6px;">
-            <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-              <td style="font-size:9px;color:#888;">$gestDatum</td>
-              <td align="right"><span style="background-color:$oeeF;color:#fff;font-size:11px;font-weight:bold;padding:2px 8px;border-radius:4px;">$oeeT</span></td>
-            </tr></table>
-          </td></tr>
-        </table>
+        $verlaufChartHtml
       </td></tr>
       </table>
     </td>
