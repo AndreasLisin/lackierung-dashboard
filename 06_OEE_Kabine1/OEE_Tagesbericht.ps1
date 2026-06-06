@@ -206,16 +206,16 @@ if ($true) {
         <div style="font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#1F4E79;margin-bottom:12px;">OEE VERLAUF</div>
         <!-- Chart mit duennen Ziellinien -->
         <table width="100%" cellpadding="0" cellspacing="0" border="0">
-          <tr><td bgcolor="#f0f0f0" style="height:1px;font-size:1px;">&nbsp;</td></tr><!-- 100% -->
-          <tr><td style="height:13px;font-size:1px;">&nbsp;</td></tr>
-          <tr><td bgcolor="#1a7a3c" style="height:1px;font-size:1px;">&nbsp;</td></tr><!-- 85% gruen -->
-          <tr><td style="height:13px;font-size:1px;">&nbsp;</td></tr>
-          <tr><td bgcolor="#f39c12" style="height:1px;font-size:1px;">&nbsp;</td></tr><!-- 75% orange -->
-          <tr><td style="height:20px;font-size:1px;">&nbsp;</td></tr>
-          <tr><td bgcolor="#c0392b" style="height:1px;font-size:1px;">&nbsp;</td></tr><!-- 60% rot -->
-          <tr><td style="height:40px;font-size:1px;">&nbsp;</td></tr>
-          <tr><td bgcolor="#dce1e7" style="height:1px;font-size:1px;">&nbsp;</td></tr><!-- 0% -->
-          <tr><td style="padding-top:6px;">
+          <tr><td width="30" style="font-size:1px;">&nbsp;</td><td bgcolor="#f0f0f0" style="height:1px;font-size:1px;">&nbsp;</td></tr>
+          <tr><td width="30" style="font-size:1px;">&nbsp;</td><td style="height:13px;font-size:1px;">&nbsp;</td></tr>
+          <tr><td width="30" style="font-size:8px;color:#1a7a3c;text-align:right;padding-right:4px;">85%</td><td bgcolor="#1a7a3c" style="height:1px;font-size:1px;">&nbsp;</td></tr>
+          <tr><td width="30" style="font-size:1px;">&nbsp;</td><td style="height:13px;font-size:1px;">&nbsp;</td></tr>
+          <tr><td width="30" style="font-size:8px;color:#f39c12;text-align:right;padding-right:4px;">75%</td><td bgcolor="#f39c12" style="height:1px;font-size:1px;">&nbsp;</td></tr>
+          <tr><td width="30" style="font-size:1px;">&nbsp;</td><td style="height:20px;font-size:1px;">&nbsp;</td></tr>
+          <tr><td width="30" style="font-size:8px;color:#c0392b;text-align:right;padding-right:4px;">60%</td><td bgcolor="#c0392b" style="height:1px;font-size:1px;">&nbsp;</td></tr>
+          <tr><td width="30" style="font-size:1px;">&nbsp;</td><td style="height:40px;font-size:1px;">&nbsp;</td></tr>
+          <tr><td width="30" style="font-size:1px;">&nbsp;</td><td bgcolor="#dce1e7" style="height:1px;font-size:1px;">&nbsp;</td></tr>
+          <tr><td colspan="2" style="padding-top:6px;">
             <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
               <td style="font-size:9px;color:#888;">$gestDatum</td>
               <td align="right"><span style="background-color:$oeeF;color:#fff;font-size:11px;font-weight:bold;padding:2px 8px;border-radius:4px;">$oeeT</span></td>
