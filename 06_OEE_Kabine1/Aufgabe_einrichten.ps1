@@ -29,7 +29,7 @@ try {
         -Argument         "-ExecutionPolicy Bypass -NonInteractive -WindowStyle Hidden -File `"$ScriptPath`"" `
         -WorkingDirectory $ScriptDir
 
-    $trigger = New-ScheduledTaskTrigger -Daily -At '08:30AM'
+    $trigger = New-ScheduledTaskTrigger -Daily -At '08:35AM'
 
     $settings = New-ScheduledTaskSettingsSet `
         -ExecutionTimeLimit (New-TimeSpan -Minutes 10) `
@@ -47,7 +47,7 @@ try {
     Write-Host " Erfolgreich eingerichtet!" -ForegroundColor Green
     Write-Host ""
     Write-Host ("  Name:      " + $task.TaskName)
-    Write-Host  "  Zeitplan:  Taeglich um 08:30 Uhr"
+    Write-Host  "  Zeitplan:  Taeglich um 08:35 Uhr"
     Write-Host  "  Skript:    $ScriptPath"
     Write-Host  "  Status:    Bereit"
     Write-Host ""
