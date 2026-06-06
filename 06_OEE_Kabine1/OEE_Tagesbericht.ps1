@@ -204,26 +204,69 @@ if ($true) {
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr><td bgcolor="#ffffff" style="padding:16px;border:1px solid #dce1e7;border-radius:8px;">
         <div style="font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#1F4E79;margin-bottom:12px;">OEE VERLAUF</div>
-        <!-- Achse 100% -->
+        <!-- Farbzonen-Chart mit Ziellinien -->
         <table width="100%" cellpadding="0" cellspacing="0" border="0">
-          <tr><td style="font-size:9px;color:#bbb;padding-bottom:2px;">100%</td></tr>
-          <tr><td bgcolor="#f0f0f0" style="height:1px;font-size:1px;">&nbsp;</td></tr>
-          <tr><td style="height:$([math]::Max(0, 100 - $oeeV))px;font-size:1px;">&nbsp;</td></tr>
-          <tr><td style="padding:0;">
-            <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-              <td width="60" align="center" style="padding:0 20px;">
-                <table cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
-                  <tr><td bgcolor="$oeeF" width="40" style="height:${oeeV}px;border-radius:4px 4px 0 0;font-size:1px;">&nbsp;</td></tr>
-                </table>
-              </td>
-              <td>&nbsp;</td>
-            </tr></table>
-          </td></tr>
-          <tr><td bgcolor="#dce1e7" style="height:2px;font-size:1px;">&nbsp;</td></tr>
-          <tr><td style="font-size:9px;color:#888;padding-top:4px;text-align:center;">$gestDatum &mdash; $oeeT</td></tr>
+          <!-- Zone: 85-100% gruen -->
+          <tr>
+            <td width="30" style="font-size:8px;color:#aaa;padding-right:4px;vertical-align:bottom;">100%</td>
+            <td bgcolor="#e8f8ee" style="height:15px;font-size:1px;">&nbsp;</td>
+          </tr>
+          <!-- Ziellinie 85% gruen -->
+          <tr>
+            <td width="30" style="font-size:8px;color:#1a7a3c;padding-right:4px;text-align:right;font-weight:bold;">85%</td>
+            <td bgcolor="#1a7a3c" style="height:2px;font-size:1px;">&nbsp;</td>
+          </tr>
+          <!-- Zone: 75-85% hellblau -->
+          <tr>
+            <td width="30" style="font-size:1px;">&nbsp;</td>
+            <td bgcolor="#e8f0fb" style="height:15px;font-size:1px;">&nbsp;</td>
+          </tr>
+          <!-- Ziellinie 75% orange -->
+          <tr>
+            <td width="30" style="font-size:8px;color:#f39c12;padding-right:4px;text-align:right;font-weight:bold;">75%</td>
+            <td bgcolor="#f39c12" style="height:2px;font-size:1px;">&nbsp;</td>
+          </tr>
+          <!-- Zone: 60-75% hellgelb -->
+          <tr>
+            <td width="30" style="font-size:1px;">&nbsp;</td>
+            <td bgcolor="#fff8e1" style="height:22px;font-size:1px;">&nbsp;</td>
+          </tr>
+          <!-- Ziellinie 60% rot -->
+          <tr>
+            <td width="30" style="font-size:8px;color:#c0392b;padding-right:4px;text-align:right;font-weight:bold;">60%</td>
+            <td bgcolor="#c0392b" style="height:2px;font-size:1px;">&nbsp;</td>
+          </tr>
+          <!-- Zone: 0-60% hellrot -->
+          <tr>
+            <td width="30" style="font-size:1px;">&nbsp;</td>
+            <td bgcolor="#fde8e6" style="height:30px;font-size:1px;">&nbsp;</td>
+          </tr>
+          <!-- Achse -->
+          <tr>
+            <td width="30" style="font-size:8px;color:#aaa;padding-right:4px;vertical-align:top;">0%</td>
+            <td bgcolor="#dce1e7" style="height:2px;font-size:1px;">&nbsp;</td>
+          </tr>
+          <!-- OEE Wert + Datum -->
+          <tr>
+            <td width="30" style="font-size:1px;">&nbsp;</td>
+            <td style="padding-top:6px;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+                <td style="font-size:9px;color:#888;">$gestDatum</td>
+                <td align="right">
+                  <span style="background-color:$oeeF;color:#fff;font-size:11px;font-weight:bold;padding:2px 8px;border-radius:4px;">$oeeT</span>
+                </td>
+              </tr></table>
+            </td>
+          </tr>
         </table>
-        <!-- Ziel-Linie Hinweis -->
-        <div style="font-size:9px;color:#1a7a3c;margin-top:8px;">&#9632; Ziel: 80 %</div>
+        <!-- Legende -->
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:10px;">
+          <tr>
+            <td style="font-size:9px;color:#1a7a3c;">&#9632; Exzellenz 85 %</td>
+            <td style="font-size:9px;color:#f39c12;">&#9632; Sollwert 75 %</td>
+            <td style="font-size:9px;color:#c0392b;">&#9632; Untergrenze 60 %</td>
+          </tr>
+        </table>
       </td></tr>
       </table>
     </td>
