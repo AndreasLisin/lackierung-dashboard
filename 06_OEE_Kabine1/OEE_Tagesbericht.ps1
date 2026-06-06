@@ -3,7 +3,7 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
+$ScriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Definition }
 $LogPfad   = Join-Path $ScriptDir 'OEE_Tagesbericht.log'
 
 $SUPABASE_URL  = 'https://tldkqifblxkdligypffr.supabase.co'

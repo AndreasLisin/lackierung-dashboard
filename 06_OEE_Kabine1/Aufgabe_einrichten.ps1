@@ -25,8 +25,9 @@ Get-ScheduledTask -TaskName 'EINHAUS OEE Tagesbericht' -ErrorAction SilentlyCont
 
 try {
     $action = New-ScheduledTaskAction `
-        -Execute  'powershell.exe' `
-        -Argument "-ExecutionPolicy Bypass -NonInteractive -WindowStyle Hidden -File `"$ScriptPath`""
+        -Execute          'powershell.exe' `
+        -Argument         "-ExecutionPolicy Bypass -NonInteractive -WindowStyle Hidden -File `"$ScriptPath`"" `
+        -WorkingDirectory $ScriptDir
 
     $trigger = New-ScheduledTaskTrigger -Daily -At '08:20AM'
 
