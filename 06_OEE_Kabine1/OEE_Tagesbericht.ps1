@@ -87,99 +87,50 @@ if ($hatDaten) {
     $s = [PSCustomObject]@{ oee=$null; verfuegbarkeit=$null; qualitaet=$null; stoerung_min=0; gesamtmenge=0; ausschuss=0; notiz=''; belegungszeit_min=0 }
 }
 
-# Verlauf-Chart HTML generieren
+# Verlauf-Chart als quickchart.io Bild generieren
 function GenVerlaufChart {
     param($daten)
-    # Charthoehe: 120px = 100%, jeder % = 1.2px
-    # Zonen (px von oben): 85% = 18px, 75% = 30px, 60% = 48px, 0% = 120px
-    $h = 120
-    if ($daten.Count -eq 0) {
-        # Leerer Chart mit nur Referenzlinien
-        return @"
-<table width='100%' cellpadding='0' cellspacing='0' border='0'>
-<tr>
-  <td width='28' style='font-size:1px;'>&nbsp;</td>
-  <td>
-    <table width='100%' cellpadding='0' cellspacing='0' border='0'>
-      <tr><td bgcolor='#f8f9fa' style='height:18px;font-size:1px;'>&nbsp;</td></tr>
-      <tr><td bgcolor='#1a7a3c' style='height:1px;font-size:1px;'>&nbsp;</td></tr>
-      <tr><td bgcolor='#f8f9fa' style='height:12px;font-size:1px;'>&nbsp;</td></tr>
-      <tr><td bgcolor='#f39c12' style='height:1px;font-size:1px;'>&nbsp;</td></tr>
-      <tr><td bgcolor='#f8f9fa' style='height:18px;font-size:1px;'>&nbsp;</td></tr>
-      <tr><td bgcolor='#c0392b' style='height:1px;font-size:1px;'>&nbsp;</td></tr>
-      <tr><td bgcolor='#f8f9fa' style='height:70px;font-size:1px;'>&nbsp;</td></tr>
-      <tr><td bgcolor='#dce1e7' style='height:1px;font-size:1px;'>&nbsp;</td></tr>
-    </table>
-  </td>
-</tr>
-</table>
-"@
+    # Labels + Datenpunkte
+    $n = $daten.Count
+    if ($n -eq 0) {
+        $labels = "''"
+        $oeeData = 'null'
+    } else {
+        $labels = ($daten | ForEach-Object { "'" + [datetime]::Parse($_.datum).ToString('dd.MM') + "'" }) -join ','
+        $oeeData = ($daten | ForEach-Object {
+            if ($null -ne $_.oee) { [math]::Round([double]$_.oee, 1) } else { 'null' }
+        }) -join ','
     }
+    $fill = if ($n -gt 0) { $n } else { 2 }
 
-    # Spaltenbreite
-    $cols = $daten.Count
-    $colW = [math]::Floor(100 / $cols)
+    # Punktfarben je Zone
+    $ptColors = if ($n -gt 0) {
+        ($daten | ForEach-Object {
+            $v = if ($null -ne $_.oee) { [double]$_.oee } else { 0 }
+            if ($v -ge 85) { "'#1a7a3c'" } elseif ($v -ge 75) { "'#2E75B6'" } elseif ($v -ge 60) { "'#f39c12'" } else { "'#c0392b'" }
+        }) -join ','
+    } else { "'#ccc'" }
 
-    # Kopf-Zeile mit Prozent-Labels links
-    $chartRows = ''
+    # Chart.js Konfiguration - Legende deaktiviert, als HTML eingebaut
+    $chartConfig = "{type:'line',data:{labels:[$labels],datasets:[" +
+        "{label:'',data:[$oeeData],borderColor:'#2E75B6',backgroundColor:'rgba(46,117,182,0.08)',pointBackgroundColor:[$ptColors],pointBorderColor:'white',pointBorderWidth:1,pointRadius:5,borderWidth:2,tension:0.3,fill:true}," +
+        "{label:'85%',data:[$(($fill..1 | ForEach-Object { '85' }) -join ',')],borderColor:'#1a7a3c',borderDash:[6,4],pointRadius:0,borderWidth:1.5,fill:false}," +
+        "{label:'75%',data:[$(($fill..1 | ForEach-Object { '75' }) -join ',')],borderColor:'#f39c12',borderDash:[6,4],pointRadius:0,borderWidth:1.5,fill:false}," +
+        "{label:'60%',data:[$(($fill..1 | ForEach-Object { '60' }) -join ',')],borderColor:'#c0392b',borderDash:[6,4],pointRadius:0,borderWidth:1.5,fill:false}" +
+        "]},options:{legend:{display:false},scales:{yAxes:[{ticks:{fontSize:9,min:0,max:100},gridLines:{color:'rgba(0,0,0,0.05)'}}],xAxes:[{ticks:{fontSize:9}}]}}}"
 
-    # Aufbau: Zeilen von oben nach unten
-    # Jede Zeile hat: label-Zelle links + Datenzellen rechts
-    # Zonen-Hoehen: 18, 1(linie), 12, 1(linie), 18, 1(linie), 70, 1(achse)
-    $zoneH = @(18, 12, 18, 70)
-    $lineC = @('#1a7a3c', '#f39c12', '#c0392b')
-    $linePct = @(85, 75, 60)
+    # URL encodieren
+    $encoded = [System.Web.HttpUtility]::UrlEncode($chartConfig)
+    $url = "https://quickchart.io/chart?c=$encoded&w=380&h=185&backgroundColor=white&devicePixelRatio=2"
 
-    # Fuer jede Zone und Linie Zeilen bauen
-    for ($z = 0; $z -lt 4; $z++) {
-        # Zone-Zeile
-        $cells = ''
-        foreach ($d in $daten) {
-            $v = if ($null -ne $d.oee) { [double]$d.oee } else { -1 }
-            # Untere Grenze der Zone
-            $unterG = switch ($z) { 0 { 85 } 1 { 75 } 2 { 60 } 3 { 0 } }
-            $obereG = switch ($z) { 0 { 100 } 1 { 85 } 2 { 75 } 3 { 60 } }
-            if ($v -ge $obereG) {
-                # Bar fuellt ganze Zone
-                $barC = if ($v -ge 85) { '#1a7a3c' } elseif ($v -ge 75) { '#2E75B6' } elseif ($v -ge 60) { '#f39c12' } else { '#c0392b' }
-                $cells += "<td bgcolor='$barC' style='height:$($zoneH[$z])px;font-size:1px;border-right:1px solid #fff;'>&nbsp;</td>"
-            } elseif ($v -gt $unterG -and $v -lt $obereG) {
-                # Bar fuellt Zone teilweise - zeige als halbe Hoehe
-                $barC = if ($v -ge 75) { '#2E75B6' } elseif ($v -ge 60) { '#f39c12' } else { '#c0392b' }
-                $fillH = [math]::Round(($v - $unterG) / ($obereG - $unterG) * $zoneH[$z])
-                $emptyH = $zoneH[$z] - $fillH
-                $cells += "<td style='padding:0;border-right:1px solid #fff;'><table width='100%' cellpadding='0' cellspacing='0' border='0'><tr><td bgcolor='#f8f9fa' style='height:${emptyH}px;font-size:1px;'>&nbsp;</td></tr><tr><td bgcolor='$barC' style='height:${fillH}px;font-size:1px;'>&nbsp;</td></tr></table></td>"
-            } else {
-                # Leer
-                $cells += "<td bgcolor='#f8f9fa' style='height:$($zoneH[$z])px;font-size:1px;border-right:1px solid #fff;'>&nbsp;</td>"
-            }
-        }
-        # Prozent-Label links (nur bei Linien)
-        $chartRows += "<tr><td width='28' style='font-size:1px;'>&nbsp;</td><td><table width='100%' cellpadding='0' cellspacing='0' border='0'><tr>$cells</tr></table></td></tr>"
+    # HTML-Legende unter dem Chart
+    $legende = "<table cellpadding='0' cellspacing='0' border='0' style='margin-top:6px;'><tr>" +
+        "<td style='font-size:9px;color:#1a7a3c;padding-right:14px;'>&#8212; 85%</td>" +
+        "<td style='font-size:9px;color:#f39c12;padding-right:14px;'>&#8212; 75%</td>" +
+        "<td style='font-size:9px;color:#c0392b;'>&#8212; 60%</td>" +
+        "</tr></table>"
 
-        # Referenzlinie (ausser nach letzter Zone)
-        if ($z -lt 3) {
-            $lc = $lineC[$z]; $lp = $linePct[$z]
-            $lCells = ''
-            foreach ($d in $daten) { $lCells += "<td bgcolor='$lc' style='height:1px;font-size:1px;border-right:1px solid #fff;'>&nbsp;</td>" }
-            $chartRows += "<tr><td width='28' style='font-size:8px;color:$lc;text-align:right;padding-right:3px;vertical-align:middle;'>${lp}%</td><td><table width='100%' cellpadding='0' cellspacing='0' border='0'><tr>$lCells</tr></table></td></tr>"
-        }
-    }
-
-    # Achse
-    $axisCells = ''
-    foreach ($d in $daten) { $axisCells += "<td bgcolor='#dce1e7' style='height:1px;font-size:1px;border-right:1px solid #fff;'>&nbsp;</td>" }
-    $chartRows += "<tr><td width='28' style='font-size:1px;'>&nbsp;</td><td><table width='100%' cellpadding='0' cellspacing='0' border='0'><tr>$axisCells</tr></table></td></tr>"
-
-    # Labels
-    $labelCells = ''
-    foreach ($d in $daten) {
-        $tag = [datetime]::Parse($d.datum).ToString('dd.MM')
-        $labelCells += "<td style='font-size:8px;color:#888;text-align:center;padding-top:3px;border-right:1px solid #fff;'>$tag</td>"
-    }
-    $chartRows += "<tr><td width='28' style='font-size:1px;'>&nbsp;</td><td><table width='100%' cellpadding='0' cellspacing='0' border='0'><tr>$labelCells</tr></table></td></tr>"
-
-    return "<table width='100%' cellpadding='0' cellspacing='0' border='0'>$chartRows</table>"
+    return "<img src='$url' width='380' height='185' alt='OEE Verlauf' style='display:block;max-width:100%;'/>$legende"
 }
 
 $verlaufChartHtml = GenVerlaufChart $verlauf
