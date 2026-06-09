@@ -227,11 +227,6 @@
       <div class="wert" id="kpiVWert">–</div>
       <div class="sub" id="kpiVSub"></div>
     </div>
-    <div class="kpi blau" id="kpiQ">
-      <div class="label">Ø Qualität</div>
-      <div class="wert" id="kpiQWert">–</div>
-      <div class="sub" id="kpiQSub"></div>
-    </div>
     <div class="kpi" id="kpiSt">
       <div class="label">Ø Stillstand</div>
       <div class="wert" id="kpiStWert">–</div>
@@ -262,7 +257,7 @@
 
   <div class="chart-grid" style="grid-template-columns:1fr 1fr">
     <div class="card">
-      <h2>Verfügbarkeit &amp; Qualität</h2>
+      <h2>Verfügbarkeit</h2>
       <div class="chart-wrap">
         <canvas id="chartVQ"></canvas>
       </div>
@@ -286,16 +281,13 @@
             <th>Schicht</th>
             <th>Belegung</th>
             <th>Stillstand</th>
-            <th>Menge</th>
-            <th>Ausschuss</th>
             <th>Verfügbarkeit</th>
-            <th>Qualität</th>
             <th>OEE</th>
             <th>Notiz</th>
           </tr>
         </thead>
         <tbody id="tabelleBody">
-          <tr><td colspan="10" class="leer">Wird geladen…</td></tr>
+          <tr><td colspan="7" class="leer">Wird geladen…</td></tr>
         </tbody>
       </table>
     </div>
@@ -414,7 +406,6 @@
   function renderKPIs(daten) {
     const oee = avgOEE(daten);
     const v   = avg(daten, 'verfuegbarkeit');
-    const q   = avg(daten, 'qualitaet');
     const st  = avg(daten, 'stoerung_min');
 
     const tage = produktionstage(daten);
@@ -428,7 +419,6 @@
     document.getElementById('kpiOEESub').textContent = subText;
 
     document.getElementById('kpiVWert').textContent = v !== null ? v.toFixed(1) + ' %' : '–';
-    document.getElementById('kpiQWert').textContent = q !== null ? q.toFixed(1) + ' %' : '–';
     document.getElementById('kpiStWert').textContent = st !== null ? Math.round(st) + ' min' : '–';
 
     const stKpi = document.getElementById('kpiSt');
@@ -514,13 +504,12 @@
       data: {
         labels,
         datasets: [
-          { label: 'Verfügbarkeit %', data: daten.map(r => r.verfuegbarkeit), borderColor: '#2E75B6', pointRadius: 3, tension: 0.3 },
-          { label: 'Qualität %',      data: daten.map(r => r.qualitaet),      borderColor: '#1a7a3c', pointRadius: 3, tension: 0.3 }
+          { label: 'Verfügbarkeit %', data: daten.map(r => r.verfuegbarkeit), borderColor: '#2E75B6', backgroundColor: 'rgba(46,117,182,0.08)', pointRadius: 3, tension: 0.3, fill: true }
         ]
       },
       options: {
         responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } },
+        plugins: { legend: { display: false } },
         scales: { y: { min: 0, max: 100, ticks: { callback: v => v + '%' } }, x: { ticks: { maxTicksLimit: 10 } } }
       }
     });
@@ -594,7 +583,7 @@
   function renderTabelle(daten) {
     const tbody = document.getElementById('tabelleBody');
     if (daten.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="10" class="leer">Keine Daten im gewählten Zeitraum</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="leer">Keine Daten im gewählten Zeitraum</td></tr>';
       return;
     }
     tbody.innerHTML = [...daten].reverse().map(r => `
@@ -603,10 +592,7 @@
         <td>${r.schicht || '–'}</td>
         <td>${r.belegungszeit_min ?? '–'} min</td>
         <td>${r.stoerung_min ?? 0} min</td>
-        <td>${r.gesamtmenge ?? '–'}</td>
-        <td>${r.ausschuss ?? 0}</td>
         <td>${r.verfuegbarkeit !== null ? r.verfuegbarkeit.toFixed(1) + ' %' : '–'}</td>
-        <td>${r.qualitaet !== null ? r.qualitaet.toFixed(1) + ' %' : '–'}</td>
         <td><span class="badge ${oeeKlasse(r.oee)}">${r.oee !== null ? r.oee.toFixed(1) + ' %' : '–'}</span></td>
         <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.notiz || ''}">${r.notiz || ''}</td>
       </tr>`).join('');

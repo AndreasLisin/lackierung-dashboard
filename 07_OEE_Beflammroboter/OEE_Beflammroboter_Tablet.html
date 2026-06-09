@@ -453,32 +453,13 @@
   <div class="stoerung-liste" id="stoerungListe"></div>
 </div>
 
-<!-- Mengen -->
-<div class="card">
-  <h2>Mengen</h2>
-  <div class="felder-grid">
-    <div class="feld">
-      <label>Gesamtmenge</label>
-      <input type="number" id="menge" min="0" placeholder="0" oninput="berechne()">
-    </div>
-    <div class="feld">
-      <label>Ausschuss + NB</label>
-      <input type="number" id="ausschuss" min="0" placeholder="0" oninput="berechne()">
-    </div>
-  </div>
-</div>
-
 <!-- OEE -->
 <div class="card">
   <h2>OEE Ergebnis</h2>
-  <div class="oee-grid">
+  <div class="oee-grid" style="grid-template-columns:1fr 1fr;">
     <div class="oee-kachel">
       <div class="label">Verfügbarkeit</div>
       <div class="wert" id="wertV">–</div>
-    </div>
-    <div class="oee-kachel">
-      <div class="label">Qualität</div>
-      <div class="wert" id="wertQ">–</div>
     </div>
     <div class="oee-kachel">
       <div class="label">Stillstand</div>
@@ -690,65 +671,46 @@
   function berechne() {
     const B = gesamtStoerung();
     const A = getBelegungszeit();
-    const C = parseInt(document.getElementById('menge').value) || 0;
-    const D = parseInt(document.getElementById('ausschuss').value) || 0;
 
     document.getElementById('wertSt').textContent = B + ' min';
-
-    if (A <= 0) {
-      document.getElementById('wertV').textContent = '0 %';
-      document.getElementById('wertQ').textContent = '–';
-      document.getElementById('oeeZahl').textContent = '0 %';
-      document.getElementById('oeeGesamt').className = 'oee-gesamt rot';
-      return;
-    }
-    const V = Math.max(0, (A - B) / A);
-
-    let Q = null;
-    if (C > 0) Q = Math.max(0, (C - D) / C);
-
-    const vText = (V * 100).toFixed(1) + ' %';
-    document.getElementById('wertV').textContent = vText;
-    document.getElementById('wertQ').textContent = Q !== null ? (Q * 100).toFixed(1) + ' %' : '–';
 
     const box = document.getElementById('oeeGesamt');
     const zahl = document.getElementById('oeeZahl');
 
-    if (Q !== null) {
-      const oee = V * Q;
-      const pct = Math.round(oee * 100);
-      zahl.textContent = pct + ' %';
-      box.className = 'oee-gesamt ' + (pct >= 80 ? 'gruen' : pct >= 60 ? 'gelb' : 'rot');
-    } else {
-      zahl.textContent = V !== null ? (V * 100).toFixed(1) + ' %' : '–';
-      box.className = 'oee-gesamt';
-      if (V !== null) {
-        const vpct = Math.round(V * 100);
-        box.className = 'oee-gesamt ' + (vpct >= 80 ? 'gruen' : vpct >= 60 ? 'gelb' : 'rot');
-      }
+    if (A <= 0) {
+      document.getElementById('wertV').textContent = '0 %';
+      zahl.textContent = '0 %';
+      box.className = 'oee-gesamt rot';
+      return;
     }
+
+    // Beim Beflammroboter werden keine Mengen erfasst -> OEE = Verfuegbarkeit
+    const V = Math.max(0, (A - B) / A);
+    const pct = Math.round(V * 100);
+
+    document.getElementById('wertV').textContent = (V * 100).toFixed(1) + ' %';
+    zahl.textContent = pct + ' %';
+    box.className = 'oee-gesamt ' + (pct >= 80 ? 'gruen' : pct >= 60 ? 'gelb' : 'rot');
   }
 
   async function speichern() {
 
     const B = gesamtStoerung();
     const A = getBelegungszeit();
-    const C = parseInt(document.getElementById('menge').value) || 0;
-    const D = parseInt(document.getElementById('ausschuss').value) || 0;
+    // Beim Beflammroboter werden keine Mengen erfasst -> OEE = Verfuegbarkeit
     const V = A > 0 ? Math.max(0, (A - B) / A) : 0;
-    const Q = C > 0 ? Math.max(0, (C - D) / C) : null;
-    const oee = Q !== null ? V * Q : (A <= 0 ? 0 : null);
+    const oee = V;
 
     const payload = {
       datum: heute.toISOString().slice(0, 10),
       schicht,
       belegungszeit_min: A,
       stoerung_min: B,
-      gesamtmenge: C,
-      ausschuss: D,
+      gesamtmenge: null,
+      ausschuss: null,
       verfuegbarkeit: parseFloat((V * 100).toFixed(2)),
-      qualitaet: Q !== null ? parseFloat((Q * 100).toFixed(2)) : null,
-      oee: oee !== null ? parseFloat((oee * 100).toFixed(2)) : null,
+      qualitaet: null,
+      oee: parseFloat((oee * 100).toFixed(2)),
       notiz: document.getElementById('notiz').value || null,
     };
 
