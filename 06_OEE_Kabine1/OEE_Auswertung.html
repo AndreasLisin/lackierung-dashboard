@@ -370,27 +370,44 @@
     return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
   }
 
-  // OEE-Ø inkl. Nicht-Produktionstage als 0 %
-  function avgOEE(arr) {
-    if (!arr.length) return null;
+  // Werktage (Mo–Sa) zwischen zwei Datumsstrings zählen
+  function werktageImZeitraum(vonStr, bisStr) {
+    const von = new Date(vonStr);
+    const bis = new Date(bisStr);
+    let count = 0;
+    const d = new Date(von);
+    while (d <= bis) {
+      const tag = d.getDay(); // 0=So, 6=Sa
+      if (tag !== 0) count++; // Mo–Sa zählen
+      d.setDate(d.getDate() + 1);
+    }
+    return count;
+  }
+
+  // OEE-Ø: Summe aller OEE-Werte (null=0) geteilt durch Werktage im Zeitraum
+  function avgOEE(arr, vonStr, bisStr) {
+    const werktage = werktageImZeitraum(vonStr, bisStr);
+    if (werktage === 0) return null;
     const sum = arr.reduce((s, r) => s + (r.oee !== null && r.oee !== undefined ? r.oee : 0), 0);
-    return sum / arr.length;
+    return sum / werktage;
   }
 
   function renderKPIs(daten) {
-    const oee = avgOEE(daten);
+    const { von, bis } = datumsbereich();
+    const oee = avgOEE(daten, von, bis);
     const v   = avg(daten, 'verfuegbarkeit');
     const q   = avg(daten, 'qualitaet');
     const st  = avg(daten, 'stoerung_min');
 
-    const ohneProd = daten.filter(r => r.oee === null || r.oee === undefined).length;
+    const werktage = werktageImZeitraum(von, bis);
+    const ohneProd = werktage - daten.filter(r => r.oee !== null && r.oee !== undefined && r.oee > 0).length;
 
     const kpiOEE = document.getElementById('kpiOEE');
     const oeeKlasseKPI = oee === null ? '' : oee >= 75 ? 'gruen' : oee >= 60 ? 'gelb' : 'rot';
     kpiOEE.className = 'kpi ' + oeeKlasseKPI;
     const oeeLabel = oee === null ? '–' : oee >= 85 ? 'Exzellenz' : oee >= 75 ? 'Sollwert erreicht' : oee >= 60 ? 'Untergrenze' : 'Unter Untergrenze';
     document.getElementById('kpiOEEWert').textContent = oee !== null ? oee.toFixed(1) + ' %' : '–';
-    const subText = daten.length + ' Schichten' + (ohneProd > 0 ? ' · ' + ohneProd + ' ohne Prod.' : '') + ' · ' + oeeLabel;
+    const subText = werktage + ' Werktage · ' + daten.length + ' Einträge' + (ohneProd > 0 ? ' · ' + ohneProd + ' × 0 %' : '') + ' · ' + oeeLabel;
     document.getElementById('kpiOEESub').textContent = subText;
 
     document.getElementById('kpiVWert').textContent = v !== null ? v.toFixed(1) + ' %' : '–';
@@ -400,7 +417,7 @@
     const stKpi = document.getElementById('kpiSt');
     stKpi.className = 'kpi ' + (st === null ? 'blau' : st <= 20 ? 'gruen' : st <= 45 ? 'gelb' : 'rot');
 
-    document.getElementById('kpiSchichten').textContent = daten.length;
+    document.getElementById('kpiSchichten').textContent = daten.length + ' / ' + werktage;
   }
 
   function destroyChart(id) {
