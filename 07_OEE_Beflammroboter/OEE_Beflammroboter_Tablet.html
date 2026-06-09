@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>OEE Eingabe Beflammroboter</title>
+  <style>
+    :root {
+      --blau: #1F4E79;
+      --blau-hell: #2E75B6;
+      --gruen: #1a7a3c;
+      --gelb: #c47a00;
+      --rot: #c0392b;
+      --grau: #f4f6f8;
+      --border: #dce1e7;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #eef1f5;
+      color: #222;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--blau);
+      color: #fff;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    header h1 { font-size: 1.15rem; font-weight: 700; }
+    header .datum { font-size: 0.85rem; opacity: 0.8; }
+
+    /* ── Cards ── */
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 18px 20px;
+      margin: 14px 14px 0;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+    .card h2 {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--blau);
+      margin-bottom: 12px;
+    }
+
+    /* ── Schicht-Buttons ── */
+    .schicht-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .btn-schicht {
+      padding: 18px 0;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      background: var(--grau);
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .btn-schicht.aktiv {
+      background: var(--blau);
+      border-color: var(--blau);
+      color: #fff;
+    }
+
+    /* ── Störung-Button ── */
+    .stoerung-wrap { text-align: center; }
+
+    #btnStoerung {
+      width: 100%;
+      padding: 28px;
+      border: none;
+      border-radius: 14px;
+      font-size: 1.25rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .2s;
+      background: var(--rot);
+      color: #fff;
+      letter-spacing: .03em;
+    }
+    #btnStoerung.laeuft {
+      background: #e67e22;
+      animation: pulse 1.4s infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; }
+      50% { opacity: .75; }
+    }
+
+    .stoerung-timer {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #e67e22;
+      margin: 10px 0 4px;
+      font-variant-numeric: tabular-nums;
+      min-height: 2.4rem;
+    }
+    .stoerung-summe {
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    /* Störungs-Liste */
+    .stoerung-liste {
+      margin-top: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .stoerung-eintrag {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #fff5f5;
+      border: 1px solid #fcd4d4;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.88rem;
+    }
+    .stoerung-eintrag .dauer { font-weight: 700; color: var(--rot); }
+    .stoerung-eintrag .zeit { color: #888; font-size: 0.8rem; }
+
+    /* ── Eingabe-Felder ── */
+    .felder-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .feld label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .feld input {
+      width: 100%;
+      padding: 16px 12px;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      font-size: 1.5rem;
+      font-weight: 700;
+      text-align: center;
+      background: var(--grau);
+      -moz-appearance: textfield;
+    }
+    .feld input:focus {
+      outline: none;
+      border-color: var(--blau-hell);
+      background: #fff;
+    }
+    .feld input::-webkit-outer-spin-button,
+    .feld input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+    /* ── OEE-Anzeige ── */
+    .oee-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .oee-kachel {
+      background: var(--grau);
+      border-radius: 10px;
+      padding: 12px 8px;
+      text-align: center;
+    }
+    .oee-kachel .label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: #888;
+      margin-bottom: 6px;
+    }
+    .oee-kachel .wert {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: #333;
+    }
+
+    .oee-gesamt {
+      text-align: center;
+      padding: 18px;
+      border-radius: 12px;
+      background: var(--grau);
+      border: 3px solid var(--border);
+      transition: all .3s;
+    }
+    .oee-gesamt .label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: #888;
+      margin-bottom: 4px;
+    }
+    .oee-gesamt .zahl {
+      font-size: 3rem;
+      font-weight: 900;
+      line-height: 1;
+    }
+    .oee-gesamt.gruen { background: #e8f8ee; border-color: var(--gruen); }
+    .oee-gesamt.gruen .zahl { color: var(--gruen); }
+    .oee-gesamt.gelb  { background: #fff8e1; border-color: var(--gelb); }
+    .oee-gesamt.gelb  .zahl { color: var(--gelb); }
+    .oee-gesamt.rot   { background: #fde8e6; border-color: var(--rot); }
+    .oee-gesamt.rot   .zahl { color: var(--rot); }
+
+    /* ── Produktion ── */
+    .produktion-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .btn-produktion {
+      padding: 22px 10px;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .15s;
+      line-height: 1.3;
+    }
+    #btnStart {
+      background: var(--gruen);
+      color: #fff;
+    }
+    #btnStart:disabled {
+      background: #b0d9bf;
+      cursor: not-allowed;
+    }
+    #btnEnde {
+      background: var(--grau);
+      color: #aaa;
+      border: 2px solid var(--border);
+    }
+    #btnEnde.aktiv {
+      background: var(--blau);
+      color: #fff;
+      border-color: var(--blau);
+    }
+    .produktion-status {
+      margin-top: 12px;
+      text-align: center;
+      font-size: 0.88rem;
+      color: #888;
+      min-height: 1.2rem;
+    }
+    .produktion-status.laeuft { color: var(--gruen); font-weight: 600; }
+    .produktion-status.beendet { color: var(--blau); font-weight: 600; }
+
+    /* ── Notiz ── */
+    textarea {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      background: var(--grau);
+      resize: none;
+      height: 70px;
+    }
+    textarea:focus { outline: none; border-color: var(--blau-hell); background: #fff; }
+
+    /* ── Speichern ── */
+    #btnSpeichern {
+      width: calc(100% - 28px);
+      margin: 14px;
+      padding: 20px;
+      background: var(--blau);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    #btnSpeichern:hover { background: var(--blau-hell); }
+    #btnSpeichern:disabled { background: #aaa; cursor: not-allowed; }
+
+    /* ── Grund-Overlay ── */
+    #grundOverlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 100;
+      overflow-y: auto;
+      padding: 20px 14px 30px;
+    }
+    #grundOverlay.show { display: block; }
+    .grund-box {
+      background: #fff;
+      border-radius: 14px;
+      padding: 20px;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    .grund-box h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--blau);
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    .grund-kategorie {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: #999;
+      margin: 14px 0 8px;
+    }
+    .grund-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .btn-grund {
+      padding: 14px 10px;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      background: var(--grau);
+      font-size: 0.88rem;
+      font-weight: 600;
+      text-align: center;
+      cursor: pointer;
+      transition: all .15s;
+      line-height: 1.3;
+    }
+    .btn-grund:hover, .btn-grund:active {
+      background: var(--rot);
+      border-color: var(--rot);
+      color: #fff;
+    }
+    .btn-grund.sonstiges {
+      grid-column: 1 / -1;
+    }
+    #grundSonstigesInput {
+      display: none;
+      margin-top: 10px;
+    }
+    #grundSonstigesInput input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      font-size: 1rem;
+      font-family: inherit;
+    }
+    #grundSonstigesInput input:focus { outline: none; border-color: var(--blau-hell); }
+    .btn-grund-confirm {
+      display: none;
+      width: 100%;
+      margin-top: 10px;
+      padding: 14px;
+      background: var(--rot);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-abbrechen {
+      width: 100%;
+      margin-top: 12px;
+      padding: 12px;
+      background: none;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #888;
+      cursor: pointer;
+    }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #222;
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 30px;
+      font-size: 0.9rem;
+      opacity: 0;
+      transition: opacity .3s;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    #toast.show { opacity: 1; }
+
+    /* bottom spacer */
+    .spacer { height: 20px; }
+  .btn-back {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,.15); color: #fff; text-decoration: none;
+    border-radius: 6px; padding: 6px 14px; font-size: 13px; font-weight: bold;
+    border: 1px solid rgba(255,255,255,.3); transition: background .2s;
+  }
+  .btn-back:hover { background: rgba(255,255,255,.25); }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>OEE Eingabe Beflammroboter</h1>
+  <span class="datum" id="headerDatum"></span>
+  <a class="btn-back" href="../index.html">← Zurück</a>
+</header>
+
+
+<!-- Produktion -->
+<div class="card">
+  <h2>Produktion</h2>
+  <div class="produktion-grid">
+    <button class="btn-produktion" id="btnStart" onclick="produktionStart()">▶ Start<br>Produktion</button>
+    <button class="btn-produktion" id="btnEnde"  onclick="produktionEnde()">⏹ Ende<br>Produktion</button>
+  </div>
+  <div class="produktion-status" id="produktionStatus">Noch nicht gestartet</div>
+</div>
+
+<!-- Störung -->
+<div class="card">
+  <h2>Störung / Stillstand</h2>
+  <div class="stoerung-wrap">
+    <button id="btnStoerung" onclick="stoerungToggle()">STÖRUNG</button>
+    <div class="stoerung-timer" id="stoerungTimer"></div>
+    <div class="stoerung-summe" id="stoerungSumme">Bisher: 0 min</div>
+  </div>
+  <div class="stoerung-liste" id="stoerungListe"></div>
+</div>
+
+<!-- Mengen -->
+<div class="card">
+  <h2>Mengen</h2>
+  <div class="felder-grid">
+    <div class="feld">
+      <label>Gesamtmenge</label>
+      <input type="number" id="menge" min="0" placeholder="0" oninput="berechne()">
+    </div>
+    <div class="feld">
+      <label>Ausschuss + NB</label>
+      <input type="number" id="ausschuss" min="0" placeholder="0" oninput="berechne()">
+    </div>
+  </div>
+</div>
+
+<!-- OEE -->
+<div class="card">
+  <h2>OEE Ergebnis</h2>
+  <div class="oee-grid">
+    <div class="oee-kachel">
+      <div class="label">Verfügbarkeit</div>
+      <div class="wert" id="wertV">–</div>
+    </div>
+    <div class="oee-kachel">
+      <div class="label">Qualität</div>
+      <div class="wert" id="wertQ">–</div>
+    </div>
+    <div class="oee-kachel">
+      <div class="label">Stillstand</div>
+      <div class="wert" id="wertSt">0 min</div>
+    </div>
+  </div>
+  <div class="oee-gesamt" id="oeeGesamt">
+    <div class="label">OEE</div>
+    <div class="zahl" id="oeeZahl">–</div>
+  </div>
+</div>
+
+<!-- Notiz -->
+<div class="card">
+  <h2>Notiz (optional)</h2>
+  <textarea id="notiz" placeholder="Störungsgrund, Besonderheiten…"></textarea>
+</div>
+
+<button id="btnSpeichern" onclick="speichern()">Schicht speichern</button>
+<div class="spacer"></div>
+
+<!-- Grund-Overlay -->
+<div id="grundOverlay">
+  <div class="grund-box">
+    <h3>Störungsgrund wählen</h3>
+
+    <div class="grund-kategorie">Roboter / Technik</div>
+    <div class="grund-grid">
+      <button class="btn-grund" onclick="grundWaehlen('Roboterstörung / Steuerungsfehler')">Roboterstörung /<br>Steuerungsfehler</button>
+      <button class="btn-grund" onclick="grundWaehlen('Brenner / Zündung gestört')">Brenner /<br>Zündung gestört</button>
+      <button class="btn-grund" onclick="grundWaehlen('Gas-Ausfall / Gasdruck')">Gas-Ausfall /<br>Gasdruck</button>
+      <button class="btn-grund" onclick="grundWaehlen('Druckluft-Ausfall')">Druckluft-Ausfall</button>
+      <button class="btn-grund" onclick="grundWaehlen('Flammeneinstellung / Justage')">Flammeneinstellung /<br>Justage</button>
+      <button class="btn-grund" onclick="grundWaehlen('Düse / Brennerkopf reinigen')">Düse /<br>Brennerkopf reinigen</button>
+    </div>
+
+    <div class="grund-kategorie">Material / Werkstück</div>
+    <div class="grund-grid">
+      <button class="btn-grund" onclick="grundWaehlen('Werkstück fehlt / Nachschub')">Werkstück fehlt /<br>Nachschub</button>
+      <button class="btn-grund" onclick="grundWaehlen('Werkstück nicht in Ordnung')">Werkstück nicht<br>in Ordnung</button>
+      <button class="btn-grund" onclick="grundWaehlen('Werkstück-Positionierung')">Werkstück-<br>Positionierung</button>
+      <button class="btn-grund" onclick="grundWaehlen('Vorbehandlung unzureichend')">Vorbehandlung<br>unzureichend</button>
+    </div>
+
+    <div class="grund-kategorie">Anlage / Umfeld</div>
+    <div class="grund-grid">
+      <button class="btn-grund" onclick="grundWaehlen('Abzug / Belüftung gestört')">Abzug /<br>Belüftung gestört</button>
+      <button class="btn-grund" onclick="grundWaehlen('Reinigung / Wartung')">Reinigung /<br>Wartung</button>
+      <button class="btn-grund" onclick="grundWaehlen('Einrichten / Programmwechsel')">Einrichten /<br>Programmwechsel</button>
+      <button class="btn-grund" id="btnSonstiges" onclick="grundSonstigesZeigen()">Sonstiges…</button>
+    </div>
+
+    <div id="grundSonstigesInput">
+      <input type="text" id="sonstigesText" placeholder="Grund eingeben…">
+      <button class="btn-grund-confirm" id="btnGrundConfirm" onclick="grundSonstigesBestaetigen()">Störung starten</button>
+    </div>
+
+    <button class="btn-abbrechen" onclick="grundAbbrechen()">Abbrechen</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  // ═══════════════════════════════════════════════════
+  // KONFIGURATION – hier einmalig anpassen
+  // ═══════════════════════════════════════════════════
+  const SUPABASE_URL    = 'https://tldkqifblxkdligypffr.supabase.co';
+  const SUPABASE_ANON   = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsZGtxaWZibHhrZGxpZ3lwZmZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1NjkwMzEsImV4cCI6MjA5NjE0NTAzMX0.Zg0Yy9uAIvuFwNfYVzfLWqmQUvTnXivYmGIXLCOa6TM';
+  const TABELLE         = 'oee_beflammroboter';
+  // ═══════════════════════════════════════════════════
+
+  let schicht = 'Früh';
+  let produktionStartZeit = null;
+  let produktionEndeZeit = null;
+  let stoerungLaeuft = false;
+  let stoerungStart = null;
+  let stoerungEintraege = [];   // { start, ende, minuten, grund }
+  let stoerungGrund = '';
+  let timerInterval = null;
+
+  // Datum anzeigen
+  const heute = new Date();
+  document.getElementById('headerDatum').textContent =
+    heute.toLocaleDateString('de-DE', { weekday:'short', day:'2-digit', month:'2-digit', year:'numeric' });
+
+  function produktionStart() {
+    produktionStartZeit = new Date();
+    produktionEndeZeit = null;
+    document.getElementById('btnStart').disabled = true;
+    document.getElementById('btnEnde').classList.add('aktiv');
+    const status = document.getElementById('produktionStatus');
+    status.textContent = 'Gestartet: ' + produktionStartZeit.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
+    status.className = 'produktion-status laeuft';
+    berechne();
+  }
+
+  function produktionEnde() {
+    if (!produktionStartZeit) return;
+    produktionEndeZeit = new Date();
+    document.getElementById('btnEnde').classList.remove('aktiv');
+    document.getElementById('btnEnde').disabled = true;
+    const status = document.getElementById('produktionStatus');
+    const min = Math.round((produktionEndeZeit - produktionStartZeit) / 60000);
+    status.textContent = 'Beendet: ' + produktionEndeZeit.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'}) + ' · Belegungszeit: ' + min + ' min';
+    status.className = 'produktion-status beendet';
+    berechne();
+  }
+
+  function getBelegungszeit() {
+    if (!produktionStartZeit) return 0;
+    const ende = produktionEndeZeit || new Date();
+    return Math.round((ende - produktionStartZeit) / 60000);
+  }
+
+  function schichtWaehlen(btn) {
+    document.querySelectorAll('.btn-schicht').forEach(b => b.classList.remove('aktiv'));
+    btn.classList.add('aktiv');
+    schicht = btn.dataset.s;
+  }
+
+  function stoerungToggle() {
+    if (!stoerungLaeuft) {
+      // Overlay öffnen → Grund wählen → dann starten
+      document.getElementById('grundOverlay').classList.add('show');
+    } else {
+      stoerungStoppen();
+    }
+  }
+
+  function grundWaehlen(grund) {
+    document.getElementById('grundOverlay').classList.remove('show');
+    stoerungStarten(grund);
+  }
+
+  function grundSonstigesZeigen() {
+    const wrap = document.getElementById('grundSonstigesInput');
+    const confirmBtn = document.getElementById('btnGrundConfirm');
+    wrap.style.display = 'block';
+    confirmBtn.style.display = 'block';
+    document.getElementById('sonstigesText').focus();
+  }
+
+  function grundSonstigesBestaetigen() {
+    const text = document.getElementById('sonstigesText').value.trim() || 'Sonstiges';
+    document.getElementById('grundOverlay').classList.remove('show');
+    document.getElementById('grundSonstigesInput').style.display = 'none';
+    document.getElementById('btnGrundConfirm').style.display = 'none';
+    document.getElementById('sonstigesText').value = '';
+    stoerungStarten(text);
+  }
+
+  function grundAbbrechen() {
+    document.getElementById('grundOverlay').classList.remove('show');
+    document.getElementById('grundSonstigesInput').style.display = 'none';
+    document.getElementById('btnGrundConfirm').style.display = 'none';
+    document.getElementById('sonstigesText').value = '';
+  }
+
+  function stoerungStarten(grund) {
+    const btn = document.getElementById('btnStoerung');
+    stoerungStart = new Date();
+    stoerungGrund = grund;
+    stoerungLaeuft = true;
+    btn.classList.add('laeuft');
+    timerInterval = setInterval(updateTimer, 1000);
+  }
+
+  function stoerungStoppen() {
+    const btn = document.getElementById('btnStoerung');
+    const ende = new Date();
+    const minuten = Math.round((ende - stoerungStart) / 60000);
+    stoerungEintraege.push({ start: stoerungStart, ende, minuten, grund: stoerungGrund });
+    stoerungLaeuft = false;
+    stoerungGrund = '';
+    btn.classList.remove('laeuft');
+    clearInterval(timerInterval);
+    document.getElementById('stoerungTimer').textContent = '';
+    renderStoerungListe();
+    berechne();
+  }
+
+  function updateTimer() {
+    const sek = Math.floor((new Date() - stoerungStart) / 1000);
+    const m = String(Math.floor(sek / 60)).padStart(2, '0');
+    const s = String(sek % 60).padStart(2, '0');
+    document.getElementById('stoerungTimer').textContent = m + ':' + s;
+  }
+
+  function renderStoerungListe() {
+    const liste = document.getElementById('stoerungListe');
+    liste.innerHTML = '';
+    stoerungEintraege.forEach((e, i) => {
+      const div = document.createElement('div');
+      div.className = 'stoerung-eintrag';
+      div.innerHTML = `<span>${e.grund || 'Störung ' + (i+1)}</span>
+        <span class="zeit">${e.start.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})} – ${e.ende.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}</span>
+        <span class="dauer">${e.minuten} min</span>`;
+      liste.appendChild(div);
+    });
+    const summe = stoerungEintraege.reduce((s, e) => s + e.minuten, 0);
+    document.getElementById('stoerungSumme').textContent = `Bisher: ${summe} min`;
+  }
+
+  function gesamtStoerung() {
+    return stoerungEintraege.reduce((s, e) => s + e.minuten, 0);
+  }
+
+  function berechne() {
+    const B = gesamtStoerung();
+    const A = getBelegungszeit();
+    const C = parseInt(document.getElementById('menge').value) || 0;
+    const D = parseInt(document.getElementById('ausschuss').value) || 0;
+
+    document.getElementById('wertSt').textContent = B + ' min';
+
+    if (A <= 0) {
+      document.getElementById('wertV').textContent = '0 %';
+      document.getElementById('wertQ').textContent = '–';
+      document.getElementById('oeeZahl').textContent = '0 %';
+      document.getElementById('oeeGesamt').className = 'oee-gesamt rot';
+      return;
+    }
+    const V = Math.max(0, (A - B) / A);
+
+    let Q = null;
+    if (C > 0) Q = Math.max(0, (C - D) / C);
+
+    const vText = (V * 100).toFixed(1) + ' %';
+    document.getElementById('wertV').textContent = vText;
+    document.getElementById('wertQ').textContent = Q !== null ? (Q * 100).toFixed(1) + ' %' : '–';
+
+    const box = document.getElementById('oeeGesamt');
+    const zahl = document.getElementById('oeeZahl');
+
+    if (Q !== null) {
+      const oee = V * Q;
+      const pct = Math.round(oee * 100);
+      zahl.textContent = pct + ' %';
+      box.className = 'oee-gesamt ' + (pct >= 80 ? 'gruen' : pct >= 60 ? 'gelb' : 'rot');
+    } else {
+      zahl.textContent = V !== null ? (V * 100).toFixed(1) + ' %' : '–';
+      box.className = 'oee-gesamt';
+      if (V !== null) {
+        const vpct = Math.round(V * 100);
+        box.className = 'oee-gesamt ' + (vpct >= 80 ? 'gruen' : vpct >= 60 ? 'gelb' : 'rot');
+      }
+    }
+  }
+
+  async function speichern() {
+
+    const B = gesamtStoerung();
+    const A = getBelegungszeit();
+    const C = parseInt(document.getElementById('menge').value) || 0;
+    const D = parseInt(document.getElementById('ausschuss').value) || 0;
+    const V = A > 0 ? Math.max(0, (A - B) / A) : 0;
+    const Q = C > 0 ? Math.max(0, (C - D) / C) : null;
+    const oee = Q !== null ? V * Q : (A <= 0 ? 0 : null);
+
+    const payload = {
+      datum: heute.toISOString().slice(0, 10),
+      schicht,
+      belegungszeit_min: A,
+      stoerung_min: B,
+      gesamtmenge: C,
+      ausschuss: D,
+      verfuegbarkeit: parseFloat((V * 100).toFixed(2)),
+      qualitaet: Q !== null ? parseFloat((Q * 100).toFixed(2)) : null,
+      oee: oee !== null ? parseFloat((oee * 100).toFixed(2)) : null,
+      notiz: document.getElementById('notiz').value || null,
+    };
+
+    if (SUPABASE_URL === 'DEINE_SUPABASE_URL') {
+      console.log('Supabase nicht konfiguriert. Daten:', payload);
+      toast('⚠ Supabase-URL noch nicht eingetragen (siehe Konsole).');
+      return;
+    }
+
+    const btn = document.getElementById('btnSpeichern');
+    btn.disabled = true;
+    btn.textContent = 'Wird gespeichert…';
+
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/${TABELLE}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON,
+          'Authorization': `Bearer ${SUPABASE_ANON}`,
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error(await res.text());
+      toast('✓ Gespeichert!');
+      setTimeout(() => location.reload(), 1500);
+    } catch (e) {
+      toast('Fehler: ' + e.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Schicht speichern';
+    }
+  }
+
+  function toast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+</script>
+</body>
+</html>
