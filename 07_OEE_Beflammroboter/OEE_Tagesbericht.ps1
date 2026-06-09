@@ -65,12 +65,12 @@ Write-Log "Datum: $gestDatum"
 
 try {
     # Gestern (Hauptdaten)
-    $url = "$SUPABASE_URL/rest/v1/$TABELLE?datum=eq.$gestern&order=created_at.asc"
+    $url = "$SUPABASE_URL/rest/v1/${TABELLE}?datum=eq.$gestern&order=created_at.asc"
     $response = Invoke-RestMethod -Uri $url -Headers @{ 'apikey' = $SUPABASE_ANON; 'Authorization' = "Bearer $SUPABASE_ANON" }
     Write-Log "$($response.Count) Schicht(en) gefunden"
 
     # Letzte 7 Tage fuer Verlauf
-    $url7 = "$SUPABASE_URL/rest/v1/$TABELLE?datum=gte.$vor7tagen&datum=lte.$gestern&order=datum.asc"
+    $url7 = "$SUPABASE_URL/rest/v1/${TABELLE}?datum=gte.$vor7tagen&datum=lte.$gestern&order=datum.asc"
     $verlauf = Invoke-RestMethod -Uri $url7 -Headers @{ 'apikey' = $SUPABASE_ANON; 'Authorization' = "Bearer $SUPABASE_ANON" }
     Write-Log "$($verlauf.Count) Eintraege fuer Verlauf"
 } catch {
