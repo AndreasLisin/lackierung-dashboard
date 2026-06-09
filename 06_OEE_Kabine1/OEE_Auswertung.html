@@ -199,10 +199,10 @@
 
 <div class="filter-bar">
   <div class="filter-schnell">
-    <button class="btn-schnell" onclick="schnell(1)">Heute</button>
-    <button class="btn-schnell" onclick="schnell(7)">Diese Woche</button>
-    <button class="btn-schnell aktiv" onclick="schnell(30)">Dieser Monat</button>
-    <button class="btn-schnell" onclick="schnell(90)">Letzte 90 Tage</button>
+    <button class="btn-schnell" onclick="schnell(1,this)">Heute</button>
+    <button class="btn-schnell" onclick="schnell(7,this)">Diese Woche</button>
+    <button class="btn-schnell aktiv" onclick="schnell(30,this)">Dieser Monat</button>
+    <button class="btn-schnell" onclick="schnell(90,this)">Letzte 90 Tage</button>
   </div>
   <span class="filter-sep">|</span>
   <label>Von</label>
@@ -309,14 +309,14 @@
 
   let charts = {};
 
-  function schnell(tage) {
+  function schnell(tage, btn) {
     const bis = new Date();
     const von = new Date();
     von.setDate(von.getDate() - (tage - 1));
     document.getElementById('filterVon').value = von.toISOString().slice(0, 10);
     document.getElementById('filterBis').value = bis.toISOString().slice(0, 10);
     document.querySelectorAll('.btn-schnell').forEach(b => b.classList.remove('aktiv'));
-    event.target.classList.add('aktiv');
+    if (btn) btn.classList.add('aktiv');
     laden();
   }
 
