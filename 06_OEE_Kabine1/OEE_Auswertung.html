@@ -347,7 +347,6 @@
       if (!res.ok) throw new Error(await res.text());
       const daten = await res.json();
 
-      const { von, bis } = datumsbereich();
       const vonFmt = new Date(von).toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' });
       const bisFmt = new Date(bis).toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' });
       document.getElementById('ladeStatus').textContent = `${vonFmt} – ${bisFmt} · ${daten.length} Einträge`;
