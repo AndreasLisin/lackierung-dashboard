@@ -46,14 +46,14 @@
     .filter-bar {
       background: var(--card);
       border-bottom: 1px solid var(--border);
-      padding: 10px 24px;
+      padding: 12px 24px;
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       flex-wrap: wrap;
     }
-    .filter-bar label { font-size: 0.8rem; font-weight: 600; color: var(--muted); }
-    .filter-bar select, .filter-bar input {
+    .filter-bar label { font-size: 0.8rem; font-weight: 600; color: var(--muted); white-space: nowrap; }
+    .filter-bar input[type="date"] {
       padding: 6px 10px;
       border: 1px solid var(--border);
       border-radius: 8px;
@@ -61,6 +61,26 @@
       background: var(--bg);
       color: var(--text);
     }
+    .filter-schnell {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .btn-schnell {
+      padding: 6px 14px;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      background: var(--bg);
+      color: var(--text);
+      cursor: pointer;
+      transition: all .15s;
+      white-space: nowrap;
+    }
+    .btn-schnell:hover { background: #dce8f5; border-color: var(--blau-hell); }
+    .btn-schnell.aktiv { background: var(--blau); border-color: var(--blau); color: #fff; }
+    .filter-sep { color: var(--border); font-size: 1.2rem; }
     .btn-laden {
       padding: 7px 18px;
       background: var(--blau);
@@ -70,9 +90,10 @@
       font-size: 0.88rem;
       font-weight: 700;
       cursor: pointer;
+      white-space: nowrap;
     }
     .btn-laden:hover { background: var(--blau-hell); }
-    #ladeStatus { font-size: 0.8rem; color: var(--muted); margin-left: auto; }
+    #ladeStatus { font-size: 0.8rem; color: var(--muted); margin-left: auto; white-space: nowrap; }
 
     /* Layout */
     .page { max-width: 1200px; margin: 0 auto; padding: 20px 20px 40px; }
@@ -177,16 +198,18 @@
 </div>
 
 <div class="filter-bar">
-  <label>Zeitraum</label>
-  <select id="filterZeitraum" onchange="zeitraumGeaendert()">
-    <option value="7">Letzte 7 Tage</option>
-    <option value="30" selected>Letzte 30 Tage</option>
-    <option value="90">Letzte 90 Tage</option>
-    <option value="custom">Benutzerdefiniert</option>
-  </select>
-  <input type="date" id="filterVon" style="display:none">
-  <input type="date" id="filterBis" style="display:none">
-  <button class="btn-laden" onclick="laden()">Aktualisieren</button>
+  <div class="filter-schnell">
+    <button class="btn-schnell" onclick="schnell(1)">Heute</button>
+    <button class="btn-schnell" onclick="schnell(7)">Diese Woche</button>
+    <button class="btn-schnell aktiv" onclick="schnell(30)">Dieser Monat</button>
+    <button class="btn-schnell" onclick="schnell(90)">Letzte 90 Tage</button>
+  </div>
+  <span class="filter-sep">|</span>
+  <label>Von</label>
+  <input type="date" id="filterVon">
+  <label>Bis</label>
+  <input type="date" id="filterBis">
+  <button class="btn-laden" onclick="laden()">Laden</button>
   <span id="ladeStatus"></span>
 </div>
 
@@ -286,28 +309,30 @@
 
   let charts = {};
 
-  function zeitraumGeaendert() {
-    const v = document.getElementById('filterZeitraum').value;
-    const custom = v === 'custom';
-    document.getElementById('filterVon').style.display = custom ? 'inline' : 'none';
-    document.getElementById('filterBis').style.display = custom ? 'inline' : 'none';
+  function schnell(tage) {
+    const bis = new Date();
+    const von = new Date();
+    von.setDate(von.getDate() - (tage - 1));
+    document.getElementById('filterVon').value = von.toISOString().slice(0, 10);
+    document.getElementById('filterBis').value = bis.toISOString().slice(0, 10);
+    document.querySelectorAll('.btn-schnell').forEach(b => b.classList.remove('aktiv'));
+    event.target.classList.add('aktiv');
+    laden();
   }
 
   function datumsbereich() {
-    const v = document.getElementById('filterZeitraum').value;
-    if (v === 'custom') {
-      return {
-        von: document.getElementById('filterVon').value,
-        bis: document.getElementById('filterBis').value
-      };
-    }
+    return {
+      von: document.getElementById('filterVon').value,
+      bis: document.getElementById('filterBis').value
+    };
+  }
+
+  function initDatum() {
     const bis = new Date();
     const von = new Date();
-    von.setDate(von.getDate() - parseInt(v));
-    return {
-      von: von.toISOString().slice(0, 10),
-      bis: bis.toISOString().slice(0, 10)
-    };
+    von.setDate(von.getDate() - 29);
+    document.getElementById('filterVon').value = von.toISOString().slice(0, 10);
+    document.getElementById('filterBis').value = bis.toISOString().slice(0, 10);
   }
 
   async function laden() {
@@ -322,7 +347,10 @@
       if (!res.ok) throw new Error(await res.text());
       const daten = await res.json();
 
-      document.getElementById('ladeStatus').textContent = `${daten.length} Einträge`;
+      const { von, bis } = datumsbereich();
+      const vonFmt = new Date(von).toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' });
+      const bisFmt = new Date(bis).toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' });
+      document.getElementById('ladeStatus').textContent = `${vonFmt} – ${bisFmt} · ${daten.length} Einträge`;
       document.getElementById('letzteAktualisierung').textContent =
         'Stand: ' + new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
 
@@ -337,23 +365,34 @@
     }
   }
 
+  // Ø nur über tatsächliche Werte (nicht null)
   function avg(arr, key) {
     const vals = arr.map(r => r[key]).filter(v => v !== null && v !== undefined);
     return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
   }
 
+  // OEE-Ø inkl. Nicht-Produktionstage als 0 %
+  function avgOEE(arr) {
+    if (!arr.length) return null;
+    const sum = arr.reduce((s, r) => s + (r.oee !== null && r.oee !== undefined ? r.oee : 0), 0);
+    return sum / arr.length;
+  }
+
   function renderKPIs(daten) {
-    const oee = avg(daten, 'oee');
+    const oee = avgOEE(daten);
     const v   = avg(daten, 'verfuegbarkeit');
     const q   = avg(daten, 'qualitaet');
     const st  = avg(daten, 'stoerung_min');
+
+    const ohneProd = daten.filter(r => r.oee === null || r.oee === undefined).length;
 
     const kpiOEE = document.getElementById('kpiOEE');
     const oeeKlasseKPI = oee === null ? '' : oee >= 75 ? 'gruen' : oee >= 60 ? 'gelb' : 'rot';
     kpiOEE.className = 'kpi ' + oeeKlasseKPI;
     const oeeLabel = oee === null ? '–' : oee >= 85 ? 'Exzellenz' : oee >= 75 ? 'Sollwert erreicht' : oee >= 60 ? 'Untergrenze' : 'Unter Untergrenze';
     document.getElementById('kpiOEEWert').textContent = oee !== null ? oee.toFixed(1) + ' %' : '–';
-    document.getElementById('kpiOEESub').textContent  = daten.length + ' Schichten · ' + oeeLabel;
+    const subText = daten.length + ' Schichten' + (ohneProd > 0 ? ' · ' + ohneProd + ' ohne Prod.' : '') + ' · ' + oeeLabel;
+    document.getElementById('kpiOEESub').textContent = subText;
 
     document.getElementById('kpiVWert').textContent = v !== null ? v.toFixed(1) + ' %' : '–';
     document.getElementById('kpiQWert').textContent = q !== null ? q.toFixed(1) + ' %' : '–';
@@ -540,6 +579,7 @@
   }
 
   // Beim Laden sofort starten
+  initDatum();
   laden();
 </script>
 </body>
