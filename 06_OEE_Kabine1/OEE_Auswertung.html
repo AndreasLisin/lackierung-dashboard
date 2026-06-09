@@ -307,13 +307,19 @@
   const SUPABASE_URL  = 'https://tldkqifblxkdligypffr.supabase.co';
   const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsZGtxaWZibHhrZGxpZ3lwZmZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1NjkwMzEsImV4cCI6MjA5NjE0NTAzMX0.Zg0Yy9uAIvuFwNfYVzfLWqmQUvTnXivYmGIXLCOa6TM';
 
+  const OEE_START = '2026-06-08'; // Erster Tag der OEE-Erfassung
+
   let charts = {};
+
+  function clampVon(dateStr) {
+    return dateStr < OEE_START ? OEE_START : dateStr;
+  }
 
   function schnell(tage, btn) {
     const bis = new Date();
     const von = new Date();
     von.setDate(von.getDate() - (tage - 1));
-    document.getElementById('filterVon').value = von.toISOString().slice(0, 10);
+    document.getElementById('filterVon').value = clampVon(von.toISOString().slice(0, 10));
     document.getElementById('filterBis').value = bis.toISOString().slice(0, 10);
     document.querySelectorAll('.btn-schnell').forEach(b => b.classList.remove('aktiv'));
     if (btn) btn.classList.add('aktiv');
@@ -329,10 +335,9 @@
 
   function initDatum() {
     const bis = new Date();
-    const von = new Date();
-    von.setDate(von.getDate() - 29);
-    document.getElementById('filterVon').value = von.toISOString().slice(0, 10);
+    document.getElementById('filterVon').value = OEE_START;
     document.getElementById('filterBis').value = bis.toISOString().slice(0, 10);
+    document.getElementById('filterVon').min = OEE_START;
   }
 
   async function laden() {
