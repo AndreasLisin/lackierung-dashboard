@@ -169,7 +169,7 @@ if ($true) {
     $stBar  = Bar $stPct $stF
 
     $notizZeile = if ($notiz) {
-        "<tr><td bgcolor='#f8fafc' style='padding:9px 12px;font-size:12px;color:#666;border-top:1px solid #eee;'>Notiz / Stoerungsgrund</td><td bgcolor='#f8fafc' style='padding:9px 12px;font-size:12px;font-weight:bold;color:#333;border-top:1px solid #eee;'>$notiz</td><td bgcolor='#f8fafc' style='padding:9px 12px;border-top:1px solid #eee;'></td><td bgcolor='#f8fafc' style='padding:9px 12px;border-top:1px solid #eee;'></td><td bgcolor='#f8fafc' style='padding:9px 12px;border-top:1px solid #eee;'></td><td bgcolor='#f8fafc' style='padding:9px 12px;border-top:1px solid #eee;'></td><td bgcolor='#f8fafc' style='padding:9px 12px;border-top:1px solid #eee;'></td><td bgcolor='#f8fafc' style='padding:9px 12px;border-top:1px solid #eee;'></td></tr>"
+        "<tr><td bgcolor='#f8fafc' style='padding:9px 12px;font-size:12px;color:#666;border-top:1px solid #eee;'>Notiz / Stoerungsgrund</td><td colspan='4' bgcolor='#f8fafc' style='padding:9px 12px;font-size:12px;font-weight:bold;color:#333;border-top:1px solid #eee;'>$notiz</td></tr>"
     } else { '' }
 
     $betreff  = "OEE Beflammroboter Tagesbericht $gestDatum"
@@ -196,7 +196,7 @@ if ($true) {
   <table width="100%" cellpadding="0" cellspacing="0" border="0">
   <tr>
     <!-- OEE -->
-    <td width="20%" style="padding:0 4px 14px 4px;">
+    <td width="25%" style="padding:0 4px 14px 4px;">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr><td bgcolor="#ffffff" style="padding:14px 12px;border:2px solid $oeeF;border-radius:8px;">
         <div style="font-size:9px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#7a8a9a;margin-bottom:6px;">OEE</div>
@@ -206,7 +206,7 @@ if ($true) {
       </table>
     </td>
     <!-- Verfuegbarkeit -->
-    <td width="20%" style="padding:0 4px 14px 4px;">
+    <td width="25%" style="padding:0 4px 14px 4px;">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr><td bgcolor="#ffffff" style="padding:14px 12px;border:2px solid #2E75B6;border-radius:8px;">
         <div style="font-size:9px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#7a8a9a;margin-bottom:6px;">Verfuegbarkeit</div>
@@ -215,18 +215,8 @@ if ($true) {
       </td></tr>
       </table>
     </td>
-    <!-- Qualitaet -->
-    <td width="20%" style="padding:0 4px 14px 4px;">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-      <tr><td bgcolor="#ffffff" style="padding:14px 12px;border:2px solid #2E75B6;border-radius:8px;">
-        <div style="font-size:9px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#7a8a9a;margin-bottom:6px;">Qualitaet</div>
-        <div style="font-size:22px;font-weight:900;color:#2E75B6;">$qT</div>
-        <div style="font-size:9px;color:#7a8a9a;margin-top:4px;">&nbsp;</div>
-      </td></tr>
-      </table>
-    </td>
     <!-- Stillstand -->
-    <td width="20%" style="padding:0 4px 14px 4px;">
+    <td width="25%" style="padding:0 4px 14px 4px;">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr><td bgcolor="#ffffff" style="padding:14px 12px;border:2px solid $stF;border-radius:8px;">
         <div style="font-size:9px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#7a8a9a;margin-bottom:6px;">Stillstand</div>
@@ -236,7 +226,7 @@ if ($true) {
       </table>
     </td>
     <!-- Schichten -->
-    <td width="20%" style="padding:0 4px 14px 4px;">
+    <td width="25%" style="padding:0 4px 14px 4px;">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr><td bgcolor="#ffffff" style="padding:14px 12px;border:2px solid #2E75B6;border-radius:8px;">
         <div style="font-size:9px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#7a8a9a;margin-bottom:6px;">Schichten gesamt</div>
@@ -282,17 +272,14 @@ if ($true) {
 <!-- CHARTS ZEILE 2: VERFUEGBARKEIT & QUALITAET + STILLSTAND -->
 <tr><td bgcolor="#ffffff" style="padding:0 12px 12px 12px;">
   <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-    <!-- Verfuegbarkeit & Qualitaet -->
+    <!-- Verfuegbarkeit -->
     <td width="50%" style="padding-right:6px;" valign="top">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr><td bgcolor="#ffffff" style="padding:16px;border:1px solid #dce1e7;border-radius:8px;">
-        <div style="font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#1F4E79;margin-bottom:12px;">VERFUEGBARKEIT &amp; QUALITAET</div>
-        <div style="font-size:10px;color:#7a8a9a;margin-bottom:4px;">Verfuegbarkeit</div>
+        <div style="font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#1F4E79;margin-bottom:12px;">VERFUEGBARKEIT</div>
+        <div style="font-size:10px;color:#7a8a9a;margin-bottom:4px;">Verfuegbarkeit (= OEE)</div>
         $vBar
-        <div style="font-size:13px;font-weight:bold;color:#2E75B6;margin-bottom:10px;">$vT</div>
-        <div style="font-size:10px;color:#7a8a9a;margin-bottom:4px;">Qualitaet</div>
-        $qBar
-        <div style="font-size:13px;font-weight:bold;color:#1a7a3c;margin-bottom:0;">$qT</div>
+        <div style="font-size:13px;font-weight:bold;color:#2E75B6;margin-bottom:0;">$vT</div>
       </td></tr>
       </table>
     </td>
@@ -321,20 +308,14 @@ if ($true) {
         <td style="padding:8px 10px;font-size:10px;font-weight:bold;color:#fff;text-transform:uppercase;letter-spacing:.5px;">Datum</td>
         <td style="padding:8px 10px;font-size:10px;font-weight:bold;color:#fff;text-transform:uppercase;letter-spacing:.5px;">Belegung</td>
         <td style="padding:8px 10px;font-size:10px;font-weight:bold;color:#fff;text-transform:uppercase;letter-spacing:.5px;">Stillstand</td>
-        <td style="padding:8px 10px;font-size:10px;font-weight:bold;color:#fff;text-transform:uppercase;letter-spacing:.5px;">Menge</td>
-        <td style="padding:8px 10px;font-size:10px;font-weight:bold;color:#fff;text-transform:uppercase;letter-spacing:.5px;">Ausschuss</td>
         <td style="padding:8px 10px;font-size:10px;font-weight:bold;color:#fff;text-transform:uppercase;letter-spacing:.5px;">Verfueg.</td>
-        <td style="padding:8px 10px;font-size:10px;font-weight:bold;color:#fff;text-transform:uppercase;letter-spacing:.5px;">Qualitaet</td>
         <td style="padding:8px 10px;font-size:10px;font-weight:bold;color:#fff;text-transform:uppercase;letter-spacing:.5px;">OEE</td>
       </tr>
       <tr bgcolor="#f8fafc">
         <td style="padding:9px 10px;font-size:12px;color:#333;border-top:1px solid #eee;">$gestDatum</td>
         <td style="padding:9px 10px;font-size:12px;color:#333;border-top:1px solid #eee;">$belegung min</td>
         <td style="padding:9px 10px;font-size:12px;font-weight:bold;color:$stF;border-top:1px solid #eee;">$stoerung min</td>
-        <td style="padding:9px 10px;font-size:12px;color:#333;border-top:1px solid #eee;">$menge</td>
-        <td style="padding:9px 10px;font-size:12px;color:#333;border-top:1px solid #eee;">$ausschuss</td>
         <td style="padding:9px 10px;font-size:12px;color:#2E75B6;border-top:1px solid #eee;">$vT</td>
-        <td style="padding:9px 10px;font-size:12px;color:#2E75B6;border-top:1px solid #eee;">$qT</td>
         <td style="padding:9px 10px;font-size:12px;font-weight:bold;color:$oeeF;border-top:1px solid #eee;">$oeeT</td>
       </tr>
       $notizZeile
