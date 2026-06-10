@@ -566,11 +566,19 @@
 
     const sorted = Object.entries(gruende).sort((a, b) => b[1] - a[1]).slice(0, 8);
 
+    const canvas = document.getElementById('chartStorung');
+    const wrap = canvas.parentElement;
+    let leer = wrap.querySelector('.leer');
+
     if (sorted.length === 0) {
-      document.getElementById('chartStorung').parentElement.innerHTML =
-        '<div class="leer">Noch keine Störungsdaten</div>';
+      canvas.style.display = 'none';
+      if (!leer) { leer = document.createElement('div'); leer.className = 'leer'; wrap.appendChild(leer); }
+      leer.textContent = 'Noch keine Störungsdaten';
+      leer.style.display = '';
       return;
     }
+    canvas.style.display = '';
+    if (leer) leer.style.display = 'none';
 
     const farben = ['#c0392b','#e67e22','#c47a00','#2E75B6','#1F4E79','#1a7a3c','#7f8c8d','#8e44ad'];
     charts['storung'] = new Chart(document.getElementById('chartStorung'), {
