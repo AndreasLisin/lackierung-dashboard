@@ -530,6 +530,7 @@
   const SUPABASE_URL    = 'https://tldkqifblxkdligypffr.supabase.co';
   const SUPABASE_ANON   = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsZGtxaWZibHhrZGxpZ3lwZmZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1NjkwMzEsImV4cCI6MjA5NjE0NTAzMX0.Zg0Yy9uAIvuFwNfYVzfLWqmQUvTnXivYmGIXLCOa6TM';
   const TABELLE         = 'oee_beflammroboter';
+  const SCHICHT_MIN     = 480;   // Plan-Schichtzeit (min) – Bezug fuer Verfuegbarkeit/OEE
   // ═══════════════════════════════════════════════════
 
   let schicht = 'Früh';
@@ -677,15 +678,8 @@
     const box = document.getElementById('oeeGesamt');
     const zahl = document.getElementById('oeeZahl');
 
-    if (A <= 0) {
-      document.getElementById('wertV').textContent = '0 %';
-      zahl.textContent = '0 %';
-      box.className = 'oee-gesamt rot';
-      return;
-    }
-
-    // Beim Beflammroboter werden keine Mengen erfasst -> OEE = Verfuegbarkeit
-    const V = Math.max(0, (A - B) / A);
+    // OEE = Verfuegbarkeit = (Belegungszeit - Stillstand) / 480 min Plan-Schichtzeit
+    const V = Math.max(0, Math.min(1, (A - B) / SCHICHT_MIN));
     const pct = Math.round(V * 100);
 
     document.getElementById('wertV').textContent = (V * 100).toFixed(1) + ' %';
@@ -697,8 +691,8 @@
 
     const B = gesamtStoerung();
     const A = getBelegungszeit();
-    // Beim Beflammroboter werden keine Mengen erfasst -> OEE = Verfuegbarkeit
-    const V = A > 0 ? Math.max(0, (A - B) / A) : 0;
+    // OEE = Verfuegbarkeit = (Belegungszeit - Stillstand) / 480 min Plan-Schichtzeit
+    const V = Math.max(0, Math.min(1, (A - B) / SCHICHT_MIN));
     const oee = V;
 
     const payload = {
