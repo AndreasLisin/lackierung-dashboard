@@ -11,7 +11,8 @@ $SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsI
 $TABELLE       = 'oee_beflammroboter'
 
 $EMPFAENGER = @(
-    'andreas.lisin@einhaus-gmbh.de'
+    'andreas.lisin@einhaus-gmbh.de',
+    'christoph.saar@einhaus-gmbh.de'
 )
 
 function Write-Log {
