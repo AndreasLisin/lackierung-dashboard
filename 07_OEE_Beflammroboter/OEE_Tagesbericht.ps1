@@ -11,7 +11,8 @@ $SUPABASE_ANON = '***REMOVED-SUPABASE-ANON-KEY-PROJEKT-ABGESCHALTET***'
 $TABELLE       = 'oee_beflammroboter'
 
 $EMPFAENGER = @(
-    'andreas.lisin@einhaus-gmbh.de'
+    'andreas.lisin@einhaus-gmbh.de',
+    'christoph.saar@einhaus-gmbh.de'
 )
 
 function Write-Log {
