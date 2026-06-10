@@ -475,19 +475,10 @@
   <div class="stoerung-liste" id="stoerungListe"></div>
 </div>
 
-<!-- Mengen -->
-<div class="card">
-  <h2>Mengen</h2>
-  <div class="felder-grid">
-    <div class="feld">
-      <label>Gesamtmenge</label>
-      <input type="number" id="menge" min="0" placeholder="0" oninput="berechne()">
-    </div>
-    <div class="feld">
-      <label>Ausschuss + NB</label>
-      <input type="number" id="ausschuss" min="0" placeholder="0" oninput="berechne()">
-    </div>
-  </div>
+<!-- Mengen (ausgeblendet - Qualität wird wöchentlich eingetragen) -->
+<div style="display:none">
+  <input type="number" id="menge" value="0">
+  <input type="number" id="ausschuss" value="0">
 </div>
 
 <!-- OEE -->
@@ -520,6 +511,26 @@
 </div>
 
 <button id="btnSpeichern" onclick="speichern()">Schicht speichern</button>
+
+<!-- Wöchentliche Qualität -->
+<div class="card" style="margin-top:14px">
+  <h2>Wöchentliche Qualität</h2>
+  <div style="font-size:0.82rem;color:#888;margin-bottom:12px;" id="kwHinweis">Wird geladen…</div>
+  <div class="felder-grid">
+    <div class="feld">
+      <label>Gesamtmenge Woche</label>
+      <input type="number" id="kwMenge" min="0" placeholder="0" oninput="kwBerechne()">
+    </div>
+    <div class="feld">
+      <label>Ausschuss + NB</label>
+      <input type="number" id="kwAusschuss" min="0" placeholder="0" oninput="kwBerechne()">
+    </div>
+  </div>
+  <div style="margin-top:12px;text-align:center;font-size:1.1rem;font-weight:700;color:#555;min-height:1.6rem" id="kwQualitaet"></div>
+  <button id="btnKwSpeichern" onclick="kwSpeichern()" style="width:100%;margin-top:12px;padding:16px;background:var(--gruen);color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;">Qualität speichern</button>
+  <div style="font-size:0.8rem;color:#888;margin-top:8px;text-align:center" id="kwStatus"></div>
+</div>
+
 <div class="spacer"></div>
 
 <!-- Grund-Overlay -->
@@ -812,6 +823,95 @@
     t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 3000);
   }
+
+  // ── ISO Kalenderwoche ──────────────────────────────
+  function getKW(d) {
+    const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
+    const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+    return { kw: Math.ceil(((date - yearStart) / 86400000 + 1) / 7), jahr: date.getUTCFullYear() };
+  }
+
+  // ── Wöchentliche Qualität ──────────────────────────
+  let kwVorhandeneId = null;
+
+  async function kwLaden() {
+    const { kw, jahr } = getKW(heute);
+    document.getElementById('kwHinweis').textContent =
+      `KW ${kw} / ${jahr} — kann jederzeit eingetragen oder aktualisiert werden`;
+
+    const url = `${SUPABASE_URL}/rest/v1/qualitaet_woche?kw=eq.${kw}&jahr=eq.${jahr}`;
+    const res = await fetch(url, {
+      headers: { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON }
+    });
+    const daten = await res.json();
+    if (daten && daten.length > 0) {
+      const d = daten[0];
+      kwVorhandeneId = d.id;
+      document.getElementById('kwMenge').value = d.gesamtmenge;
+      document.getElementById('kwAusschuss').value = d.ausschuss;
+      document.getElementById('kwStatus').textContent =
+        'Gespeichert: ' + d.gesamtmenge + ' Teile · ' + d.ausschuss + ' Ausschuss · ' + d.qualitaet.toFixed(1) + ' %';
+      kwBerechne();
+    }
+  }
+
+  function kwBerechne() {
+    const m = parseInt(document.getElementById('kwMenge').value) || 0;
+    const a = parseInt(document.getElementById('kwAusschuss').value) || 0;
+    const el = document.getElementById('kwQualitaet');
+    if (m > 0) {
+      const q = Math.max(0, (m - a) / m * 100);
+      el.textContent = 'Qualität: ' + q.toFixed(1) + ' %';
+      el.style.color = q >= 95 ? 'var(--gruen)' : q >= 85 ? 'var(--gelb)' : 'var(--rot)';
+    } else {
+      el.textContent = '';
+    }
+  }
+
+  async function kwSpeichern() {
+    const { kw, jahr } = getKW(heute);
+    const m = parseInt(document.getElementById('kwMenge').value) || 0;
+    const a = parseInt(document.getElementById('kwAusschuss').value) || 0;
+    if (m <= 0) { toast('Bitte Gesamtmenge eintragen.'); return; }
+    const q = parseFloat(Math.max(0, (m - a) / m * 100).toFixed(2));
+
+    const btn = document.getElementById('btnKwSpeichern');
+    btn.disabled = true; btn.textContent = 'Wird gespeichert…';
+
+    const payload = { jahr, kw, gesamtmenge: m, ausschuss: a, qualitaet: q, updated_at: new Date().toISOString() };
+
+    try {
+      let res;
+      if (kwVorhandeneId) {
+        // Update
+        res = await fetch(`${SUPABASE_URL}/rest/v1/qualitaet_woche?id=eq.${kwVorhandeneId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON, Prefer: 'return=minimal' },
+          body: JSON.stringify(payload)
+        });
+      } else {
+        // Insert mit upsert
+        res = await fetch(`${SUPABASE_URL}/rest/v1/qualitaet_woche`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON, Prefer: 'resolution=merge-duplicates,return=minimal' },
+          body: JSON.stringify(payload)
+        });
+      }
+      if (!res.ok) throw new Error(await res.text());
+      document.getElementById('kwStatus').textContent =
+        'Gespeichert: ' + m + ' Teile · ' + a + ' Ausschuss · ' + q.toFixed(1) + ' %';
+      toast('✓ Qualität KW ' + kw + ' gespeichert!');
+      await kwLaden();
+    } catch (e) {
+      toast('Fehler: ' + e.message);
+    } finally {
+      btn.disabled = false; btn.textContent = 'Qualität speichern';
+    }
+  }
+
+  // Beim Start KW-Daten laden
+  kwLaden();
 </script>
 </body>
 </html>
