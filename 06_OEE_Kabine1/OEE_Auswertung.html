@@ -177,6 +177,7 @@
 
     /* Leer-Zustand */
     .leer { text-align: center; padding: 40px; color: var(--muted); font-size: 0.9rem; }
+    .q-ausstehend { font-size: 0.72rem; color: var(--gelb); font-weight: 600; margin-top: 3px; }
   </style>
 </head>
 <body>
@@ -230,7 +231,7 @@
     <div class="kpi blau" id="kpiQ">
       <div class="label">Ø Qualität</div>
       <div class="wert" id="kpiQWert">–</div>
-      <div class="sub" id="kpiQSub"></div>
+      <div class="sub" id="kpiQSub">wöchentlich</div>
     </div>
     <div class="kpi" id="kpiSt">
       <div class="label">Ø Stillstand</div>
@@ -309,6 +310,16 @@
 
   const OEE_START = '2026-06-08'; // Erster Tag der OEE-Erfassung
 
+  // ISO Kalenderwoche
+  function getKW(dateStr) {
+    const d = new Date(dateStr);
+    const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
+    const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+    const kw = Math.ceil(((date - yearStart) / 86400000 + 1) / 7);
+    return `${date.getUTCFullYear()}-${kw}`;
+  }
+
   let charts = {};
 
   function clampVon(dateStr) {
@@ -361,6 +372,7 @@
     const { von, bis } = datumsbereich();
 
     try {
+      // Schichtdaten laden
       const url = `${SUPABASE_URL}/rest/v1/oee_erfassung?datum=gte.${von}&datum=lte.${bis}&order=datum.asc`;
       const res = await fetch(url, {
         headers: { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON }
@@ -368,18 +380,37 @@
       if (!res.ok) throw new Error(await res.text());
       const daten = await res.json();
 
+      // Wöchentliche Qualitätsdaten laden
+      const resQ = await fetch(`${SUPABASE_URL}/rest/v1/qualitaet_woche?order=jahr.asc,kw.asc`, {
+        headers: { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON }
+      });
+      const qualDaten = resQ.ok ? await resQ.json() : [];
+
+      // Qualität je KW als Map: "jahr-kw" -> qualitaet
+      const qualMap = {};
+      qualDaten.forEach(q => { qualMap[`${q.jahr}-${q.kw}`] = q.qualitaet; });
+
+      // OEE pro Schicht mit wöchentlicher Qualität berechnen
+      const datenMitOEE = daten.map(r => {
+        const kwKey = getKW(r.datum);
+        const q = qualMap[kwKey] !== undefined ? qualMap[kwKey] : null;
+        const v = r.verfuegbarkeit;
+        const oee = (v !== null && q !== null) ? parseFloat((v * q / 100).toFixed(2)) : null;
+        return { ...r, qualitaet_woche: q, oee_berechnet: oee };
+      });
+
       const vonFmt = new Date(von).toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' });
       const bisFmt = new Date(bis).toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' });
       document.getElementById('ladeStatus').textContent = `${vonFmt} – ${bisFmt} · ${daten.length} Einträge`;
       document.getElementById('letzteAktualisierung').textContent =
         'Stand: ' + new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
 
-      renderKPIs(daten);
-      renderTrendChart(daten);
-      renderVQChart(daten);
-      renderStillstandChart(daten);
-      renderStorungChart(daten);
-      renderTabelle(daten);
+      renderKPIs(datenMitOEE, qualMap);
+      renderTrendChart(datenMitOEE);
+      renderVQChart(datenMitOEE);
+      renderStillstandChart(datenMitOEE);
+      renderStorungChart(datenMitOEE);
+      renderTabelle(datenMitOEE);
     } catch (e) {
       document.getElementById('ladeStatus').textContent = 'Fehler: ' + e.message;
     }
@@ -413,26 +444,32 @@
     return sum / werktage;
   }
 
-  function renderKPIs(daten) {
+  function renderKPIs(daten, qualMap) {
     const { von, bis } = datumsbereich();
-    const oee = avgOEE(daten, von, bis);
-    const v   = avg(daten, 'verfuegbarkeit');
-    const q   = avg(daten, 'qualitaet');
-    const st  = avg(daten, 'stoerung_min');
-
+    // OEE aus berechnetem Wert (V × Q_woche)
+    const oeeWerte = daten.map(r => r.oee_berechnet !== null && r.oee_berechnet !== undefined ? r.oee_berechnet : 0);
     const werktage = werktageImZeitraum(von, bis);
-    const ohneProd = werktage - daten.filter(r => r.oee !== null && r.oee !== undefined && r.oee > 0).length;
+    const oeeSum = oeeWerte.reduce((s, v) => s + v, 0);
+    const oee = werktage > 0 ? oeeSum / werktage : null;
+
+    const v  = avg(daten, 'verfuegbarkeit');
+    const st = avg(daten, 'stoerung_min');
+
+    // Ø Qualität aus qualMap (nur eingetragene Wochen im Zeitraum)
+    const qualWerte = Object.values(qualMap);
+    const q = qualWerte.length > 0 ? qualWerte.reduce((s, v) => s + v, 0) / qualWerte.length : null;
+    const qAusstehend = daten.some(r => r.qualitaet_woche === null);
 
     const kpiOEE = document.getElementById('kpiOEE');
     const oeeKlasseKPI = oee === null ? '' : oee >= 75 ? 'gruen' : oee >= 60 ? 'gelb' : 'rot';
     kpiOEE.className = 'kpi ' + oeeKlasseKPI;
     const oeeLabel = oee === null ? '–' : oee >= 85 ? 'Exzellenz' : oee >= 75 ? 'Sollwert erreicht' : oee >= 60 ? 'Untergrenze' : 'Unter Untergrenze';
     document.getElementById('kpiOEEWert').textContent = oee !== null ? oee.toFixed(1) + ' %' : '–';
-    const subText = werktage + ' Werktage · ' + daten.length + ' Einträge' + (ohneProd > 0 ? ' · ' + ohneProd + ' × 0 %' : '') + ' · ' + oeeLabel;
+    const subText = werktage + ' Werktage · ' + daten.length + ' Einträge' + (qAusstehend ? ' · Q ausstehend' : '') + ' · ' + oeeLabel;
     document.getElementById('kpiOEESub').textContent = subText;
 
     document.getElementById('kpiVWert').textContent = v !== null ? v.toFixed(1) + ' %' : '–';
-    document.getElementById('kpiQWert').textContent = q !== null ? q.toFixed(1) + ' %' : '–';
+    document.getElementById('kpiQWert').textContent = q !== null ? q.toFixed(1) + ' %' : (qAusstehend ? 'ausstehend' : '–');
     document.getElementById('kpiStWert').textContent = st !== null ? Math.round(st) + ' min' : '–';
 
     const stKpi = document.getElementById('kpiSt');
@@ -449,7 +486,7 @@
     destroyChart('oee');
     const hatDaten = daten.length > 0;
     const labels   = hatDaten ? daten.map(r => new Date(r.datum).toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit' })) : ['', ''];
-    const oeeVals  = hatDaten ? daten.map(r => r.oee) : [null, null];
+    const oeeVals  = hatDaten ? daten.map(r => r.oee_berechnet) : [null, null];
     const n        = labels.length;
     charts['oee'] = new Chart(document.getElementById('chartOEE'), {
       type: 'line',
@@ -517,8 +554,8 @@
       data: {
         labels,
         datasets: [
-          { label: 'Verfügbarkeit %', data: daten.map(r => r.verfuegbarkeit), borderColor: '#2E75B6', pointRadius: 3, tension: 0.3 },
-          { label: 'Qualität %',      data: daten.map(r => r.qualitaet),      borderColor: '#1a7a3c', pointRadius: 3, tension: 0.3 }
+          { label: 'Verfügbarkeit %', data: daten.map(r => r.verfuegbarkeit),   borderColor: '#2E75B6', pointRadius: 3, tension: 0.3 },
+          { label: 'Qualität %',      data: daten.map(r => r.qualitaet_woche), borderColor: '#1a7a3c', pointRadius: 3, tension: 0.3 }
         ]
       },
       options: {
@@ -617,8 +654,8 @@
         <td>${r.gesamtmenge ?? '–'}</td>
         <td>${r.ausschuss ?? 0}</td>
         <td>${r.verfuegbarkeit !== null ? r.verfuegbarkeit.toFixed(1) + ' %' : '–'}</td>
-        <td>${r.qualitaet !== null ? r.qualitaet.toFixed(1) + ' %' : '–'}</td>
-        <td><span class="badge ${oeeKlasse(r.oee)}">${r.oee !== null ? r.oee.toFixed(1) + ' %' : '–'}</span></td>
+        <td>${r.qualitaet_woche !== null && r.qualitaet_woche !== undefined ? r.qualitaet_woche.toFixed(1) + ' %' : '<span style="color:#c47a00;font-size:0.78rem">ausstehend</span>'}</td>
+        <td><span class="badge ${oeeKlasse(r.oee_berechnet)}">${r.oee_berechnet !== null && r.oee_berechnet !== undefined ? r.oee_berechnet.toFixed(1) + ' %' : '–'}</span></td>
         <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.notiz || ''}">${r.notiz || ''}</td>
       </tr>`).join('');
   }
