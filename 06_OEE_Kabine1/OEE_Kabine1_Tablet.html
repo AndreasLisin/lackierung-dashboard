@@ -720,9 +720,11 @@
     return stoerungEintraege.reduce((s, e) => s + e.minuten, 0);
   }
 
+  const SCHICHT_MIN = 480; // Feste Schichtlänge für Verfügbarkeitsberechnung
+
   function berechne() {
     const B = gesamtStoerung();
-    const A = getBelegungszeit();
+    const A = getBelegungszeit(); // nur zur Anzeige
     const C = parseInt(document.getElementById('menge').value) || 0;
     const D = parseInt(document.getElementById('ausschuss').value) || 0;
 
@@ -735,7 +737,7 @@
       document.getElementById('oeeGesamt').className = 'oee-gesamt rot';
       return;
     }
-    const V = Math.max(0, (A - B) / A);
+    const V = Math.max(0, (SCHICHT_MIN - B) / SCHICHT_MIN);
 
     let Q = null;
     if (C > 0) Q = Math.max(0, (C - D) / C);
@@ -768,9 +770,9 @@
     const A = getBelegungszeit();
     const C = parseInt(document.getElementById('menge').value) || 0;
     const D = parseInt(document.getElementById('ausschuss').value) || 0;
-    const V = A > 0 ? Math.max(0, (A - B) / A) : 0;
+    const V = A > 0 ? Math.max(0, (SCHICHT_MIN - B) / SCHICHT_MIN) : 0;
     const Q = C > 0 ? Math.max(0, (C - D) / C) : null;
-    const oee = Q !== null ? V * Q : (A <= 0 ? 0 : null);
+    const oee = A <= 0 ? 0 : null; // OEE wird im Dashboard aus V × Q_woche berechnet
 
     const payload = {
       datum: heute.toISOString().slice(0, 10),
