@@ -24,17 +24,29 @@
       min-height: 100vh;
     }
 
-    /* ── Header ── */
-    header {
+    /* ── Header (einheitlicher Topbar-Standard) ── */
+    .topbar {
       background: var(--blau);
       color: #fff;
-      padding: 14px 20px;
+      padding: 0 28px;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      min-height: 62px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.3);
     }
-    header h1 { font-size: 1.15rem; font-weight: 700; }
-    header .datum { font-size: 0.85rem; opacity: 0.8; }
+    .topbar-left   { display: flex; align-items: center; gap: 16px; }
+    .topbar-logo   { font-size: 22px; font-weight: 700; letter-spacing: .5px; color: #fff; }
+    .topbar-logo span { color: #BDD7EE; }
+    .topbar-sub    { font-size: 12px; color: rgba(255,255,255,.7); margin-top: 2px; }
+    .topbar-center { text-align: center; }
+    .topbar-center .titel { font-size: 17px; font-weight: 700; letter-spacing: .5px; }
+    .topbar-center .untertitel { font-size: 11px; opacity: .7; }
+    .topbar-right  { display: flex; align-items: center; gap: 12px; }
+    @media (max-width: 640px) {
+      .topbar { padding: 8px 14px; }
+      .topbar-left { display: none; }
+    }
 
     /* ── Cards ── */
     .card {
@@ -425,11 +437,21 @@
 </head>
 <body>
 
-<header>
-  <h1>OEE Eingabe Beflammroboter</h1>
-  <span class="datum" id="headerDatum"></span>
-  <a class="btn-back" href="../index.html">← Zurück</a>
-</header>
+<div class="topbar">
+  <div class="topbar-left">
+    <div>
+      <div class="topbar-logo">EINHAUS <span>Oberflächenveredelung GmbH</span></div>
+      <div class="topbar-sub">Industrielackierung · 55411 Bingen-Dietersheim</div>
+    </div>
+  </div>
+  <div class="topbar-center">
+    <div class="titel">🔥 OEE Eingabe Beflammroboter</div>
+    <div class="untertitel">Lackierung | <span id="headerDatum"></span></div>
+  </div>
+  <div class="topbar-right">
+    <a class="btn-back" href="../index.html">← Zurück</a>
+  </div>
+</div>
 
 
 <!-- Produktion -->
