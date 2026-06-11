@@ -565,8 +565,14 @@
   let stoerungGrund = '';
   let timerInterval = null;
 
+  // Auto-Speicherung: eine Tageszeile, die bei jedem Stop aktualisiert wird
+  let gespeicherteId   = null;   // id der heutigen Supabase-Zeile (null = noch nicht angelegt)
+  let baselineBelegung = 0;      // bereits gespeicherte Belegungszeit (min) von heute
+  let baselineStoerung = 0;      // bereits gespeicherter Stillstand (min) von heute
+
   // Datum anzeigen
   const heute = new Date();
+  const datumStr = heute.toISOString().slice(0, 10);
   document.getElementById('headerDatum').textContent =
     heute.toLocaleDateString('de-DE', { weekday:'short', day:'2-digit', month:'2-digit', year:'numeric' });
 
@@ -593,6 +599,7 @@
     document.getElementById('btnStart').disabled = false;   // naechste Phase erlauben
     updateProduktionStatus();
     berechne();
+    persistiere(true);   // diese Phase automatisch in die Tageszeile speichern
   }
 
   // Summe aller Produktionsphasen (laufende Phase eingerechnet) in Minuten.
@@ -601,20 +608,19 @@
     let ms = 0;
     produktionSegmente.forEach(s => { ms += (s.ende - s.start); });
     if (produktionLaeuft && aktuellerStart) ms += (new Date() - aktuellerStart);
-    return Math.round(ms / 60000);
+    return baselineBelegung + Math.round(ms / 60000);
   }
 
   function updateProduktionStatus() {
     const status = document.getElementById('produktionStatus');
     const total = getBelegungszeit();
-    const phasen = produktionSegmente.length + (produktionLaeuft ? 1 : 0);
     if (produktionLaeuft) {
-      status.textContent = 'Phase ' + phasen + ' laeuft seit ' +
+      status.textContent = 'Phase laeuft seit ' +
         aktuellerStart.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'}) +
         ' · Belegung gesamt: ' + total + ' min';
       status.className = 'produktion-status laeuft';
-    } else if (produktionSegmente.length > 0) {
-      status.textContent = produktionSegmente.length + ' Produktionsphase(n) · Belegung gesamt: ' + total + ' min';
+    } else if (total > 0) {
+      status.textContent = 'Belegung gesamt heute: ' + total + ' min · gespeichert';
       status.className = 'produktion-status beendet';
     } else {
       status.textContent = 'Noch nicht gestartet';
@@ -712,7 +718,7 @@
   }
 
   function gesamtStoerung() {
-    return stoerungEintraege.reduce((s, e) => s + e.minuten, 0);
+    return baselineStoerung + stoerungEintraege.reduce((s, e) => s + e.minuten, 0);
   }
 
   function berechne() {
@@ -733,16 +739,20 @@
     box.className = 'oee-gesamt ' + (pct >= 80 ? 'gruen' : pct >= 60 ? 'gelb' : 'rot');
   }
 
-  async function speichern() {
+  // Manuelles Speichern (Button) – nutzt dieselbe Logik wie der Auto-Save
+  function speichern() { persistiere(false); }
 
+  // Speichert/aktualisiert die heutige Tageszeile.
+  // auto=true: ausgeloest durch "Ende Produktion" (kein Reload, dezenter Hinweis)
+  // auto=false: ausgeloest durch den Button "Schicht speichern"
+  async function persistiere(auto) {
     const B = gesamtStoerung();
     const A = getBelegungszeit();
     // OEE = Verfuegbarkeit = (Belegungszeit - Stillstand) / 480 min Plan-Schichtzeit
     const V = Math.max(0, Math.min(1, (A - B) / SCHICHT_MIN));
-    const oee = V;
 
     const payload = {
-      datum: heute.toISOString().slice(0, 10),
+      datum: datumStr,
       schicht,
       belegungszeit_min: A,
       stoerung_min: B,
@@ -750,41 +760,71 @@
       ausschuss: null,
       verfuegbarkeit: parseFloat((V * 100).toFixed(2)),
       qualitaet: null,
-      oee: parseFloat((oee * 100).toFixed(2)),
+      oee: parseFloat((V * 100).toFixed(2)),
       notiz: document.getElementById('notiz').value || null,
     };
 
-    if (SUPABASE_URL === 'DEINE_SUPABASE_URL') {
-      console.log('Supabase nicht konfiguriert. Daten:', payload);
-      toast('⚠ Supabase-URL noch nicht eingetragen (siehe Konsole).');
-      return;
-    }
-
     const btn = document.getElementById('btnSpeichern');
-    btn.disabled = true;
-    btn.textContent = 'Wird gespeichert…';
+    if (!auto) { btn.disabled = true; btn.textContent = 'Wird gespeichert…'; }
 
     try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/${TABELLE}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': SUPABASE_ANON,
-          'Authorization': `Bearer ${SUPABASE_ANON}`,
-          'Prefer': 'return=minimal'
-        },
-        body: JSON.stringify(payload)
-      });
-      if (!res.ok) throw new Error(await res.text());
-      toast('✓ Gespeichert!');
-      setTimeout(() => location.reload(), 1500);
+      let res;
+      if (gespeicherteId === null) {
+        // Erste Speicherung heute -> neue Zeile anlegen, id merken
+        res = await fetch(`${SUPABASE_URL}/rest/v1/${TABELLE}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_ANON,
+            'Authorization': `Bearer ${SUPABASE_ANON}`,
+            'Prefer': 'return=representation'
+          },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const rows = await res.json();
+        if (rows && rows[0]) gespeicherteId = rows[0].id;
+      } else {
+        // Folge-Speicherung -> bestehende Tageszeile aktualisieren
+        res = await fetch(`${SUPABASE_URL}/rest/v1/${TABELLE}?id=eq.${gespeicherteId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_ANON,
+            'Authorization': `Bearer ${SUPABASE_ANON}`,
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error(await res.text());
+      }
+      toast(auto ? ('✓ Phase gespeichert · ' + A + ' min gesamt') : '✓ Schicht gespeichert!');
     } catch (e) {
-      toast('Fehler: ' + e.message);
+      toast('Fehler beim Speichern: ' + e.message);
     } finally {
-      btn.disabled = false;
-      btn.textContent = 'Schicht speichern';
+      if (!auto) { btn.disabled = false; btn.textContent = 'Schicht speichern'; }
     }
   }
+
+  // Beim Laden: heutigen Stand aus Supabase holen, damit neue Phasen
+  // oben drauf gerechnet werden (auch nach Neuladen / am selben Tag).
+  async function ladeHeutigenStand() {
+    try {
+      const url = `${SUPABASE_URL}/rest/v1/${TABELLE}?datum=eq.${datumStr}&order=id.desc&limit=1`;
+      const res = await fetch(url, { headers: { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON } });
+      if (!res.ok) return;
+      const rows = await res.json();
+      if (rows && rows[0]) {
+        gespeicherteId   = rows[0].id;
+        baselineBelegung = rows[0].belegungszeit_min || 0;
+        baselineStoerung = rows[0].stoerung_min || 0;
+        if (rows[0].notiz) document.getElementById('notiz').value = rows[0].notiz;
+        updateProduktionStatus();
+        berechne();
+      }
+    } catch (e) { /* offline -> ignorieren, dann wird beim ersten Speichern neu angelegt */ }
+  }
+  ladeHeutigenStand();
 
   function toast(msg) {
     const t = document.getElementById('toast');
