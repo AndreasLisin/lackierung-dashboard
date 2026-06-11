@@ -204,20 +204,20 @@
   }
   .tool-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 18px;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 12px;
   }
   .tool-card {
     background: var(--card);
     border: 2px solid var(--border);
-    border-radius: 12px;
-    padding: 28px 22px;
+    border-radius: 10px;
+    padding: 14px;
     cursor: pointer;
     text-decoration: none;
     color: inherit;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 6px;
     transition: all 0.15s;
     box-shadow: 0 2px 6px rgba(0,0,0,0.05);
   }
@@ -227,18 +227,18 @@
     transform: translateY(-3px);
   }
   .tool-icon {
-    width: 44px;
-    height: 44px;
+    width: 32px;
+    height: 32px;
     background: var(--icon-bg);
-    border-radius: 10px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: background 0.25s;
   }
   .tool-icon svg {
-    width: 24px;
-    height: 24px;
+    width: 16px;
+    height: 16px;
     stroke: var(--primary-light);
     fill: none;
     stroke-width: 2;
@@ -246,18 +246,18 @@
     stroke-linejoin: round;
   }
   .tool-name {
-    font-size: 16px;
+    font-size: 13px;
     font-weight: bold;
     color: var(--primary);
   }
   .tool-desc {
-    font-size: 12px;
+    font-size: 11px;
     color: var(--text-muted);
     line-height: 1.5;
   }
   .tool-arrow {
     margin-top: auto;
-    font-size: 18px;
+    font-size: 13px;
     color: var(--primary-light);
     align-self: flex-end;
   }
