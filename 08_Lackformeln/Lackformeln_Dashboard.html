@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lackformeln – EINHAUS</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #EEF2F7;
+    color: #1c2b3a;
+  }
+
+  /* ── Topbar (EINHAUS Standard) ── */
+  .topbar {
+    background: #1F4E79; color: #fff; padding: 0 28px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 62px; position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,.3);
+  }
+  .topbar-left   { display: flex; align-items: center; gap: 16px; }
+  .topbar-logo   { font-size: 22px; font-weight: 700; letter-spacing: .5px; color: #fff; }
+  .topbar-logo span { color: #BDD7EE; }
+  .topbar-sub    { font-size: 12px; color: rgba(255,255,255,.7); margin-top: 2px; }
+  .topbar-center { text-align: center; }
+  .topbar-right  { display: flex; align-items: center; gap: 12px; }
+
+  /* ── Toolbar ── */
+  .toolbar {
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+    padding: 16px 24px; background: #fff; border-bottom: 1px solid #dbe3ec;
+    position: sticky; top: 62px; z-index: 90;
+  }
+  .toolbar input[type=search], .toolbar select {
+    padding: 9px 12px; border: 1px solid #c4cfdc; border-radius: 8px;
+    font-size: 14px; background: #fff; color: #1c2b3a;
+  }
+  .toolbar input[type=search] { flex: 1 1 260px; min-width: 200px; }
+  .count { color: #5b6b7d; font-size: 13px; margin-left: auto; }
+  .btn {
+    border: none; border-radius: 8px; padding: 9px 16px; font-size: 14px;
+    font-weight: 600; cursor: pointer; background: #1F4E79; color: #fff;
+  }
+  .btn:hover { background: #163a5c; }
+  .btn.ghost { background: #eef2f7; color: #1F4E79; border: 1px solid #c4cfdc; }
+  .btn.ghost:hover { background: #e2e9f1; }
+
+  /* ── Karten ── */
+  .wrap { padding: 22px 24px 60px; }
+  .kunde-h {
+    font-size: 15px; font-weight: 700; color: #1F4E79; margin: 22px 4px 10px;
+    border-bottom: 2px solid #d4deea; padding-bottom: 4px;
+  }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 16px; }
+  .card {
+    background: #fff; border: 1px solid #dbe3ec; border-radius: 12px;
+    padding: 16px 16px 14px; box-shadow: 0 1px 3px rgba(0,0,0,.05);
+    display: flex; flex-direction: column;
+  }
+  .card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .card-name { font-size: 16px; font-weight: 700; line-height: 1.25; }
+  .badges { display: flex; flex-wrap: wrap; gap: 5px; margin: 8px 0 4px; }
+  .badge {
+    font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 20px;
+    background: #eef2f7; color: #3d5168; border: 1px solid #d4deea;
+  }
+  .badge.code   { background: #e7f0fb; color: #1F4E79; border-color: #c4d8f0; }
+  .badge.typ    { background: #f0ebfb; color: #5b3da8; border-color: #ddd0f5; }
+  .badge.system { background: #e9f7ee; color: #1a7a3c; border-color: #c5e9d2; }
+  .badge.neu    { background: #fff3da; color: #9a6700; border-color: #f3dca0; }
+  .badge.warn   { background: #fde8e6; color: #b23222; border-color: #f3c2bb; }
+
+  table.komp { width: 100%; border-collapse: collapse; margin: 10px 0 4px; font-size: 13px; }
+  table.komp th, table.komp td { text-align: right; padding: 4px 6px; }
+  table.komp th { color: #5b6b7d; font-weight: 600; border-bottom: 1px solid #e3e9f0; font-size: 11px; text-transform: uppercase; }
+  table.komp td:first-child, table.komp th:first-child { text-align: left; font-weight: 600; }
+  table.komp tr.grp td { background: #f4f7fb; font-weight: 700; color: #1F4E79; text-align: left; font-size: 11px; }
+  table.komp tfoot td { border-top: 1px solid #e3e9f0; font-weight: 700; }
+  .skaliert { color: #1F4E79; }
+
+  .rechner { display: flex; align-items: center; gap: 8px; margin: 6px 0 2px; font-size: 13px; }
+  .rechner input { width: 90px; padding: 5px 8px; border: 1px solid #c4cfdc; border-radius: 6px; font-size: 13px; text-align: right; }
+  .rechner label { color: #5b6b7d; }
+
+  .meta { font-size: 12px; color: #4a5a6d; margin-top: 8px; line-height: 1.5; }
+  .meta b { color: #2b3a4b; }
+  .card-foot { margin-top: 10px; display: flex; gap: 8px; }
+  .lnk { background: none; border: none; color: #1F4E79; font-size: 12.5px; font-weight: 600; cursor: pointer; padding: 4px 6px; border-radius: 6px; }
+  .lnk:hover { background: #eef2f7; }
+
+  .empty { text-align: center; color: #7a8a9b; padding: 60px 20px; font-size: 15px; }
+
+  /* ── Modal Neuanlage ── */
+  .modal-bg {
+    display: none; position: fixed; inset: 0; background: rgba(20,33,48,.55);
+    z-index: 200; align-items: flex-start; justify-content: center; overflow-y: auto; padding: 30px 14px;
+  }
+  .modal-bg.open { display: flex; }
+  .modal {
+    background: #fff; border-radius: 14px; width: 560px; max-width: 100%;
+    padding: 22px 24px 18px; box-shadow: 0 12px 40px rgba(0,0,0,.3);
+  }
+  .modal h2 { margin: 0 0 4px; font-size: 19px; color: #1F4E79; }
+  .modal .hint { font-size: 12.5px; color: #6a7a8b; margin: 0 0 16px; }
+  .field { margin-bottom: 12px; }
+  .field label { display: block; font-size: 12.5px; font-weight: 600; color: #3d5168; margin-bottom: 4px; }
+  .field input, .field textarea, .field select {
+    width: 100%; padding: 9px 11px; border: 1px solid #c4cfdc; border-radius: 8px; font-size: 14px; font-family: inherit;
+  }
+  .row2 { display: flex; gap: 10px; }
+  .row2 > * { flex: 1; }
+  .komp-row { display: flex; gap: 8px; margin-bottom: 7px; }
+  .komp-row input.code { flex: 2; }
+  .komp-row input.g { flex: 1; }
+  .komp-row button { border: none; background: #fde8e6; color: #b23222; border-radius: 8px; width: 38px; cursor: pointer; font-size: 16px; }
+  .modal-foot { display: flex; justify-content: flex-end; gap: 10px; margin-top: 14px; }
+
+  #toast {
+    position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%);
+    background: #1c2b3a; color: #fff; padding: 12px 22px; border-radius: 10px;
+    font-size: 14px; z-index: 300; opacity: 0; transition: opacity .25s; pointer-events: none;
+  }
+  #toast.show { opacity: 1; }
+
+  @media print {
+    .topbar, .toolbar, .card-foot, .rechner, #toast { display: none !important; }
+    .grid { display: block; }
+    .card { break-inside: avoid; box-shadow: none; margin-bottom: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <div>
+      <div class="topbar-logo">EINHAUS <span>Oberflächenveredelung GmbH</span></div>
+      <div class="topbar-sub">Industrielackierung · 55411 Bingen-Dietersheim</div>
+    </div>
+  </div>
+  <div class="topbar-center">
+    <div style="font-size:17px;font-weight:700;letter-spacing:.5px;">🎨 Lackformeln</div>
+    <div style="font-size:11px;opacity:.7;">Lackierung | Farbton-Mischformeln</div>
+  </div>
+  <div class="topbar-right">
+    <span id="stamp" style="font-size:11px;opacity:.7;"></span>
+  </div>
+</div>
+
+<div class="toolbar">
+  <input type="search" id="suche" placeholder="🔍 Suche nach Farbname oder Farbcode …">
+  <select id="fKunde"><option value="">Alle Kunden</option></select>
+  <select id="fTyp">
+    <option value="">Alle Typen</option>
+    <option>Uni</option><option>Metallic</option><option>Perl</option><option>Effekt</option>
+  </select>
+  <button class="btn ghost" onclick="ladeFormeln()">↻ Aktualisieren</button>
+  <button class="btn" onclick="oeffneModal()">+ Neue Formel</button>
+  <span class="count" id="count"></span>
+</div>
+
+<div class="wrap" id="wrap">
+  <div class="empty">Lade Formeln …</div>
+</div>
+
+<!-- Modal Neuanlage -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <h2>Neue Lackformel</h2>
+    <p class="hint">Wird gespeichert und beim nächsten Sync in die Begleitdatei <b>Dashboard_Neu.xlsx</b> geschrieben. Der Excel-Master bleibt führend.</p>
+    <div class="row2">
+      <div class="field"><label>Kunde *</label><input id="mKunde" placeholder="z. B. VW, Tesla, DC Valeo"></div>
+      <div class="field"><label>Farbname *</label><input id="mName" placeholder="z. B. VW Deep Black LC9X"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>System</label><input id="mSystem" placeholder="z. B. Hit 3, Basislack"></div>
+      <div class="field"><label>Typ</label>
+        <select id="mTyp"><option>Uni</option><option>Metallic</option><option>Perl</option><option>Effekt</option></select>
+      </div>
+    </div>
+    <div class="field">
+      <label>Komponenten (Code · Gramm) *</label>
+      <div id="kompRows"></div>
+      <button class="btn ghost" style="margin-top:4px;padding:6px 12px;" onclick="addKompRow()">+ Komponente</button>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Primer</label><input id="mPrimer" placeholder="optional"></div>
+      <div class="field"><label>Klarlack</label><input id="mKlar" placeholder="optional"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Härter</label><input id="mHaerter" placeholder="optional"></div>
+      <div class="field"><label>Erfasst von</label><input id="mVon" placeholder="dein Name (optional)"></div>
+    </div>
+    <div class="field"><label>Notiz</label><textarea id="mNotiz" rows="2" placeholder="optional"></textarea></div>
+    <div class="modal-foot">
+      <button class="btn ghost" onclick="schliesseModal()">Abbrechen</button>
+      <button class="btn" id="mSave" onclick="speichereFormel()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  // ── Konfiguration ──
+  const SUPABASE_URL  = 'https://tldkqifblxkdligypffr.supabase.co';
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsZGtxaWZibHhrZGxpZ3lwZmZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1NjkwMzEsImV4cCI6MjA5NjE0NTAzMX0.Zg0Yy9uAIvuFwNfYVzfLWqmQUvTnXivYmGIXLCOa6TM';
+  const H = { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON };
+
+  let ALLE = [];
+
+  function toast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3200);
+  }
+  const esc = s => (s ?? '').toString().replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const num = g => (Math.round(g * 100) / 100).toLocaleString('de-DE');
+
+  async function ladeFormeln() {
+    document.getElementById('wrap').innerHTML = '<div class="empty">Lade Formeln …</div>';
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/lackformeln?order=kunde.asc,farbname.asc`, { headers: H });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      ALLE = await res.json();
+      fuelleKundenFilter();
+      render();
+      document.getElementById('stamp').textContent = 'Stand: ' + new Date().toLocaleString('de-DE');
+    } catch (e) {
+      document.getElementById('wrap').innerHTML =
+        `<div class="empty">⚠ Konnte Formeln nicht laden (${esc(e.message)}).<br>
+         Ist die Tabelle <b>lackformeln</b> in Supabase angelegt und der Sync gelaufen?</div>`;
+    }
+  }
+
+  function fuelleKundenFilter() {
+    const sel = document.getElementById('fKunde');
+    const cur = sel.value;
+    const kunden = [...new Set(ALLE.map(f => f.kunde))].sort((a, b) => a.localeCompare(b, 'de'));
+    sel.innerHTML = '<option value="">Alle Kunden</option>' +
+      kunden.map(k => `<option${k === cur ? ' selected' : ''}>${esc(k)}</option>`).join('');
+  }
+
+  function render() {
+    const q = document.getElementById('suche').value.trim().toLowerCase();
+    const fk = document.getElementById('fKunde').value;
+    const ft = document.getElementById('fTyp').value;
+
+    let list = ALLE.filter(f => {
+      if (fk && f.kunde !== fk) return false;
+      if (ft && f.typ !== ft) return false;
+      if (q) {
+        const hay = (f.farbname + ' ' + (f.farbcode || '') + ' ' + f.kunde).toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+
+    document.getElementById('count').textContent = `${list.length} von ${ALLE.length} Formeln`;
+    const wrap = document.getElementById('wrap');
+    if (!list.length) { wrap.innerHTML = '<div class="empty">Keine Formeln gefunden.</div>'; return; }
+
+    // nach Kunde gruppieren
+    const groups = {};
+    list.forEach(f => { (groups[f.kunde] = groups[f.kunde] || []).push(f); });
+
+    wrap.innerHTML = Object.keys(groups).sort((a, b) => a.localeCompare(b, 'de')).map(k =>
+      `<div class="kunde-h">${esc(k)} <span style="font-weight:400;color:#8493a4;">(${groups[k].length})</span></div>
+       <div class="grid">${groups[k].map(karte).join('')}</div>`
+    ).join('');
+  }
+
+  function karte(f) {
+    const komp = Array.isArray(f.komponenten) ? f.komponenten : [];
+    const total = komp.reduce((s, k) => s + (Number(k.gramm) || 0), 0);
+    const isNeu = (f.quelle_blatt === 'Dashboard') || /^Dashboard-Neuanlage/.test(f.notiz || '');
+
+    const badges = [
+      f.farbcode ? `<span class="badge code">${esc(f.farbcode)}</span>` : '',
+      f.system   ? `<span class="badge system">${esc(f.system)}</span>` : '',
+      f.typ      ? `<span class="badge typ">${esc(f.typ)}</span>` : '',
+      isNeu      ? `<span class="badge neu">Neuanlage</span>` : '',
+      !f.geprueft && !isNeu ? `<span class="badge warn">ungeprüft</span>` : ''
+    ].join('');
+
+    let lastGrp = null, rows = '';
+    komp.forEach((k, i) => {
+      if (k.gruppe && k.gruppe !== lastGrp) {
+        rows += `<tr class="grp"><td colspan="4">${esc(k.gruppe)}</td></tr>`;
+        lastGrp = k.gruppe;
+      }
+      const g = Number(k.gramm) || 0;
+      const pct = total ? (g / total * 100) : 0;
+      rows += `<tr>
+        <td>${esc(k.code)}</td>
+        <td>${num(g)}</td>
+        <td style="color:#8493a4">${pct.toFixed(1)}%</td>
+        <td class="skaliert" data-base="${g}">${num(g)}</td></tr>`;
+    });
+
+    const meta = [
+      f.primer   ? `<div><b>Primer:</b> ${esc(f.primer)}</div>` : '',
+      f.klarlack ? `<div><b>Klarlack:</b> ${esc(f.klarlack)}</div>` : '',
+      f.haerter  ? `<div><b>Härter:</b> ${esc(f.haerter)}</div>` : '',
+      f.vorlage_nr ? `<div><b>Vorlage:</b> ${esc(f.vorlage_nr)}</div>` : '',
+      f.notiz && !isNeu ? `<div><b>Notiz:</b> ${esc(f.notiz)}</div>` : ''
+    ].join('');
+
+    const cid = 'c' + f.id;
+    return `<div class="card" id="${cid}">
+      <div class="card-head"><div class="card-name">${esc(f.farbname)}</div></div>
+      <div class="badges">${badges}</div>
+      <table class="komp">
+        <thead><tr><th>Komponente</th><th>Rezept g</th><th>%</th><th>Ziel g</th></tr></thead>
+        <tbody>${rows}</tbody>
+        <tfoot><tr><td>Summe</td><td>${num(total)}</td><td></td>
+          <td class="skaliert summe" data-base="${total}">${num(total)}</td></tr></tfoot>
+      </table>
+      <div class="rechner">
+        <label>Zielmenge (g):</label>
+        <input type="number" min="0" step="any" value="${Math.round(total)}"
+               oninput="skaliere('${cid}', ${total}, this.value)">
+        <button class="lnk" onclick="resetZiel('${cid}', ${total})">Reset</button>
+      </div>
+      ${meta ? `<div class="meta">${meta}</div>` : ''}
+      <div class="card-foot">
+        <button class="lnk" onclick="kopiere(${f.id})">📋 Kopieren</button>
+        <button class="lnk" onclick="window.print()">🖨 Drucken</button>
+      </div>
+    </div>`;
+  }
+
+  function skaliere(cid, total, ziel) {
+    const factor = total > 0 ? (parseFloat(ziel) || 0) / total : 0;
+    document.querySelectorAll('#' + cid + ' .skaliert').forEach(td => {
+      const base = parseFloat(td.dataset.base) || 0;
+      td.textContent = num(base * factor);
+    });
+  }
+  function resetZiel(cid, total) {
+    const inp = document.querySelector('#' + cid + ' .rechner input');
+    inp.value = Math.round(total);
+    skaliere(cid, total, total);
+  }
+
+  function kopiere(id) {
+    const f = ALLE.find(x => x.id === id);
+    if (!f) return;
+    const komp = (f.komponenten || []).map(k =>
+      `${k.gruppe ? '[' + k.gruppe + '] ' : ''}${k.code}\t${k.gramm} g`).join('\n');
+    const txt = [
+      f.kunde + ' – ' + f.farbname + (f.farbcode ? ' (' + f.farbcode + ')' : ''),
+      f.system ? 'System: ' + f.system : '',
+      komp,
+      f.primer ? 'Primer: ' + f.primer : '',
+      f.klarlack ? 'Klarlack: ' + f.klarlack : '',
+      f.haerter ? 'Härter: ' + f.haerter : ''
+    ].filter(Boolean).join('\n');
+    navigator.clipboard.writeText(txt).then(() => toast('Formel kopiert'));
+  }
+
+  // ── Neuanlage-Modal ──
+  function oeffneModal() {
+    document.getElementById('kompRows').innerHTML = '';
+    addKompRow(); addKompRow();
+    ['mKunde','mName','mSystem','mPrimer','mKlar','mHaerter','mVon','mNotiz'].forEach(i => document.getElementById(i).value = '');
+    document.getElementById('modalBg').classList.add('open');
+  }
+  function schliesseModal() { document.getElementById('modalBg').classList.remove('open'); }
+  function addKompRow() {
+    const div = document.createElement('div');
+    div.className = 'komp-row';
+    div.innerHTML = `<input class="code" placeholder="Code (z. B. 502)">
+                     <input class="g" type="number" step="any" placeholder="Gramm">
+                     <button onclick="this.parentNode.remove()">×</button>`;
+    document.getElementById('kompRows').appendChild(div);
+  }
+
+  async function speichereFormel() {
+    const kunde = document.getElementById('mKunde').value.trim();
+    const name  = document.getElementById('mName').value.trim();
+    const komp = [...document.querySelectorAll('#kompRows .komp-row')].map(r => ({
+      code: r.querySelector('.code').value.trim(),
+      gramm: parseFloat(r.querySelector('.g').value)
+    })).filter(k => k.code && !isNaN(k.gramm));
+
+    if (!kunde || !name) { toast('Bitte Kunde und Farbname ausfüllen'); return; }
+    if (!komp.length)    { toast('Bitte mindestens eine Komponente angeben'); return; }
+
+    const payload = {
+      kunde, farbname: name,
+      system: document.getElementById('mSystem').value.trim() || null,
+      komponenten: komp,
+      primer: document.getElementById('mPrimer').value.trim() || null,
+      klarlack: document.getElementById('mKlar').value.trim() || null,
+      haerter: document.getElementById('mHaerter').value.trim() || null,
+      notiz: document.getElementById('mNotiz').value.trim() || null,
+      erfasst_von: document.getElementById('mVon').value.trim() || null
+    };
+
+    const btn = document.getElementById('mSave');
+    btn.disabled = true; btn.textContent = 'Speichert …';
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/lackformeln_eingang`, {
+        method: 'POST',
+        headers: { ...H, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      schliesseModal();
+      toast('Formel gespeichert – erscheint nach dem nächsten Sync (max. 1 Std.)');
+    } catch (e) {
+      toast('Fehler beim Speichern: ' + e.message);
+    } finally {
+      btn.disabled = false; btn.textContent = 'Speichern';
+    }
+  }
+
+  document.getElementById('suche').addEventListener('input', render);
+  document.getElementById('fKunde').addEventListener('change', render);
+  document.getElementById('fTyp').addEventListener('change', render);
+  document.getElementById('modalBg').addEventListener('click', e => { if (e.target.id === 'modalBg') schliesseModal(); });
+
+  ladeFormeln();
+</script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+# Geheimnisse und temporaere Dateien - NICHT ins oeffentliche Repo
+service_role.key
+*.docx
+parsed.json
+eingang_new.json
+Sync_Lackformeln.log
+Review_Lackformeln.xlsx
+__pycache__/
