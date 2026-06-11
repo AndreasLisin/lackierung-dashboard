@@ -585,8 +585,9 @@
   // ═══════════════════════════════════════════════════
 
   let schicht = 'Früh';
-  let produktionStartZeit = null;
-  let produktionEndeZeit = null;
+  let produktionSegmente = [];   // [{ start: Date, ende: Date }] – mehrere Produktionsphasen
+  let produktionLaeuft = false;
+  let aktuellerStart = null;
   let stoerungLaeuft = false;
   let stoerungStart = null;
   let stoerungEintraege = [];   // { start, ende, minuten, grund }
@@ -598,33 +599,56 @@
   document.getElementById('headerDatum').textContent =
     heute.toLocaleDateString('de-DE', { weekday:'short', day:'2-digit', month:'2-digit', year:'numeric' });
 
+  // Start einer neuen Produktionsphase (mehrfach pro Schicht moeglich)
   function produktionStart() {
-    produktionStartZeit = new Date();
-    produktionEndeZeit = null;
+    if (produktionLaeuft) return;            // laeuft bereits
+    aktuellerStart = new Date();
+    produktionLaeuft = true;
     document.getElementById('btnStart').disabled = true;
+    document.getElementById('btnEnde').disabled = false;
     document.getElementById('btnEnde').classList.add('aktiv');
-    const status = document.getElementById('produktionStatus');
-    status.textContent = 'Gestartet: ' + produktionStartZeit.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
-    status.className = 'produktion-status laeuft';
+    updateProduktionStatus();
     berechne();
   }
 
+  // Aktuelle Phase beenden – Dauer wird zur Gesamt-Belegungszeit addiert.
+  // Danach kann erneut "Start" gedrueckt werden (naechste Phase).
   function produktionEnde() {
-    if (!produktionStartZeit) return;
-    produktionEndeZeit = new Date();
+    if (!produktionLaeuft) return;
+    produktionSegmente.push({ start: aktuellerStart, ende: new Date() });
+    aktuellerStart = null;
+    produktionLaeuft = false;
     document.getElementById('btnEnde').classList.remove('aktiv');
-    document.getElementById('btnEnde').disabled = true;
-    const status = document.getElementById('produktionStatus');
-    const min = Math.round((produktionEndeZeit - produktionStartZeit) / 60000);
-    status.textContent = 'Beendet: ' + produktionEndeZeit.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'}) + ' · Belegungszeit: ' + min + ' min';
-    status.className = 'produktion-status beendet';
+    document.getElementById('btnStart').disabled = false;   // naechste Phase erlauben
+    updateProduktionStatus();
     berechne();
   }
 
+  // Summe aller Produktionsphasen (laufende Phase eingerechnet) in Minuten.
+  // Pausen zwischen den Phasen zaehlen NICHT mit.
   function getBelegungszeit() {
-    if (!produktionStartZeit) return 0;
-    const ende = produktionEndeZeit || new Date();
-    return Math.round((ende - produktionStartZeit) / 60000);
+    let ms = 0;
+    produktionSegmente.forEach(s => { ms += (s.ende - s.start); });
+    if (produktionLaeuft && aktuellerStart) ms += (new Date() - aktuellerStart);
+    return Math.round(ms / 60000);
+  }
+
+  function updateProduktionStatus() {
+    const status = document.getElementById('produktionStatus');
+    const total = getBelegungszeit();
+    const phasen = produktionSegmente.length + (produktionLaeuft ? 1 : 0);
+    if (produktionLaeuft) {
+      status.textContent = 'Phase ' + phasen + ' laeuft seit ' +
+        aktuellerStart.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'}) +
+        ' · Belegung gesamt: ' + total + ' min';
+      status.className = 'produktion-status laeuft';
+    } else if (produktionSegmente.length > 0) {
+      status.textContent = produktionSegmente.length + ' Produktionsphase(n) · Belegung gesamt: ' + total + ' min';
+      status.className = 'produktion-status beendet';
+    } else {
+      status.textContent = 'Noch nicht gestartet';
+      status.className = 'produktion-status';
+    }
   }
 
   function schichtWaehlen(btn) {
