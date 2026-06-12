@@ -34,10 +34,10 @@ SKIP_SHEETS = {"Canyon Liste", "VW City Wings 06_2022", "VW City Wings 06_2022 (
 MAX_GRAMM = 100000
 
 # Schluesselwoerter
-RE_SYSTEM      = re.compile(r"^\s*hit\s*\d+\s*$", re.I)
+RE_SYSTEM      = re.compile(r"^\s*hit\b.*", re.I)   # "Hit 3", "Hit 5 HKM", "Hit A1", "Hit 8 Neu" ...
 RE_GROUP_LABEL = re.compile(r"^\s*(grundton|effekt|basislack|deckton|perl\.?|grundlack|decklack)\b", re.I)
 RE_PRIMER      = re.compile(r"primer", re.I)
-RE_KLARLACK    = re.compile(r"klarlack|klar(?!\w)", re.I)
+RE_KLARLACK    = re.compile(r"klarlack|klerlack|klar(?!\w)", re.I)
 RE_HAERTER     = re.compile(r"h(ae|ä|a)rter", re.I)
 RE_VORLAGE     = re.compile(r"vorlage", re.I)
 
@@ -138,8 +138,34 @@ def extract_pairs(row):
                 pairs.append((code, amt, j))
                 j += 2
                 continue
+            # Layout "Code | Name | Gramm" (z.B. Canyon Moviestar): eine Text-Luecke ueberspringen
+            nb = vals[j + 1]
+            if (j + 2 < len(vals) and not is_nan(nb) and not isinstance(nb, (int, float))
+                    and as_code(nb) is None):
+                amt2 = to_amount(vals[j + 2])
+                if amt2 is not None and 0 < amt2 <= MAX_GRAMM:
+                    pairs.append((code, amt2, j))
+                    j += 3
+                    continue
         j += 1
     return pairs
+
+
+def lone_code(row):
+    """Zeile mit nur EINER kurzen Code-Zelle (z.B. Toyota-Farbcode '040','209') -> (Spalte, Titel)."""
+    cells = [(j, v) for j, v in enumerate(row) if not is_nan(v)]
+    if len(cells) != 1:
+        return None
+    j, v = cells[0]
+    if isinstance(v, (int, float)):
+        f = float(v)
+        if f == int(f) and 1 <= f <= 99999:
+            return (j, str(int(f)))
+        return None
+    s = clean(v)
+    if 1 <= len(s) <= 8 and re.match(r"^[A-Za-z0-9][A-Za-z0-9 .\-/]{0,7}$", s):
+        return (j, s)
+    return None
 
 
 def text_cells(row):
@@ -183,6 +209,10 @@ def parse_sheet(df, sheet):
     for i, row in enumerate(rows):
         pairs = extract_pairs(row)
         texts = text_cells(row)
+        if not pairs and not texts:
+            lc = lone_code(row)          # einzelne Code-Zelle = Farbcode-Titel
+            if lc:
+                texts = [lc]
         is_empty = not pairs and not texts
 
         if is_empty:
@@ -399,7 +429,8 @@ def main():
     if out_path:
         with open(out_path, "w", encoding="utf-8") as fh:
             fh.write(text)
-        sys.stderr.write(f"{len(records)} Formeln -> {out_path}\n")
+        # Statusmeldung nach stdout (nicht stderr) -> kein NativeCommandError im PS-Log
+        sys.stdout.write(f"{len(records)} Formeln -> {out_path}\n")
     else:
         sys.stdout.reconfigure(encoding="utf-8")
         sys.stdout.write(text)

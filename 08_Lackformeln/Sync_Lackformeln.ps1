@@ -57,7 +57,7 @@ function Invoke-Python {
     $perr = Join-Path $ScriptDir 'py_stderr.tmp'
     $prev = $ErrorActionPreference
     $ErrorActionPreference = 'Continue'
-    & $Python @PyArgs 2> $perr
+    & $Python @PyArgs 2> $perr | Out-Null
     $code = $LASTEXITCODE
     $ErrorActionPreference = $prev
     if (Test-Path $perr) {
