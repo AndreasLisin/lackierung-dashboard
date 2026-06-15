@@ -515,6 +515,7 @@
 <!-- Wöchentliche Qualität -->
 <div class="card" style="margin-top:14px">
   <h2>Wöchentliche Qualität</h2>
+  <div style="display:flex;gap:8px;margin-bottom:14px;" id="kwWahlButtons"></div>
   <div style="font-size:0.82rem;color:#888;margin-bottom:12px;" id="kwHinweis">Wird geladen…</div>
   <div class="felder-grid">
     <div class="feld">
@@ -902,14 +903,39 @@
 
   // ── Wöchentliche Qualität ──────────────────────────
   let kwVorhandeneId = null;
+  let kwAktiv = null; // { kw, jahr }
+
+  function kwWochenButtons() {
+    const dieseW = getKW(heute);
+    const letzteW = (() => { const v = new Date(heute); v.setDate(heute.getDate() - 7); return getKW(v); })();
+    const wrap = document.getElementById('kwWahlButtons');
+    wrap.innerHTML = '';
+    [
+      { label: `Diese Woche (KW ${dieseW.kw})`, val: dieseW },
+      { label: `Letzte Woche (KW ${letzteW.kw})`, val: letzteW }
+    ].forEach(({ label, val }) => {
+      const btn = document.createElement('button');
+      btn.textContent = label;
+      const istAktiv = kwAktiv && kwAktiv.kw === val.kw && kwAktiv.jahr === val.jahr;
+      btn.style.cssText = `flex:1;padding:12px 8px;border-radius:10px;font-size:0.88rem;font-weight:700;cursor:pointer;border:2px solid ${istAktiv ? 'var(--blau)' : 'var(--border)'};background:${istAktiv ? 'var(--blau)' : 'var(--grau)'};color:${istAktiv ? '#fff' : 'var(--text)'};`;
+      btn.onclick = () => { kwAktiv = val; kwLaden(); };
+      wrap.appendChild(btn);
+    });
+  }
 
   async function kwLaden() {
-    const { kw, jahr } = getKW(heute);
+    if (!kwAktiv) kwAktiv = getKW(heute);
+    kwWochenButtons();
+    const { kw, jahr } = kwAktiv;
     document.getElementById('kwHinweis').textContent =
       `KW ${kw} / ${jahr} — kann jederzeit eingetragen oder aktualisiert werden`;
+    document.getElementById('kwMenge').value = '';
+    document.getElementById('kwAusschuss').value = '';
+    document.getElementById('kwQualitaet').textContent = '';
+    document.getElementById('kwStatus').textContent = '';
+    kwVorhandeneId = null;
 
-    const url = `${SUPABASE_URL}/rest/v1/qualitaet_woche?kw=eq.${kw}&jahr=eq.${jahr}`;
-    const res = await fetch(url, {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/qualitaet_woche?kw=eq.${kw}&jahr=eq.${jahr}`, {
       headers: { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON }
     });
     const daten = await res.json();
@@ -938,7 +964,7 @@
   }
 
   async function kwSpeichern() {
-    const { kw, jahr } = getKW(heute);
+    const { kw, jahr } = kwAktiv;
     const m = parseInt(document.getElementById('kwMenge').value) || 0;
     const a = parseInt(document.getElementById('kwAusschuss').value) || 0;
     if (m <= 0) { toast('Bitte Gesamtmenge eintragen.'); return; }
@@ -952,14 +978,12 @@
     try {
       let res;
       if (kwVorhandeneId) {
-        // Update
         res = await fetch(`${SUPABASE_URL}/rest/v1/qualitaet_woche?id=eq.${kwVorhandeneId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON, Prefer: 'return=minimal' },
           body: JSON.stringify(payload)
         });
       } else {
-        // Insert mit upsert
         res = await fetch(`${SUPABASE_URL}/rest/v1/qualitaet_woche`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON, Prefer: 'resolution=merge-duplicates,return=minimal' },
