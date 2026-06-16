@@ -747,27 +747,15 @@ async function idbGet(k) {
 async function writeToFile() {
   if (!fileHandle) return false;
   try {
-    if ((await fileHandle.queryPermission({ mode: 'readwrite' })) !== 'granted') return false;
+    // showOpenFilePicker vergibt nur Lese-Recht -> Schreib-Recht aktiv anfordern
+    let perm = await fileHandle.queryPermission({ mode: 'readwrite' });
+    if (perm !== 'granted') perm = await fileHandle.requestPermission({ mode: 'readwrite' });
+    if (perm !== 'granted') return false;
     const w = await fileHandle.createWritable();
     await w.write(JSON.stringify(data, null, 2));
     await w.close();
     return true;
   } catch (e) { console.warn('Schreiben fehlgeschlagen', e); return false; }
-}
-
-async function readFromFile() {
-  if (!fileHandle) return false;
-  try {
-    const f   = await fileHandle.getFile();
-    const arr = JSON.parse(await f.text());
-    if (Array.isArray(arr)) {
-      data = arr;
-      localStorage.setItem(LS_KEY, JSON.stringify(data));
-      render();
-      return true;
-    }
-  } catch (e) { console.warn('Lesen fehlgeschlagen', e); }
-  return false;
 }
 
 /* Wird bei jeder Datenänderung aufgerufen: localStorage + (falls verknüpft) Datei */
@@ -784,7 +772,8 @@ async function linkFile() {
   try {
     const [h] = await window.showOpenFilePicker({
       types: [{ description: 'Wartungsdaten', accept: { 'application/json': ['.json'] } }],
-      multiple: false
+      multiple: false,
+      mode: 'readwrite'
     });
     fileHandle = h;
     await idbSet('handle', h);
@@ -799,8 +788,8 @@ async function linkFile() {
 async function reauth() {
   try {
     if ((await fileHandle.requestPermission({ mode: 'readwrite' })) === 'granted') {
-      await readFromFile();
-      setLinkStatus('linked');
+      // aktuellen Dashboard-Stand in die Datei schreiben (nicht umgekehrt!)
+      setLinkStatus((await writeToFile()) ? 'linked' : 'error');
     }
   } catch (e) { console.warn(e); }
 }
@@ -832,7 +821,7 @@ async function init() {
   try { fileHandle = await idbGet('handle'); } catch (e) { fileHandle = null; }
   if (fileHandle) {
     const perm = await fileHandle.queryPermission({ mode: 'readwrite' });
-    if (perm === 'granted') { await readFromFile(); setLinkStatus('linked'); }
+    if (perm === 'granted') { setLinkStatus((await writeToFile()) ? 'linked' : 'error'); }
     else setLinkStatus('reauth');
   } else {
     setLinkStatus(false);
