@@ -261,6 +261,7 @@
     <div class="table-top">
       <div class="table-top-title">Alle Anlagen</div>
       <div class="table-top-actions">
+        <button class="btn btn-ghost" onclick="migrateLocal()" title="Früher in diesem Browser eingetragene Daten in die zentrale Datenbank übernehmen (einmalig)">⤵ Alte Daten übernehmen</button>
         <button class="btn btn-ghost" onclick="reloadData()" title="Daten neu aus der Datenbank laden">🔄 Aktualisieren</button>
         <button class="btn btn-ghost" onclick="exportData()" title="Sicherungskopie als JSON herunterladen">📤 Sicherung</button>
         <button class="btn btn-primary" onclick="openModal(null)">+ Anlage hinzufügen</button>
@@ -412,6 +413,46 @@ async function reloadData() {
   setDbStatus('Lädt …', 'var(--text-muted)');
   try { await loadData(); render(); setDbStatus('', null); }
   catch (e) { setDbStatus('⚠️ Verbindung fehlgeschlagen: ' + e.message, 'var(--r)'); }
+}
+
+// Einmalige Übernahme der früher im Browser (localStorage) gespeicherten Daten
+async function migrateLocal() {
+  const raw = localStorage.getItem('einhaus_wartung_anlagen');
+  if (!raw) { alert('Auf diesem Gerät/Browser ist kein alter Datensatz gespeichert.'); return; }
+  let alt;
+  try { alt = JSON.parse(raw); } catch { alert('Der alte Browser-Speicher ist unlesbar.'); return; }
+  if (!Array.isArray(alt) || !alt.length) { alert('Kein alter Datensatz gefunden.'); return; }
+  if (!confirm(`${alt.length} Anlage(n) aus dem alten Browser-Speicher übernehmen?\n\nEs werden nur fehlende Angaben ergänzt und fehlende Anlagen neu angelegt – nichts wird überschrieben.`)) return;
+  try {
+    await loadData();
+    const byName = {};
+    data.forEach(e => { byName[e.anlage] = e; });
+    let neu = 0, ergaenzt = 0;
+    for (const a of alt) {
+      if (!a || !a.anlage) continue;
+      const row = toRow(a);
+      const cur = byName[a.anlage];
+      if (cur) {
+        const dbRow = toRow(cur);
+        const patch = {};
+        for (const k in row) {
+          const leer = dbRow[k] === null || dbRow[k] === '' || dbRow[k] === undefined;
+          if (leer && row[k]) patch[k] = row[k];
+        }
+        if (Object.keys(patch).length) {
+          const res = await fetch(`${REST}?id=eq.${cur.id}`, { method: 'PATCH', headers: HEADERS, body: JSON.stringify(patch) });
+          if (res.ok) ergaenzt++;
+        }
+      } else {
+        const res = await fetch(REST, { method: 'POST', headers: HEADERS, body: JSON.stringify(row) });
+        if (res.ok) neu++;
+      }
+    }
+    await reloadData();
+    alert(`Übernahme abgeschlossen:\n${neu} Anlage(n) neu angelegt, ${ergaenzt} ergänzt.`);
+  } catch (e) {
+    alert('Übernahme fehlgeschlagen:\n' + e.message);
+  }
 }
 
 function addMonths(dateStr, months) {
