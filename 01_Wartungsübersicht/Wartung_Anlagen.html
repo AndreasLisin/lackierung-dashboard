@@ -261,16 +261,16 @@
     <div class="table-top">
       <div class="table-top-title">Alle Anlagen</div>
       <div class="table-top-actions">
-        <button class="btn btn-ghost" id="linkBtn" onclick="linkFile()" title="Dashboard direkt mit Wartung_Daten.json verbinden – Änderungen werden dann automatisch gespeichert">🔗 Mit Datei verknüpfen</button>
-        <button class="btn btn-ghost" onclick="importData()" title="Daten aus Wartung_Daten.json laden">📥 Importieren</button>
-        <button class="btn btn-ghost" onclick="exportData()" title="Daten als Wartung_Daten.json speichern (für PowerShell-Skript)">📤 Exportieren</button>
+        <button class="btn btn-ghost" onclick="reloadData()" title="Daten neu aus der Datenbank laden">🔄 Aktualisieren</button>
+        <button class="btn btn-ghost" onclick="exportData()" title="Sicherungskopie als JSON herunterladen">📤 Sicherung</button>
         <button class="btn btn-primary" onclick="openModal(null)">+ Anlage hinzufügen</button>
       </div>
     </div>
     <div class="ps-hint">
-      💡 <span><strong>PowerShell-Automatik:</strong>
-      Das E-Mail-Skript liest die Datei <code>Wartung_Daten.json</code> aus diesem Ordner.
-      <br><span id="linkStatus"></span></span>
+      💡 <span><strong>Zentrale Datenbank:</strong>
+      Alle Anlagen sind zentral gespeichert – derselbe Stand auf jedem Gerät (PC &amp; Handy).
+      Das E-Mail-Skript liest ebenfalls direkt aus der Datenbank.
+      <span id="dbStatus"></span></span>
     </div>
     <table>
       <thead>
@@ -368,28 +368,50 @@
 </div>
 
 <script>
-const LS_KEY = 'einhaus_wartung_anlagen';
+/* ── Zentrale Datenbank (Supabase) ── */
+const SUPABASE_URL  = 'https://tldkqifblxkdligypffr.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsZGtxaWZibHhrZGxpZ3lwZmZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1NjkwMzEsImV4cCI6MjA5NjE0NTAzMX0.Zg0Yy9uAIvuFwNfYVzfLWqmQUvTnXivYmGIXLCOa6TM';
+const REST    = `${SUPABASE_URL}/rest/v1/wartung_anlagen`;
+const HEADERS = { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}`, 'Content-Type': 'application/json' };
+
 let editId = null;
-
-const DEFAULT_DATA = [
-  { id:1, anlage:'Lackierroboter 1',       wartungstyp:'Jahreswartung',      letzteWartung:'2025-10-01', intervallMonate:12, person:'Zuständige Person', email:'', notizen:'', wFirma:'', wKontakt:'', wTelefon:'', wEmail:'' },
-  { id:2, anlage:'Lackierroboter 2',       wartungstyp:'Ölwechsel',          letzteWartung:'2025-12-01', intervallMonate:6,  person:'Zuständige Person', email:'', notizen:'', wFirma:'', wKontakt:'', wTelefon:'', wEmail:'' },
-  { id:3, anlage:'Beflammroboter',         wartungstyp:'Halbjahreswartung',  letzteWartung:'2025-10-15', intervallMonate:6,  person:'Zuständige Person', email:'', notizen:'', wFirma:'', wKontakt:'', wTelefon:'', wEmail:'' },
-  { id:4, anlage:'Absauganlage',           wartungstyp:'Filterwechsel',      letzteWartung:'2026-03-01', intervallMonate:3,  person:'Zuständige Person', email:'', notizen:'', wFirma:'', wKontakt:'', wTelefon:'', wEmail:'' },
-  { id:5, anlage:'Farbversorgungsanlage',  wartungstyp:'Jahreswartung',      letzteWartung:'2025-09-01', intervallMonate:12, person:'Zuständige Person', email:'', notizen:'', wFirma:'', wKontakt:'', wTelefon:'', wEmail:'' },
-  { id:6, anlage:'Drucklufttrockner',      wartungstyp:'Filterwechsel',      letzteWartung:'2026-02-15', intervallMonate:6,  person:'Zuständige Person', email:'', notizen:'', wFirma:'', wKontakt:'', wTelefon:'', wEmail:'' },
-  { id:7, anlage:'Kabinen-Belüftung',      wartungstyp:'Filterwechsel',      letzteWartung:'2026-04-01', intervallMonate:2,  person:'Zuständige Person', email:'', notizen:'', wFirma:'', wKontakt:'', wTelefon:'', wEmail:'' },
-];
-
 let data = [];
 
-function loadData() {
-  const raw = localStorage.getItem(LS_KEY);
-  data = raw ? JSON.parse(raw) : DEFAULT_DATA;
+// DB-Spalten (snake_case) <-> App-Felder (camelCase)
+function fromRow(r) {
+  return {
+    id: r.id, anlage: r.anlage, wartungstyp: r.wartungstyp,
+    letzteWartung: r.letzte_wartung, intervallMonate: r.intervall_monate,
+    person: r.person, email: r.email, notizen: r.notizen,
+    wFirma: r.w_firma, wKontakt: r.w_kontakt, wTelefon: r.w_telefon, wEmail: r.w_email
+  };
+}
+function toRow(e) {
+  return {
+    anlage: e.anlage, wartungstyp: e.wartungstyp,
+    letzte_wartung: e.letzteWartung, intervall_monate: e.intervallMonate,
+    person: e.person, email: e.email, notizen: e.notizen,
+    w_firma: e.wFirma, w_kontakt: e.wKontakt, w_telefon: e.wTelefon, w_email: e.wEmail
+  };
 }
 
-function saveData() {
-  localStorage.setItem(LS_KEY, JSON.stringify(data));
+function setDbStatus(msg, color) {
+  const el = document.getElementById('dbStatus');
+  if (!el) return;
+  el.innerHTML = msg ? `<br>${msg}` : '';
+  el.style.color = color || 'var(--text-muted)';
+}
+
+async function loadData() {
+  const res = await fetch(`${REST}?order=created_at.asc`, { headers: HEADERS });
+  if (!res.ok) throw new Error('HTTP ' + res.status + ' ' + (await res.text()));
+  data = (await res.json()).map(fromRow);
+}
+
+async function reloadData() {
+  setDbStatus('Lädt …', 'var(--text-muted)');
+  try { await loadData(); render(); setDbStatus('', null); }
+  catch (e) { setDbStatus('⚠️ Verbindung fehlgeschlagen: ' + e.message, 'var(--r)'); }
 }
 
 function addMonths(dateStr, months) {
@@ -562,7 +584,7 @@ function closeModal() {
   editId = null;
 }
 
-function saveModal() {
+async function saveModal() {
   const anlage = document.getElementById('fAnlage').value.trim();
   const letzte = document.getElementById('fLetzte').value;
   if (!anlage || !letzte) {
@@ -582,24 +604,31 @@ function saveModal() {
     wTelefon:  document.getElementById('fWTelefon').value.trim(),
     wEmail:    document.getElementById('fWEmail').value.trim(),
   };
-  if (editId === null) {
-    entry.id = Date.now();
-    data.push(entry);
-  } else {
-    const idx = data.findIndex(x => x.id === editId);
-    data[idx] = { id: editId, ...entry };
+  try {
+    let res;
+    if (editId === null) {
+      res = await fetch(REST, { method: 'POST', headers: HEADERS, body: JSON.stringify(toRow(entry)) });
+    } else {
+      res = await fetch(`${REST}?id=eq.${editId}`, { method: 'PATCH', headers: HEADERS, body: JSON.stringify(toRow(entry)) });
+    }
+    if (!res.ok) throw new Error('HTTP ' + res.status + ' ' + (await res.text()));
+    closeModal();
+    await reloadData();
+  } catch (e) {
+    alert('Speichern fehlgeschlagen:\n' + e.message);
   }
-  autoSave();
-  closeModal();
-  render();
 }
 
-function deleteEntry(id) {
+async function deleteEntry(id) {
   const e = data.find(x => x.id === id);
   if (!confirm(`Anlage "${e.anlage}" wirklich löschen?`)) return;
-  data = data.filter(x => x.id !== id);
-  autoSave();
-  render();
+  try {
+    const res = await fetch(`${REST}?id=eq.${id}`, { method: 'DELETE', headers: HEADERS });
+    if (!res.ok) throw new Error('HTTP ' + res.status + ' ' + (await res.text()));
+    await reloadData();
+  } catch (err) {
+    alert('Löschen fehlgeschlagen:\n' + err.message);
+  }
 }
 
 function sendReminder(id) {
@@ -686,145 +715,16 @@ function exportData() {
   URL.revokeObjectURL(a.href);
 }
 
-function importData() {
-  const input    = document.createElement('input');
-  input.type     = 'file';
-  input.accept   = '.json';
-  input.onchange = e => {
-    const file   = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      try {
-        const imported = JSON.parse(ev.target.result);
-        if (!Array.isArray(imported)) throw new Error('Kein Array');
-        data = imported;
-        autoSave();
-        render();
-        alert(`✅ ${data.length} Anlage(n) erfolgreich importiert.`);
-      } catch {
-        alert('❌ Fehler: Die Datei konnte nicht gelesen werden.\nBitte eine gültige Wartung_Daten.json auswählen.');
-      }
-    };
-    reader.readAsText(file, 'UTF-8');
-  };
-  input.click();
-}
-
-/* ══════════ Direkt-Verknüpfung mit Wartung_Daten.json ══════════ */
-/* File System Access API: speichert jede Änderung automatisch in die Datei,
-   die das PowerShell-Skript liest. Kein manuelles Exportieren mehr nötig. */
-let fileHandle = null;
-const FSA = ('showOpenFilePicker' in window);
-
-function idbOpen() {
-  return new Promise((res, rej) => {
-    const r = indexedDB.open('einhaus_wartung', 1);
-    r.onupgradeneeded = () => r.result.createObjectStore('kv');
-    r.onsuccess = () => res(r.result);
-    r.onerror   = () => rej(r.error);
-  });
-}
-async function idbSet(k, v) {
-  const db = await idbOpen();
-  return new Promise((res, rej) => {
-    const t = db.transaction('kv', 'readwrite');
-    t.objectStore('kv').put(v, k);
-    t.oncomplete = () => res();
-    t.onerror    = () => rej(t.error);
-  });
-}
-async function idbGet(k) {
-  const db = await idbOpen();
-  return new Promise((res, rej) => {
-    const t  = db.transaction('kv', 'readonly');
-    const rq = t.objectStore('kv').get(k);
-    rq.onsuccess = () => res(rq.result);
-    rq.onerror   = () => rej(rq.error);
-  });
-}
-
-async function writeToFile() {
-  if (!fileHandle) return false;
-  try {
-    // showOpenFilePicker vergibt nur Lese-Recht -> Schreib-Recht aktiv anfordern
-    let perm = await fileHandle.queryPermission({ mode: 'readwrite' });
-    if (perm !== 'granted') perm = await fileHandle.requestPermission({ mode: 'readwrite' });
-    if (perm !== 'granted') return false;
-    const w = await fileHandle.createWritable();
-    await w.write(JSON.stringify(data, null, 2));
-    await w.close();
-    return true;
-  } catch (e) { console.warn('Schreiben fehlgeschlagen', e); return false; }
-}
-
-/* Wird bei jeder Datenänderung aufgerufen: localStorage + (falls verknüpft) Datei */
-async function autoSave() {
-  saveData();
-  if (fileHandle) setLinkStatus((await writeToFile()) ? 'linked' : 'error');
-}
-
-async function linkFile() {
-  if (!FSA) {
-    alert('Dieser Browser unterstützt die Direkt-Speicherung nicht.\nBitte Microsoft Edge oder Google Chrome verwenden – oder weiterhin 📤 Exportieren nutzen.');
-    return;
-  }
-  try {
-    const [h] = await window.showOpenFilePicker({
-      types: [{ description: 'Wartungsdaten', accept: { 'application/json': ['.json'] } }],
-      multiple: false,
-      mode: 'readwrite'
-    });
-    fileHandle = h;
-    await idbSet('handle', h);
-    const ok = await writeToFile();
-    setLinkStatus(ok ? 'linked' : 'error');
-    if (ok) alert('✅ Verknüpft mit Wartung_Daten.json.\n\nAlle Änderungen werden ab jetzt automatisch gespeichert – kein Exportieren mehr nötig.');
-  } catch (e) {
-    if (e.name !== 'AbortError') alert('Verknüpfen nicht möglich: ' + e.message);
-  }
-}
-
-async function reauth() {
-  try {
-    if ((await fileHandle.requestPermission({ mode: 'readwrite' })) === 'granted') {
-      // aktuellen Dashboard-Stand in die Datei schreiben (nicht umgekehrt!)
-      setLinkStatus((await writeToFile()) ? 'linked' : 'error');
-    }
-  } catch (e) { console.warn(e); }
-}
-
-function setLinkStatus(state) {
-  const el  = document.getElementById('linkStatus');
-  const btn = document.getElementById('linkBtn');
-  if (!el) return;
-  if (state === 'linked') {
-    el.innerHTML = '🔗 <strong style="color:var(--g)">Verknüpft</strong> – Änderungen werden automatisch in <code>Wartung_Daten.json</code> gespeichert.';
-    if (btn) btn.style.display = 'none';
-  } else if (state === 'reauth') {
-    el.innerHTML = '🔒 Verknüpfung vorhanden – bitte einmal pro Sitzung bestätigen (Button oben).';
-    if (btn) { btn.style.display = ''; btn.textContent = '🔗 Verknüpfung aktivieren'; btn.onclick = reauth; }
-  } else if (state === 'error') {
-    el.innerHTML = '⚠️ <strong style="color:var(--r)">Auto-Speichern fehlgeschlagen</strong> – bitte 📤 Exportieren nutzen.';
-  } else if (state === 'nofsa') {
-    el.innerHTML = 'ℹ️ Dieser Browser speichert nicht direkt – nach Änderungen 📤 <strong>Exportieren</strong> (Edge/Chrome ermöglichen automatisches Speichern).';
-  } else {
-    el.innerHTML = '⚠️ <strong style="color:var(--o)">Nicht verknüpft</strong> – einmalig auf 🔗 <strong>Mit Datei verknüpfen</strong> klicken, sonst sieht das E-Mail-Skript alte Daten.';
-    if (btn) { btn.style.display = ''; btn.textContent = '🔗 Mit Datei verknüpfen'; btn.onclick = linkFile; }
-  }
-}
-
+/* ══════════ Start: Daten aus der zentralen Datenbank laden ══════════ */
 async function init() {
-  loadData();
-  render();
-  if (!FSA) { const b = document.getElementById('linkBtn'); if (b) b.style.display = 'none'; setLinkStatus('nofsa'); return; }
-  try { fileHandle = await idbGet('handle'); } catch (e) { fileHandle = null; }
-  if (fileHandle) {
-    const perm = await fileHandle.queryPermission({ mode: 'readwrite' });
-    if (perm === 'granted') { setLinkStatus((await writeToFile()) ? 'linked' : 'error'); }
-    else setLinkStatus('reauth');
-  } else {
-    setLinkStatus(false);
+  setDbStatus('Lädt …', 'var(--text-muted)');
+  try {
+    await loadData();
+    render();
+    setDbStatus('', null);
+  } catch (e) {
+    console.error(e);
+    setDbStatus('⚠️ Verbindung zur Datenbank fehlgeschlagen: ' + e.message + ' — bitte Seite neu laden (Strg+F5).', 'var(--r)');
   }
 }
 
