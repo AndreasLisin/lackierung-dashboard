@@ -261,6 +261,7 @@
     <div class="table-top">
       <div class="table-top-title">Alle Anlagen</div>
       <div class="table-top-actions">
+        <button class="btn btn-ghost" id="linkBtn" onclick="linkFile()" title="Dashboard direkt mit Wartung_Daten.json verbinden – Änderungen werden dann automatisch gespeichert">🔗 Mit Datei verknüpfen</button>
         <button class="btn btn-ghost" onclick="importData()" title="Daten aus Wartung_Daten.json laden">📥 Importieren</button>
         <button class="btn btn-ghost" onclick="exportData()" title="Daten als Wartung_Daten.json speichern (für PowerShell-Skript)">📤 Exportieren</button>
         <button class="btn btn-primary" onclick="openModal(null)">+ Anlage hinzufügen</button>
@@ -268,9 +269,8 @@
     </div>
     <div class="ps-hint">
       💡 <span><strong>PowerShell-Automatik:</strong>
-      Nach jeder Änderung auf <strong>Exportieren</strong> klicken und die Datei als
-      <code>Wartung_Daten.json</code> in diesen Ordner speichern –
-      das Skript liest sie jeden Montag automatisch aus.</span>
+      Das E-Mail-Skript liest die Datei <code>Wartung_Daten.json</code> aus diesem Ordner.
+      <br><span id="linkStatus"></span></span>
     </div>
     <table>
       <thead>
@@ -589,7 +589,7 @@ function saveModal() {
     const idx = data.findIndex(x => x.id === editId);
     data[idx] = { id: editId, ...entry };
   }
-  saveData();
+  autoSave();
   closeModal();
   render();
 }
@@ -598,7 +598,7 @@ function deleteEntry(id) {
   const e = data.find(x => x.id === id);
   if (!confirm(`Anlage "${e.anlage}" wirklich löschen?`)) return;
   data = data.filter(x => x.id !== id);
-  saveData();
+  autoSave();
   render();
 }
 
@@ -699,7 +699,7 @@ function importData() {
         const imported = JSON.parse(ev.target.result);
         if (!Array.isArray(imported)) throw new Error('Kein Array');
         data = imported;
-        saveData();
+        autoSave();
         render();
         alert(`✅ ${data.length} Anlage(n) erfolgreich importiert.`);
       } catch {
@@ -711,8 +711,135 @@ function importData() {
   input.click();
 }
 
-loadData();
-render();
+/* ══════════ Direkt-Verknüpfung mit Wartung_Daten.json ══════════ */
+/* File System Access API: speichert jede Änderung automatisch in die Datei,
+   die das PowerShell-Skript liest. Kein manuelles Exportieren mehr nötig. */
+let fileHandle = null;
+const FSA = ('showOpenFilePicker' in window);
+
+function idbOpen() {
+  return new Promise((res, rej) => {
+    const r = indexedDB.open('einhaus_wartung', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('kv');
+    r.onsuccess = () => res(r.result);
+    r.onerror   = () => rej(r.error);
+  });
+}
+async function idbSet(k, v) {
+  const db = await idbOpen();
+  return new Promise((res, rej) => {
+    const t = db.transaction('kv', 'readwrite');
+    t.objectStore('kv').put(v, k);
+    t.oncomplete = () => res();
+    t.onerror    = () => rej(t.error);
+  });
+}
+async function idbGet(k) {
+  const db = await idbOpen();
+  return new Promise((res, rej) => {
+    const t  = db.transaction('kv', 'readonly');
+    const rq = t.objectStore('kv').get(k);
+    rq.onsuccess = () => res(rq.result);
+    rq.onerror   = () => rej(rq.error);
+  });
+}
+
+async function writeToFile() {
+  if (!fileHandle) return false;
+  try {
+    if ((await fileHandle.queryPermission({ mode: 'readwrite' })) !== 'granted') return false;
+    const w = await fileHandle.createWritable();
+    await w.write(JSON.stringify(data, null, 2));
+    await w.close();
+    return true;
+  } catch (e) { console.warn('Schreiben fehlgeschlagen', e); return false; }
+}
+
+async function readFromFile() {
+  if (!fileHandle) return false;
+  try {
+    const f   = await fileHandle.getFile();
+    const arr = JSON.parse(await f.text());
+    if (Array.isArray(arr)) {
+      data = arr;
+      localStorage.setItem(LS_KEY, JSON.stringify(data));
+      render();
+      return true;
+    }
+  } catch (e) { console.warn('Lesen fehlgeschlagen', e); }
+  return false;
+}
+
+/* Wird bei jeder Datenänderung aufgerufen: localStorage + (falls verknüpft) Datei */
+async function autoSave() {
+  saveData();
+  if (fileHandle) setLinkStatus((await writeToFile()) ? 'linked' : 'error');
+}
+
+async function linkFile() {
+  if (!FSA) {
+    alert('Dieser Browser unterstützt die Direkt-Speicherung nicht.\nBitte Microsoft Edge oder Google Chrome verwenden – oder weiterhin 📤 Exportieren nutzen.');
+    return;
+  }
+  try {
+    const [h] = await window.showOpenFilePicker({
+      types: [{ description: 'Wartungsdaten', accept: { 'application/json': ['.json'] } }],
+      multiple: false
+    });
+    fileHandle = h;
+    await idbSet('handle', h);
+    const ok = await writeToFile();
+    setLinkStatus(ok ? 'linked' : 'error');
+    if (ok) alert('✅ Verknüpft mit Wartung_Daten.json.\n\nAlle Änderungen werden ab jetzt automatisch gespeichert – kein Exportieren mehr nötig.');
+  } catch (e) {
+    if (e.name !== 'AbortError') alert('Verknüpfen nicht möglich: ' + e.message);
+  }
+}
+
+async function reauth() {
+  try {
+    if ((await fileHandle.requestPermission({ mode: 'readwrite' })) === 'granted') {
+      await readFromFile();
+      setLinkStatus('linked');
+    }
+  } catch (e) { console.warn(e); }
+}
+
+function setLinkStatus(state) {
+  const el  = document.getElementById('linkStatus');
+  const btn = document.getElementById('linkBtn');
+  if (!el) return;
+  if (state === 'linked') {
+    el.innerHTML = '🔗 <strong style="color:var(--g)">Verknüpft</strong> – Änderungen werden automatisch in <code>Wartung_Daten.json</code> gespeichert.';
+    if (btn) btn.style.display = 'none';
+  } else if (state === 'reauth') {
+    el.innerHTML = '🔒 Verknüpfung vorhanden – bitte einmal pro Sitzung bestätigen (Button oben).';
+    if (btn) { btn.style.display = ''; btn.textContent = '🔗 Verknüpfung aktivieren'; btn.onclick = reauth; }
+  } else if (state === 'error') {
+    el.innerHTML = '⚠️ <strong style="color:var(--r)">Auto-Speichern fehlgeschlagen</strong> – bitte 📤 Exportieren nutzen.';
+  } else if (state === 'nofsa') {
+    el.innerHTML = 'ℹ️ Dieser Browser speichert nicht direkt – nach Änderungen 📤 <strong>Exportieren</strong> (Edge/Chrome ermöglichen automatisches Speichern).';
+  } else {
+    el.innerHTML = '⚠️ <strong style="color:var(--o)">Nicht verknüpft</strong> – einmalig auf 🔗 <strong>Mit Datei verknüpfen</strong> klicken, sonst sieht das E-Mail-Skript alte Daten.';
+    if (btn) { btn.style.display = ''; btn.textContent = '🔗 Mit Datei verknüpfen'; btn.onclick = linkFile; }
+  }
+}
+
+async function init() {
+  loadData();
+  render();
+  if (!FSA) { const b = document.getElementById('linkBtn'); if (b) b.style.display = 'none'; setLinkStatus('nofsa'); return; }
+  try { fileHandle = await idbGet('handle'); } catch (e) { fileHandle = null; }
+  if (fileHandle) {
+    const perm = await fileHandle.queryPermission({ mode: 'readwrite' });
+    if (perm === 'granted') { await readFromFile(); setLinkStatus('linked'); }
+    else setLinkStatus('reauth');
+  } else {
+    setLinkStatus(false);
+  }
+}
+
+init();
 </script>
 
 </body>
