@@ -348,6 +348,14 @@
         <input type="text" id="fWFirma" placeholder="z. B. Müller Service GmbH">
       </div>
       <div class="fg">
+        <label>Anrede</label>
+        <select id="fWAnrede">
+          <option value="">—</option>
+          <option value="Herr">Herr</option>
+          <option value="Frau">Frau</option>
+        </select>
+      </div>
+      <div class="fg">
         <label>Ansprechpartner</label>
         <input type="text" id="fWKontakt" placeholder="Name">
       </div>
@@ -383,16 +391,18 @@ function fromRow(r) {
     id: r.id, anlage: r.anlage, wartungstyp: r.wartungstyp,
     letzteWartung: r.letzte_wartung, intervallMonate: r.intervall_monate,
     person: r.person, email: r.email, notizen: r.notizen,
-    wFirma: r.w_firma, wKontakt: r.w_kontakt, wTelefon: r.w_telefon, wEmail: r.w_email
+    wFirma: r.w_firma, wKontakt: r.w_kontakt, wTelefon: r.w_telefon, wEmail: r.w_email, wAnrede: r.w_anrede
   };
 }
 function toRow(e) {
-  return {
+  const r = {
     anlage: e.anlage, wartungstyp: e.wartungstyp,
     letzte_wartung: e.letzteWartung, intervall_monate: e.intervallMonate,
     person: e.person, email: e.email, notizen: e.notizen,
     w_firma: e.wFirma, w_kontakt: e.wKontakt, w_telefon: e.wTelefon, w_email: e.wEmail
   };
+  if (hasAnrede) r.w_anrede = e.wAnrede || '';
+  return r;
 }
 
 function setDbStatus(msg, color) {
@@ -402,10 +412,13 @@ function setDbStatus(msg, color) {
   el.style.color = color || 'var(--text-muted)';
 }
 
+let hasAnrede = true;
 async function loadData() {
   const res = await fetch(`${REST}?order=created_at.asc`, { headers: HEADERS });
   if (!res.ok) throw new Error('HTTP ' + res.status + ' ' + (await res.text()));
-  data = (await res.json()).map(fromRow);
+  const rows = await res.json();
+  if (rows.length) hasAnrede = Object.prototype.hasOwnProperty.call(rows[0], 'w_anrede');
+  data = rows.map(fromRow);
 }
 
 async function reloadData() {
@@ -546,7 +559,7 @@ function openModal(id) {
   document.getElementById('modalOverlay').classList.add('open');
   if (id === null) {
     document.getElementById('modalTitle').textContent = 'Anlage hinzufügen';
-    ['fAnlage','fTyp','fPerson','fEmail','fNotizen','fNaechste','fWFirma','fWKontakt','fWTelefon','fWEmail'].forEach(f => document.getElementById(f).value = '');
+    ['fAnlage','fTyp','fPerson','fEmail','fNotizen','fNaechste','fWFirma','fWAnrede','fWKontakt','fWTelefon','fWEmail'].forEach(f => document.getElementById(f).value = '');
     document.getElementById('fZyklus').value = '12';
     document.getElementById('fIntervall').value = '';
     document.getElementById('customWrap').style.display = 'none';
@@ -560,6 +573,7 @@ function openModal(id) {
     document.getElementById('fEmail').value    = e.email;
     document.getElementById('fNotizen').value  = e.notizen;
     document.getElementById('fWFirma').value   = e.wFirma   || '';
+    document.getElementById('fWAnrede').value  = e.wAnrede  || '';
     document.getElementById('fWKontakt').value = e.wKontakt || '';
     document.getElementById('fWTelefon').value = e.wTelefon || '';
     document.getElementById('fWEmail').value   = e.wEmail   || '';
@@ -600,6 +614,7 @@ async function saveModal() {
     email:     document.getElementById('fEmail').value.trim(),
     notizen:   document.getElementById('fNotizen').value.trim(),
     wFirma:    document.getElementById('fWFirma').value.trim(),
+    wAnrede:   document.getElementById('fWAnrede').value,
     wKontakt:  document.getElementById('fWKontakt').value.trim(),
     wTelefon:  document.getElementById('fWTelefon').value.trim(),
     wEmail:    document.getElementById('fWEmail').value.trim(),
@@ -665,13 +680,21 @@ function sendDienstleister(id) {
   const st = getStatus(days);
   const monatStr = next.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
 
-  const anrede = e.wKontakt ? `Guten Tag ${e.wKontakt},` : 'Sehr geehrte Damen und Herren,';
+  let anrede;
+  const nachname = e.wKontakt ? e.wKontakt.trim().split(/\s+/).pop() : '';
+  if (e.wAnrede && nachname) {
+    anrede = `Guten Tag ${e.wAnrede} ${nachname},`;
+  } else if (nachname) {
+    anrede = `Guten Tag ${e.wKontakt},`;
+  } else {
+    anrede = 'Sehr geehrte Damen und Herren,';
+  }
 
   let intro;
   if (st === 'r') {
-    intro = `für die unten genannte Anlage ist die Wartung fällig (vorgesehen: ${monatStr}). Wir bitten Sie, einen Termin mit uns abzustimmen.`;
+    intro = `für die unten genannte Anlage ist die Wartung fällig.`;
   } else {
-    intro = `für die unten genannte Anlage steht eine Wartung an (vorgesehen: ${monatStr}). Wir bitten Sie, einen Termin mit uns abzustimmen.`;
+    intro = `für die unten genannte Anlage steht eine Wartung an.`;
   }
 
   const subject = `Wartungsauftrag: ${e.anlage} – ${e.wartungstyp} (${monatStr})`;
