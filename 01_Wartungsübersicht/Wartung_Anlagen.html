@@ -262,7 +262,7 @@
       <div class="table-top-title">Alle Anlagen</div>
       <div class="table-top-actions">
         <button class="btn btn-ghost" onclick="reloadData()" title="Daten neu aus der Datenbank laden">🔄 Aktualisieren</button>
-        <button class="btn btn-ghost" onclick="setAbsender()" title="Ihr Name für die E-Mail-Signatur (wird auf diesem Gerät gespeichert)">👤 Mein Name</button>
+        <button class="btn btn-ghost" onclick="openSig()" title="Deine E-Mail-Signatur festlegen (wird auf diesem Gerät gespeichert)">✍ Meine Signatur</button>
         <button class="btn btn-ghost" onclick="exportData()" title="Sicherungskopie als JSON herunterladen">📤 Sicherung</button>
         <button class="btn btn-primary" onclick="openModal(null)">+ Anlage hinzufügen</button>
       </div>
@@ -372,6 +372,21 @@
     <div class="modal-footer">
       <button class="btn btn-cancel" onclick="closeModal()">Abbrechen</button>
       <button class="btn btn-save" onclick="saveModal()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- Signatur-Dialog -->
+<div class="modal-overlay" id="sigOverlay">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-title">✍ Meine E-Mail-Signatur</div>
+    <div class="fg full">
+      <label>Erscheint am Ende deiner manuellen Mails (Erinnerung &amp; Dienstleister)</label>
+      <textarea id="fSignatur" style="min-height:240px;" placeholder="Mit freundlichen Grüßen&#10;&#10;i.A. Max Mustermann&#10;Leiter Lackiererei&#10;..."></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-cancel" onclick="closeSig()">Abbrechen</button>
+      <button class="btn btn-save" onclick="saveSig()">Speichern</button>
     </div>
   </div>
 </div>
@@ -647,25 +662,21 @@ async function deleteEntry(id) {
   }
 }
 
-function getAbsenderName() {
-  let n = (localStorage.getItem('absenderName') || '').trim();
-  if (!n) {
-    n = (prompt('Ihr Name für die E-Mail-Signatur (wird auf diesem Gerät gespeichert):') || '').trim();
-    if (n) localStorage.setItem('absenderName', n);
-  }
-  return n;
+function openSig() {
+  document.getElementById('fSignatur').value = localStorage.getItem('absenderSignatur') || '';
+  document.getElementById('sigOverlay').classList.add('open');
 }
-function setAbsender() {
-  const cur = localStorage.getItem('absenderName') || '';
-  const n = prompt('Ihr Name für die E-Mail-Signatur:', cur);
-  if (n !== null) {
-    localStorage.setItem('absenderName', n.trim());
-    alert(n.trim() ? `Name gespeichert: ${n.trim()}` : 'Name entfernt.');
-  }
+function closeSig() { document.getElementById('sigOverlay').classList.remove('open'); }
+function saveSig() {
+  localStorage.setItem('absenderSignatur', document.getElementById('fSignatur').value);
+  closeSig();
+  alert('Signatur gespeichert (auf diesem Gerät).');
 }
 function signatur() {
-  const n = getAbsenderName();
-  return `Mit freundlichen Grüßen\n${n ? n + '\n' : ''}Lackierung – EINHAUS Oberflächenveredelung GmbH\nSaarlandstr. 375a, 55411 Bingen`;
+  const sig = (localStorage.getItem('absenderSignatur') || '').replace(/\s+$/, '');
+  if (sig) return sig;
+  // Fallback, falls noch keine eigene Signatur hinterlegt wurde
+  return 'Mit freundlichen Grüßen\nLackierung – EINHAUS Oberflächenveredelung GmbH\nSaarlandstr. 375a, 55411 Bingen';
 }
 
 function sendReminder(id) {
