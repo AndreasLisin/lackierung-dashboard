@@ -662,26 +662,25 @@ function sendDienstleister(id) {
   const e = data.find(x => x.id === id);
   const next = addMonths(e.letzteWartung, e.intervallMonate);
   const days = calcDays(next);
-  const dateStr = fmtDate(next);
   const st = getStatus(days);
+  const monatStr = next.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
 
   const anrede = e.wKontakt ? `Guten Tag ${e.wKontakt},` : 'Sehr geehrte Damen und Herren,';
 
   let intro;
   if (st === 'r') {
-    const verz = Math.abs(days);
-    intro = `für die unten genannte Anlage ist eine Wartung bereits seit ${verz} Tag${verz !== 1 ? 'en' : ''} überfällig (fällig war: ${dateStr}). Wir bitten Sie, umgehend einen Termin mit uns abzustimmen.`;
+    intro = `für die unten genannte Anlage ist die Wartung fällig (vorgesehen: ${monatStr}). Wir bitten Sie, einen Termin mit uns abzustimmen.`;
   } else {
-    intro = `für die unten genannte Anlage steht in ${days} Tag${days !== 1 ? 'en' : ''} eine Wartung an (fällig am: ${dateStr}). Wir bitten Sie, rechtzeitig einen Termin mit uns abzustimmen.`;
+    intro = `für die unten genannte Anlage steht eine Wartung an (vorgesehen: ${monatStr}). Wir bitten Sie, einen Termin mit uns abzustimmen.`;
   }
 
-  const subject = `Wartungsauftrag: ${e.anlage} – ${e.wartungstyp} (fällig: ${dateStr})`;
+  const subject = `Wartungsauftrag: ${e.anlage} – ${e.wartungstyp} (${monatStr})`;
 
   const body =
     `${anrede}\n\n${intro}\n\n` +
     `Anlage:          ${e.anlage}\n` +
     `Wartungstyp:     ${e.wartungstyp}\n` +
-    `Nächste Wartung: ${dateStr}\n` +
+    `Nächste Wartung: ${monatStr}\n` +
     (e.notizen ? `\nHinweise: ${e.notizen}\n` : '') +
     `\nBitte nehmen Sie Kontakt mit uns auf, um einen geeigneten Termin zu vereinbaren.\n` +
     `\nMit freundlichen Grüßen\nLackierung – EINHAUS Oberflächenveredelung GmbH\nSaarlandstr. 375a, 55411 Bingen`;
