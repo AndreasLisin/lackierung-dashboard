@@ -674,41 +674,48 @@ function sendReminder(id) {
 }
 
 function sendDienstleister(id) {
-  const e = data.find(x => x.id === id);
-  const next = addMonths(e.letzteWartung, e.intervallMonate);
-  const days = calcDays(next);
-  const st = getStatus(days);
-  const monatStr = next.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
+  const clicked = data.find(x => x.id === id);
+  if (!clicked || !clicked.wEmail) return;
+
+  const monatOf = e => addMonths(e.letzteWartung, e.intervallMonate).toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
+  const daysOf  = e => calcDays(addMonths(e.letzteWartung, e.intervallMonate));
+  // Schluessel = gleicher Dienstleister UND gleicher Ansprechpartner (E-Mail + Name)
+  const keyOf   = e => `${(e.wEmail || '').trim().toLowerCase()}|${(e.wKontakt || '').trim().toLowerCase()}`;
+  const key = keyOf(clicked);
+
+  // Angeklickte Anlage + alle weiteren FAELLIGEN (ueberfaellig/bald) desselben Dienstleisters
+  const gruppe = data.filter(x =>
+    x.wEmail && keyOf(x) === key &&
+    (x.id === clicked.id || ['r', 'o'].includes(getStatus(daysOf(x))))
+  ).sort((a, b) => daysOf(a) - daysOf(b));
 
   let anrede;
-  const nachname = e.wKontakt ? e.wKontakt.trim().split(/\s+/).pop() : '';
-  if (e.wAnrede && nachname) {
-    anrede = `Guten Tag ${e.wAnrede} ${nachname},`;
-  } else if (nachname) {
-    anrede = `Guten Tag ${e.wKontakt},`;
-  } else {
-    anrede = 'Sehr geehrte Damen und Herren,';
-  }
+  const nachname = clicked.wKontakt ? clicked.wKontakt.trim().split(/\s+/).pop() : '';
+  if (clicked.wAnrede && nachname) anrede = `Guten Tag ${clicked.wAnrede} ${nachname},`;
+  else if (nachname) anrede = `Guten Tag ${clicked.wKontakt},`;
+  else anrede = 'Sehr geehrte Damen und Herren,';
 
-  let intro;
-  if (st === 'r') {
-    intro = `für die unten genannte Anlage ist die Wartung fällig.`;
-  } else {
-    intro = `für die unten genannte Anlage steht eine Wartung an.`;
-  }
+  const mehrere = gruppe.length > 1;
+  const intro = mehrere
+    ? 'für die unten genannten Anlagen stehen Wartungen an.'
+    : (getStatus(daysOf(clicked)) === 'r' ? 'für die unten genannte Anlage ist die Wartung fällig.' : 'für die unten genannte Anlage steht eine Wartung an.');
 
-  const subject = `Wartungsauftrag: ${e.anlage} – ${e.wartungstyp} (${monatStr})`;
+  const bloecke = gruppe.map(e => {
+    let b = `Anlage:          ${e.anlage}\nWartungstyp:     ${e.wartungstyp}\nNächste Wartung: ${monatOf(e)}`;
+    if (e.notizen) b += `\nHinweise:        ${e.notizen}`;
+    return b;
+  }).join('\n\n');
+
+  const subject = mehrere
+    ? `Wartungsauftrag: ${gruppe.length} Anlagen${clicked.wFirma ? ' – ' + clicked.wFirma : ''}`
+    : `Wartungsauftrag: ${clicked.anlage} – ${clicked.wartungstyp} (${monatOf(clicked)})`;
 
   const body =
-    `${anrede}\n\n${intro}\n\n` +
-    `Anlage:          ${e.anlage}\n` +
-    `Wartungstyp:     ${e.wartungstyp}\n` +
-    `Nächste Wartung: ${monatStr}\n` +
-    (e.notizen ? `\nHinweise: ${e.notizen}\n` : '') +
-    `\nBitte nehmen Sie Kontakt mit uns auf, um einen geeigneten Termin zu vereinbaren.\n` +
+    `${anrede}\n\n${intro}\n\n${bloecke}\n\n` +
+    `Bitte nehmen Sie Kontakt mit uns auf, um ${mehrere ? 'geeignete Termine' : 'einen geeigneten Termin'} zu vereinbaren.\n` +
     `\nMit freundlichen Grüßen\nLackierung – EINHAUS Oberflächenveredelung GmbH\nSaarlandstr. 375a, 55411 Bingen`;
 
-  window.location.href = `mailto:${encodeURIComponent(e.wEmail)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  window.location.href = `mailto:${encodeURIComponent(clicked.wEmail)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
 document.getElementById('modalOverlay').addEventListener('click', function(ev) {
