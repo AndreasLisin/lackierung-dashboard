@@ -262,6 +262,7 @@
       <div class="table-top-title">Alle Anlagen</div>
       <div class="table-top-actions">
         <button class="btn btn-ghost" onclick="reloadData()" title="Daten neu aus der Datenbank laden">🔄 Aktualisieren</button>
+        <button class="btn btn-ghost" onclick="setAbsender()" title="Ihr Name für die E-Mail-Signatur (wird auf diesem Gerät gespeichert)">👤 Mein Name</button>
         <button class="btn btn-ghost" onclick="exportData()" title="Sicherungskopie als JSON herunterladen">📤 Sicherung</button>
         <button class="btn btn-primary" onclick="openModal(null)">+ Anlage hinzufügen</button>
       </div>
@@ -646,6 +647,27 @@ async function deleteEntry(id) {
   }
 }
 
+function getAbsenderName() {
+  let n = (localStorage.getItem('absenderName') || '').trim();
+  if (!n) {
+    n = (prompt('Ihr Name für die E-Mail-Signatur (wird auf diesem Gerät gespeichert):') || '').trim();
+    if (n) localStorage.setItem('absenderName', n);
+  }
+  return n;
+}
+function setAbsender() {
+  const cur = localStorage.getItem('absenderName') || '';
+  const n = prompt('Ihr Name für die E-Mail-Signatur:', cur);
+  if (n !== null) {
+    localStorage.setItem('absenderName', n.trim());
+    alert(n.trim() ? `Name gespeichert: ${n.trim()}` : 'Name entfernt.');
+  }
+}
+function signatur() {
+  const n = getAbsenderName();
+  return `Mit freundlichen Grüßen\n${n ? n + '\n' : ''}Lackierung – EINHAUS Oberflächenveredelung GmbH\nSaarlandstr. 375a, 55411 Bingen`;
+}
+
 function sendReminder(id) {
   const e = data.find(x => x.id === id);
   const next = addMonths(e.letzteWartung, e.intervallMonate);
@@ -668,7 +690,7 @@ function sendReminder(id) {
     `Wartungstyp:   ${e.wartungstyp}\n` +
     `Nächste Wartung: ${dateStr}\n` +
     (e.notizen ? `\nHinweise: ${e.notizen}\n` : '') +
-    `\nMit freundlichen Grüßen\nLackierung – EINHAUS Oberflächenveredelung GmbH`;
+    `\n${signatur()}`;
 
   window.location.href = `mailto:${encodeURIComponent(e.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
@@ -713,7 +735,7 @@ function sendDienstleister(id) {
   const body =
     `${anrede}\n\n${intro}\n\n${bloecke}\n\n` +
     `Bitte nehmen Sie Kontakt mit uns auf, um ${mehrere ? 'geeignete Termine' : 'einen geeigneten Termin'} zu vereinbaren.\n` +
-    `\nMit freundlichen Grüßen\nLackierung – EINHAUS Oberflächenveredelung GmbH\nSaarlandstr. 375a, 55411 Bingen`;
+    `\n${signatur()}`;
 
   window.location.href = `mailto:${encodeURIComponent(clicked.wEmail)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
