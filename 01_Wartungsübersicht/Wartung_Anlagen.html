@@ -716,11 +716,9 @@ function sendDienstleister(id) {
   const keyOf   = e => `${(e.wEmail || '').trim().toLowerCase()}|${(e.wKontakt || '').trim().toLowerCase()}`;
   const key = keyOf(clicked);
 
-  // Angeklickte Anlage + alle weiteren FAELLIGEN (ueberfaellig/bald) desselben Dienstleisters
-  const gruppe = data.filter(x =>
-    x.wEmail && keyOf(x) === key &&
-    (x.id === clicked.id || ['r', 'o'].includes(getStatus(daysOf(x))))
-  ).sort((a, b) => daysOf(a) - daysOf(b));
+  // Alle Anlagen desselben Dienstleisters + Ansprechpartners (gleiche E-Mail + Name)
+  const gruppe = data.filter(x => x.wEmail && keyOf(x) === key)
+    .sort((a, b) => daysOf(a) - daysOf(b));
 
   let anrede;
   const nachname = clicked.wKontakt ? clicked.wKontakt.trim().split(/\s+/).pop() : '';
