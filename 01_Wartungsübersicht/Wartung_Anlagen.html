@@ -743,7 +743,7 @@ function sendDienstleister(id) {
 
   const body =
     `${anrede}\n\n${intro}\n\n${bloecke}\n\n` +
-    `Bitte nehmen Sie Kontakt mit uns auf, um ${mehrere ? 'geeignete Termine' : 'einen geeigneten Termin'} zu vereinbaren.\n` +
+    `Bitte nennen Sie uns drei mögliche Terminvorschläge zur Abstimmung.\n` +
     `\n${signatur()}`;
 
   window.location.href = `mailto:${encodeURIComponent(clicked.wEmail)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
