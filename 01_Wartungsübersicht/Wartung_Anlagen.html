@@ -379,10 +379,19 @@
 <!-- Signatur-Dialog -->
 <div class="modal-overlay" id="sigOverlay">
   <div class="modal" style="max-width:560px;">
-    <div class="modal-title">✍ Meine E-Mail-Signatur</div>
+    <div class="modal-title">✍ Absender / Signatur</div>
     <div class="fg full">
-      <label>Erscheint am Ende deiner manuellen Mails (Erinnerung &amp; Dienstleister)</label>
-      <textarea id="fSignatur" style="min-height:240px;" placeholder="Mit freundlichen Grüßen&#10;&#10;i.A. Max Mustermann&#10;Leiter Lackiererei&#10;..."></textarea>
+      <label>Wer versendet von diesem Gerät? (einmalig wählen)</label>
+      <select id="fAbsenderWahl" onchange="onAbsenderWahl()">
+        <option value="">— bitte wählen —</option>
+        <option value="Andreas Lisin">Andreas Lisin</option>
+        <option value="Jan Markert">Jan Markert</option>
+        <option value="__custom__">Andere (eigene Signatur eingeben)</option>
+      </select>
+    </div>
+    <div class="fg full" id="sigPreviewWrap" style="display:none;">
+      <label id="sigPreviewLabel">Signatur</label>
+      <textarea id="fSignatur" style="min-height:220px;" placeholder="Mit freundlichen Grüßen&#10;..."></textarea>
     </div>
     <div class="modal-footer">
       <button class="btn btn-cancel" onclick="closeSig()">Abbrechen</button>
@@ -662,20 +671,82 @@ async function deleteEntry(id) {
   }
 }
 
+// Fest hinterlegte Signaturen pro Person (gelten auf jedem Gerät)
+const SIGNATUREN = {
+  'Andreas Lisin': `Mit freundlichen Grüßen
+
+i.A. Andreas Lisin
+Leiter Lackiererei
+
+EINHAUS Oberflächenveredelung GmbH
+Saarlandstr. 375a
+D-55411 Bingen
+
+Mobil: +49 171 3535549
+E-Mail: andreas.lisin@einhaus-gmbh.de
+I-Net: www.einhaus-gmbh.de
+DUNS: 321022493
+HRB 22060 Amtsgericht Bingen/Rh.
+Umsatzsteuer-ID: DE 148268841`,
+  'Jan Markert': `Mit freundlichen Grüßen
+Jan Markert
+
+EINHAUS Oberflächenveredelung GmbH
+Saarlandstraße 375a
+55411 Bingen/ Dietersheim
+Email an: jan.markert@einhaus-gmbh.de
+015165175636`
+};
+
 function openSig() {
-  document.getElementById('fSignatur').value = localStorage.getItem('absenderSignatur') || '';
+  const name = localStorage.getItem('absenderName') || '';
+  const sel = document.getElementById('fAbsenderWahl');
+  if (SIGNATUREN[name]) sel.value = name;
+  else if ((localStorage.getItem('absenderSignatur') || '').trim()) sel.value = '__custom__';
+  else sel.value = '';
+  onAbsenderWahl();
   document.getElementById('sigOverlay').classList.add('open');
+}
+function onAbsenderWahl() {
+  const v  = document.getElementById('fAbsenderWahl').value;
+  const ta = document.getElementById('fSignatur');
+  const wrap = document.getElementById('sigPreviewWrap');
+  const lbl  = document.getElementById('sigPreviewLabel');
+  if (v === '__custom__') {
+    ta.readOnly = false;
+    ta.value = localStorage.getItem('absenderSignatur') || '';
+    lbl.textContent = 'Eigene Signatur (frei eingeben)';
+    wrap.style.display = '';
+  } else if (SIGNATUREN[v]) {
+    ta.readOnly = true;
+    ta.value = SIGNATUREN[v];
+    lbl.textContent = 'Signatur-Vorschau (fest hinterlegt)';
+    wrap.style.display = '';
+  } else {
+    wrap.style.display = 'none';
+  }
 }
 function closeSig() { document.getElementById('sigOverlay').classList.remove('open'); }
 function saveSig() {
-  localStorage.setItem('absenderSignatur', document.getElementById('fSignatur').value);
+  const v = document.getElementById('fAbsenderWahl').value;
+  if (v === '__custom__') {
+    localStorage.setItem('absenderSignatur', document.getElementById('fSignatur').value);
+    localStorage.removeItem('absenderName');
+  } else if (SIGNATUREN[v]) {
+    localStorage.setItem('absenderName', v);
+    localStorage.removeItem('absenderSignatur');
+  } else {
+    localStorage.removeItem('absenderName');
+    localStorage.removeItem('absenderSignatur');
+  }
   closeSig();
-  alert('Signatur gespeichert (auf diesem Gerät).');
+  alert('Absender/Signatur gespeichert (auf diesem Gerät).');
 }
 function signatur() {
-  const sig = (localStorage.getItem('absenderSignatur') || '').replace(/\s+$/, '');
-  if (sig) return sig;
-  // Fallback, falls noch keine eigene Signatur hinterlegt wurde
+  const name = localStorage.getItem('absenderName') || '';
+  if (SIGNATUREN[name]) return SIGNATUREN[name];
+  const custom = (localStorage.getItem('absenderSignatur') || '').replace(/\s+$/, '');
+  if (custom) return custom;
   return 'Mit freundlichen Grüßen\nLackierung – EINHAUS Oberflächenveredelung GmbH\nSaarlandstr. 375a, 55411 Bingen';
 }
 
