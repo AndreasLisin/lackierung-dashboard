@@ -330,7 +330,7 @@
     </div>
   </div>
   <div style="margin-top:10px;" class="field">
-    <label>Moderator / Schichtführer</label>
+    <label>Schichtführer</label>
     <input type="text" id="moderator" placeholder="Name eingeben …">
   </div>
 </div>
@@ -353,13 +353,11 @@
 <div class="card">
   <div class="card-title">
     <svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-    Unterweisungsinhalt (Bestätigung Moderator)
+    Unterweisungsinhalt (Bestätigung Schichtführer)
   </div>
   <div class="checks">
     <label class="check-row"><input type="checkbox" id="cb1"> Fehlerbilder gezeigt und erklärt</label>
     <label class="check-row"><input type="checkbox" id="cb2"> Ursache besprochen</label>
-    <label class="check-row"><input type="checkbox" id="cb3"> Abstellmaßnahme festgelegt</label>
-    <label class="check-row"><input type="checkbox" id="cb4"> Wiederholungsrisiko bewertet</label>
   </div>
   <div class="massnahme-row">
     <label>Maßnahme / Bemerkung</label>
@@ -385,7 +383,7 @@
 <div class="card">
   <div class="card-title">
     <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-    Moderator / Schichtführer – Unterschrift
+    Schichtführer – Unterschrift
   </div>
   <div class="sig-wrap" id="mod-sig-wrap">
     <span class="sig-label" id="mod-sig-hint">Hier unterschreiben …</span>
@@ -506,10 +504,11 @@
         </div>
         <div class="nio-row wide">
           <div>
-            <div class="nio-label">Betrifft Lackierer (Name/Kürzel)</div>
-            <input class="nio-input" placeholder="z. B. Schulz, M."
-              value="${escHtml(t.lackierer)}"
-              onchange="updateNio(${t.id},'lackierer',this.value)">
+            <div class="nio-label">Betrifft Lackierer</div>
+            <select class="nio-input" onchange="updateNio(${t.id},'lackierer',this.value)">
+              <option value="">– bitte auswählen –</option>
+              ${LACKIERER.map(l => `<option value="${l.name}"${t.lackierer===l.name?' selected':''}>${l.name} (${l.nr})</option>`).join('')}
+            </select>
           </div>
         </div>`;
       list.appendChild(div);
@@ -667,7 +666,7 @@
     const moderator = document.getElementById('moderator').value.trim();
 
     if (!datum)     { showToast('Datum fehlt.', true); return; }
-    if (!moderator) { showToast('Moderator-Name fehlt.', true); return; }
+    if (!moderator) { showToast('Schichtführer-Name fehlt.', true); return; }
     if (nioTeile.length === 0) { showToast('Mindestens ein n.i.O.-Teil erforderlich.', true); return; }
 
     const fehlend = nioTeile.filter(t => !t.bezeichnung.trim() || !t.ursache.trim());
@@ -688,10 +687,8 @@
         lackierer:   t.lackierer
       })),
       inhalte: {
-        fehlerbild_gezeigt:    document.getElementById('cb1').checked,
-        ursache_besprochen:    document.getElementById('cb2').checked,
-        massnahme_festgelegt:  document.getElementById('cb3').checked,
-        wiederholung_bewertet: document.getElementById('cb4').checked
+        fehlerbild_gezeigt: document.getElementById('cb1').checked,
+        ursache_besprochen: document.getElementById('cb2').checked,
       },
       massnahme:   document.getElementById('massnahme').value.trim(),
       teilnehmer:  teilnehmer.map(t => ({
@@ -744,7 +741,7 @@
     teilnCounter = 0;
     document.getElementById('moderator').value = '';
     document.getElementById('massnahme').value = '';
-    ['cb1','cb2','cb3','cb4'].forEach(id => document.getElementById(id).checked = false);
+    ['cb1','cb2'].forEach(id => document.getElementById(id).checked = false);
     const now = new Date();
     document.getElementById('datum').value   = now.toISOString().slice(0, 10);
     document.getElementById('uhrzeit').value = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
