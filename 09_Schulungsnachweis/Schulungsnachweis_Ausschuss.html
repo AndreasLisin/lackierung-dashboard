@@ -170,6 +170,18 @@
     }
     .teiln-input:focus { outline: none; border-color: var(--blau-hell); }
 
+    /* Lackierer-Picker */
+    .lackierer-picker { display: flex; flex-wrap: wrap; gap: 6px; }
+    .lack-btn {
+      padding: 7px 13px; border: 1.5px solid var(--border);
+      border-radius: 8px; font-size: 13px; cursor: pointer;
+      background: #fff; color: var(--text); transition: all .12s;
+      display: flex; align-items: center; gap: 7px;
+    }
+    .lack-btn.aktiv { border-color: var(--blau); background: #e8f0fb; color: var(--blau); }
+    .lack-nr { font-size: 11px; color: var(--text-muted); background: var(--grau); padding: 1px 6px; border-radius: 8px; }
+    .lack-btn.aktiv .lack-nr { background: #c5d9f1; color: var(--blau); }
+
     /* Fehlerart-Referenz-Chips */
     .ref-chips { display: flex; flex-wrap: wrap; gap: 5px; }
     .ref-chip {
@@ -316,14 +328,6 @@
       <label>Uhrzeit (Beginn)</label>
       <input type="time" id="uhrzeit">
     </div>
-    <div class="field" style="grid-column:span 2">
-      <label>Schicht</label>
-      <div class="schicht-row">
-        <button class="btn-schicht aktiv" onclick="setSchicht('Früh', this)">Frühschicht</button>
-        <button class="btn-schicht" onclick="setSchicht('Spät', this)">Spätschicht</button>
-        <button class="btn-schicht" onclick="setSchicht('Nacht', this)">Nachtschicht</button>
-      </div>
-    </div>
   </div>
   <div style="margin-top:10px;" class="field">
     <label>Moderator / Schichtführer</label>
@@ -407,14 +411,23 @@
   const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsZGtxaWZibHhrZGxpZ3lwZmZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1NjkwMzEsImV4cCI6MjA5NjE0NTAzMX0.Zg0Yy9uAIvuFwNfYVzfLWqmQUvTnXivYmGIXLCOa6TM';
   const TABELLE       = 'schulungsnachweis';
 
-  const FEHLERARTEN = ['Läufer', 'Kratzer', 'Einschlüsse', 'Verlauf', 'Abplatzer', 'Pinholes', 'Orangenhaut', 'Sonstiges'];
+  const FEHLERARTEN = ['Läufer', 'Kratzer', 'Einschlüsse', 'Verlauf', 'Abplatzer', 'Magerlack', 'Pinholes', 'Orangenhaut', 'Sonstiges'];
+
+  const LACKIERER = [
+    { nr: 20161, name: 'Igor Wasetschko' },
+    { nr: 30,    name: 'Mohamad Ayham Almoubayed' },
+    { nr: 167,   name: 'Alexandru Lascu' },
+    { nr: 146,   name: 'Dumitru Ciorei' },
+    { nr: 161,   name: 'Bogdan Beldea' },
+    { nr: 10,    name: 'Christian Kunz' },
+    { nr: 20,    name: 'Jonathan Göttel' },
+  ];
 
   /* ═══════════════════════════════════════════════
      STATE
   ═══════════════════════════════════════════════ */
-  let schicht   = 'Früh';
-  let nioTeile  = [];   // [{id, bezeichnung, teilenummer, fehlerart, ursache, lackierer}]
-  let teilnehmer = [];  // [{id, name, personalnr, fehlerRefs:[], uhrzeit, pad}]
+  let nioTeile  = [];   // [{id, bezeichnung, fehlerart, ursache, lackierer}]
+  let teilnehmer = [];  // [{id, name, lackiererNr, fehlerRefs:[], uhrzeit, pad}]
   let nioCounter   = 0;
   let teilnCounter = 0;
   let modPad;
@@ -436,20 +449,11 @@
   });
 
   /* ═══════════════════════════════════════════════
-     SCHICHT
-  ═══════════════════════════════════════════════ */
-  function setSchicht(s, btn) {
-    schicht = s;
-    document.querySelectorAll('.btn-schicht').forEach(b => b.classList.remove('aktiv'));
-    btn.classList.add('aktiv');
-  }
-
-  /* ═══════════════════════════════════════════════
      n.i.O.-TEILE
   ═══════════════════════════════════════════════ */
   function addNioTeil() {
     nioCounter++;
-    const item = { id: nioCounter, bezeichnung: '', teilenummer: '', fehlerart: '', ursache: '', lackierer: '' };
+    const item = { id: nioCounter, bezeichnung: '', fehlerart: '', ursache: '', lackierer: '' };
     nioTeile.push(item);
     renderNioList();
     updateNioCount();
@@ -473,18 +477,12 @@
       div.innerHTML = `
         <button class="btn-del-nio" onclick="removeNioTeil(${t.id})" title="Entfernen">×</button>
         <span class="nio-nr">Teil ${nr}</span>
-        <div class="nio-row">
+        <div class="nio-row wide">
           <div>
             <div class="nio-label">Teilebezeichnung *</div>
             <input class="nio-input" placeholder="z. B. Türverkleidung li."
               value="${escHtml(t.bezeichnung)}"
               onchange="updateNio(${t.id},'bezeichnung',this.value)">
-          </div>
-          <div>
-            <div class="nio-label">Teilenummer</div>
-            <input class="nio-input" placeholder="z. B. 4A0-867-171"
-              value="${escHtml(t.teilenummer)}"
-              onchange="updateNio(${t.id},'teilenummer',this.value)">
           </div>
         </div>
         <div class="nio-row wide">
@@ -550,7 +548,7 @@
   ═══════════════════════════════════════════════ */
   function addTeilnehmer() {
     teilnCounter++;
-    const item = { id: teilnCounter, name: '', personalnr: '', fehlerRefs: [], uhrzeit: '', pad: null };
+    const item = { id: teilnCounter, name: '', lackiererNr: null, fehlerRefs: [], uhrzeit: '', pad: null };
     teilnehmer.push(item);
     renderTeilnList();
   }
@@ -571,23 +569,15 @@
       div.innerHTML = `
         <button class="btn-del-teiln" onclick="removeTeilnehmer(${t.id})" title="Entfernen">×</button>
         <div style="font-size:11px;font-weight:700;color:var(--blau);margin-bottom:10px;">LACKIERER ${nr}</div>
-        <div class="teiln-header">
-          <div>
-            <div class="nio-label">Name *</div>
-            <input class="teiln-input" placeholder="Nachname, Vorname"
-              value="${escHtml(t.name)}"
-              onchange="updateTeiln(${t.id},'name',this.value)">
+        <div style="margin-bottom:10px;">
+          <div class="nio-label">Lackierer auswählen *</div>
+          <div class="lackierer-picker">
+            ${LACKIERER.map(l => `<button class="lack-btn${t.lackiererNr===l.nr?' aktiv':''}" onclick="selectLackierer(${t.id},${l.nr},'${l.name.replace(/'/g,"\\'")}',this)">${l.name}<span class="lack-nr">${l.nr}</span></button>`).join('')}
           </div>
-          <div>
-            <div class="nio-label">Personal-Nr.</div>
-            <input class="teiln-input" placeholder="LAC-00"
-              value="${escHtml(t.personalnr)}"
-              onchange="updateTeiln(${t.id},'personalnr',this.value)">
-          </div>
-          <div>
-            <div class="nio-label">Fehler-Nr. (Teil …)</div>
-            <div class="ref-chips" id="refs-${t.id}">${buildRefChips(t)}</div>
-          </div>
+        </div>
+        <div style="margin-bottom:10px;">
+          <div class="nio-label">Fehler-Nr. (Teil …)</div>
+          <div class="ref-chips" id="refs-${t.id}">${buildRefChips(t)}</div>
         </div>
         <div class="nio-label">Unterschrift</div>
         <div class="sig-wrap">
@@ -640,6 +630,15 @@
     else { t.fehlerRefs.splice(idx, 1); btn.classList.remove('aktiv'); }
   }
 
+  function selectLackierer(teilnId, nr, name, btn) {
+    const t = teilnehmer.find(x => x.id === teilnId);
+    if (!t) return;
+    t.lackiererNr = nr;
+    t.name = name;
+    btn.closest('.lackierer-picker').querySelectorAll('.lack-btn').forEach(b => b.classList.remove('aktiv'));
+    btn.classList.add('aktiv');
+  }
+
   function updateTeiln(id, field, value) {
     const t = teilnehmer.find(x => x.id === id);
     if (t) t[field] = value;
@@ -674,18 +673,16 @@
     const fehlend = nioTeile.filter(t => !t.bezeichnung.trim() || !t.ursache.trim());
     if (fehlend.length > 0) { showToast('Pflichtfelder: Teilebezeichnung und Ursache.', true); return; }
 
-    const ohneUnterschrift = teilnehmer.filter(t => !t.name.trim());
+    const ohneUnterschrift = teilnehmer.filter(t => !t.name);
     if (ohneUnterschrift.length > 0) { showToast('Alle Lackierer müssen einen Namen haben.', true); return; }
 
     const payload = {
       datum:       datum,
-      schicht:     schicht,
       uhrzeit:     uhrzeit,
       moderator:   moderator,
       nioteile:    nioTeile.map((t, idx) => ({
         nr:          idx + 1,
         bezeichnung: t.bezeichnung,
-        teilenummer: t.teilenummer,
         fehlerart:   t.fehlerart,
         ursache:     t.ursache,
         lackierer:   t.lackierer
@@ -699,7 +696,7 @@
       massnahme:   document.getElementById('massnahme').value.trim(),
       teilnehmer:  teilnehmer.map(t => ({
         name:          t.name,
-        personalnr:    t.personalnr,
+        lackierer_nr:  t.lackiererNr,
         fehler_refs:   t.fehlerRefs,
         uhrzeit:       t.uhrzeit,
         unterschrift:  t.pad ? t.pad.toDataURL() : null
