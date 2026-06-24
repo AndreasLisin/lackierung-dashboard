@@ -85,9 +85,10 @@
   .banner { display: flex; align-items: center; gap: 12px; padding: 13px 18px; border-radius: 10px; font-size: 14px; font-weight: bold; }
   .banner-r { background: var(--r-bg); border: 1.5px solid var(--r); color: var(--r); }
   .banner-o { background: var(--o-bg); border: 1.5px solid var(--o); color: var(--o); }
+  .banner-b { background: #eef4fb; border: 1.5px solid #1c6fb5; color: #1c6fb5; }
 
   /* ── Summary ── */
-  .summary-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 28px; }
+  .summary-row { display: grid; grid-template-columns: repeat(5,1fr); gap: 16px; margin-bottom: 28px; }
   .sum-card {
     background: var(--card); border: 2px solid var(--border);
     border-radius: 12px; padding: 20px 16px; text-align: center;
@@ -96,10 +97,12 @@
   .sum-card.red  { border-color: var(--r); background: var(--r-bg); }
   .sum-card.orange { border-color: var(--o); background: var(--o-bg); }
   .sum-card.green { border-color: var(--g); background: var(--g-bg); }
+  .sum-card.blue { border-color: #1c6fb5; background: #eef4fb; }
   .sum-num { font-size: 36px; font-weight: bold; line-height: 1; color: var(--text); }
   .sum-card.red .sum-num   { color: var(--r); }
   .sum-card.orange .sum-num { color: var(--o); }
   .sum-card.green .sum-num  { color: var(--g); }
+  .sum-card.blue .sum-num  { color: #1c6fb5; }
   .sum-label { font-size: 11px; color: var(--text-muted); margin-top: 6px; text-transform: uppercase; letter-spacing: .5px; }
 
   /* ── Table ── */
@@ -121,16 +124,19 @@
   tr:last-child td { border-bottom: none; }
   tr.row-r td { background: var(--r-bg); }
   tr.row-o td { background: var(--o-bg); }
+  tr.row-b td { background: #eef4fb; }
   tbody tr:hover td { filter: brightness(.97); }
 
   .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; white-space: nowrap; }
   .badge-r { background: var(--r); color: #fff; }
   .badge-o { background: var(--o); color: #fff; }
   .badge-g { background: var(--g); color: #fff; }
+  .badge-b { background: #1c6fb5; color: #fff; }
 
   .days-r { color: var(--r); font-weight: bold; }
   .days-o { color: var(--o); font-weight: bold; }
   .days-g { color: var(--g); }
+  .days-b { color: #1c6fb5; font-weight: bold; }
 
   /* ── Buttons ── */
   .btn {
@@ -340,6 +346,16 @@
         <label>Notizen</label>
         <textarea id="fNotizen" placeholder="Optionale Hinweise …"></textarea>
       </div>
+      <div class="fg full">
+        <label style="display:flex;align-items:center;gap:8px;text-transform:none;font-weight:normal;font-size:13px;cursor:pointer;">
+          <input type="checkbox" id="fStundenbasiert" onchange="onStundenChange()" style="width:18px;height:18px;padding:0;margin:0;flex:none;">
+          Stundenbasiert – nach Ablauf <strong style="margin:0 4px;">beobachten</strong> statt überfällig
+        </label>
+      </div>
+      <div class="fg full" id="stundenInfoWrap" style="display:none;">
+        <label>Stunden-Info (nur Anzeige, z. B. „200 h")</label>
+        <input type="text" id="fStundenInfo" placeholder="z. B. 200 h">
+      </div>
 
       <div class="form-section-divider full" style="grid-column:1/-1;margin-top:8px;padding-top:14px;border-top:1px solid var(--border);font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:.8px;color:var(--primary);">
         🔧 Wartungsfirma / Dienstleister
@@ -416,7 +432,8 @@ function fromRow(r) {
     id: r.id, anlage: r.anlage, wartungstyp: r.wartungstyp,
     letzteWartung: r.letzte_wartung, intervallMonate: r.intervall_monate,
     person: r.person, email: r.email, notizen: r.notizen,
-    wFirma: r.w_firma, wKontakt: r.w_kontakt, wTelefon: r.w_telefon, wEmail: r.w_email, wAnrede: r.w_anrede
+    wFirma: r.w_firma, wKontakt: r.w_kontakt, wTelefon: r.w_telefon, wEmail: r.w_email, wAnrede: r.w_anrede,
+    stundenbasiert: r.stundenbasiert, stundenInfo: r.stunden_info
   };
 }
 function toRow(e) {
@@ -427,6 +444,7 @@ function toRow(e) {
     w_firma: e.wFirma, w_kontakt: e.wKontakt, w_telefon: e.wTelefon, w_email: e.wEmail
   };
   if (hasAnrede) r.w_anrede = e.wAnrede || '';
+  if (hasStunden) { r.stundenbasiert = !!e.stundenbasiert; r.stunden_info = e.stundenInfo || ''; }
   return r;
 }
 
@@ -438,11 +456,15 @@ function setDbStatus(msg, color) {
 }
 
 let hasAnrede = true;
+let hasStunden = true;
 async function loadData() {
   const res = await fetch(`${REST}?order=created_at.asc`, { headers: HEADERS });
   if (!res.ok) throw new Error('HTTP ' + res.status + ' ' + (await res.text()));
   const rows = await res.json();
-  if (rows.length) hasAnrede = Object.prototype.hasOwnProperty.call(rows[0], 'w_anrede');
+  if (rows.length) {
+    hasAnrede  = Object.prototype.hasOwnProperty.call(rows[0], 'w_anrede');
+    hasStunden = Object.prototype.hasOwnProperty.call(rows[0], 'stundenbasiert');
+  }
   data = rows.map(fromRow);
 }
 
@@ -470,6 +492,12 @@ function getStatus(days) {
   return 'g';
 }
 
+// Status pro Anlage: stundenbasierte Anlagen werden nach Ablauf "beobachtet" statt überfällig
+function entryStatus(e, days) {
+  if (e.stundenbasiert && days <= 0) return 'b';
+  return getStatus(days);
+}
+
 function fmtDate(d) {
   return d.toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' });
 }
@@ -477,10 +505,12 @@ function fmtDate(d) {
 function badgeHtml(st) {
   if (st === 'r') return '<span class="badge badge-r">Überfällig</span>';
   if (st === 'o') return '<span class="badge badge-o">Bald fällig</span>';
+  if (st === 'b') return '<span class="badge badge-b">Beobachten</span>';
   return '<span class="badge badge-g">OK</span>';
 }
 
 function daysHtml(days, st) {
+  if (st === 'b') return `<span class="days-b">Beobachten${days < 0 ? ` (seit ${Math.abs(days)} Tagen)` : ''}</span>`;
   if (days < 0)  return `<span class="days-r">+ ${Math.abs(days)} Tage überfällig</span>`;
   if (days === 0) return `<span class="days-r">Heute fällig</span>`;
   return `<span class="days-${st}">${days} Tage</span>`;
@@ -497,6 +527,11 @@ function onZyklusChange() {
   updateNextDate();
 }
 
+function onStundenChange() {
+  document.getElementById('stundenInfoWrap').style.display =
+    document.getElementById('fStundenbasiert').checked ? '' : 'none';
+}
+
 function updateNextDate() {
   const letzte = document.getElementById('fLetzte').value;
   const iv = getIntervall();
@@ -508,17 +543,19 @@ function render() {
   const enriched = data.map(e => {
     const next = addMonths(e.letzteWartung, e.intervallMonate);
     const days = calcDays(next);
-    return { ...e, next, days, st: getStatus(days) };
+    return { ...e, next, days, st: entryStatus(e, days) };
   }).sort((a, b) => a.days - b.days);
 
   const overdue = enriched.filter(e => e.st === 'r').length;
   const soon    = enriched.filter(e => e.st === 'o').length;
+  const beob    = enriched.filter(e => e.st === 'b').length;
   const ok      = enriched.filter(e => e.st === 'g').length;
 
   // Banners
   let bHtml = '';
   if (overdue) bHtml += `<div class="banner banner-r">⚠️ ${overdue} Anlage${overdue > 1 ? 'n' : ''} überfällig – sofortige Wartung erforderlich!</div>`;
   if (soon)    bHtml += `<div class="banner banner-o">🔔 ${soon} Wartung${soon > 1 ? 'en' : ''} in den nächsten 3 Monaten fällig</div>`;
+  if (beob)    bHtml += `<div class="banner banner-b">🔵 ${beob} Anlage${beob > 1 ? 'n' : ''} im Beobachtungszeitraum – Betriebsstunden prüfen</div>`;
   document.getElementById('banners').innerHTML = bHtml;
 
   // Summary cards
@@ -526,13 +563,14 @@ function render() {
     <div class="sum-card"><div class="sum-num">${data.length}</div><div class="sum-label">Anlagen gesamt</div></div>
     <div class="sum-card red"><div class="sum-num">${overdue}</div><div class="sum-label">Überfällig</div></div>
     <div class="sum-card orange"><div class="sum-num">${soon}</div><div class="sum-label">Fällig &lt; 3 Monate</div></div>
+    <div class="sum-card blue"><div class="sum-num">${beob}</div><div class="sum-label">Beobachten</div></div>
     <div class="sum-card green"><div class="sum-num">${ok}</div><div class="sum-label">Alles OK</div></div>
   `;
 
   // Table rows
   let rows = '';
   for (const e of enriched) {
-    const rc = e.st === 'r' ? 'row-r' : e.st === 'o' ? 'row-o' : '';
+    const rc = e.st === 'r' ? 'row-r' : e.st === 'o' ? 'row-o' : e.st === 'b' ? 'row-b' : '';
 
     const mailBtn = e.email
       ? `<button class="btn btn-icon btn-mail" onclick="sendReminder(${e.id})" title="Erinnerung an ${e.person || 'zuständige Person'}">✉</button>`
@@ -548,6 +586,7 @@ function render() {
         <td>
           <strong>${e.anlage}</strong>
           <br><span style="font-size:11px;color:var(--text-muted)">${e.wartungstyp}</span>
+          ${e.stundenbasiert ? `<br><span style="font-size:11px;color:#1c6fb5">⏱ stundenbasiert${e.stundenInfo ? ' · ' + e.stundenInfo : ''}</span>` : ''}
           ${e.notizen ? `<br><span style="font-size:11px;color:var(--text-muted);font-style:italic">${e.notizen}</span>` : ''}
         </td>
         <td>
@@ -584,11 +623,13 @@ function openModal(id) {
   document.getElementById('modalOverlay').classList.add('open');
   if (id === null) {
     document.getElementById('modalTitle').textContent = 'Anlage hinzufügen';
-    ['fAnlage','fTyp','fPerson','fEmail','fNotizen','fNaechste','fWFirma','fWAnrede','fWKontakt','fWTelefon','fWEmail'].forEach(f => document.getElementById(f).value = '');
+    ['fAnlage','fTyp','fPerson','fEmail','fNotizen','fNaechste','fWFirma','fWAnrede','fWKontakt','fWTelefon','fWEmail','fStundenInfo'].forEach(f => document.getElementById(f).value = '');
     document.getElementById('fZyklus').value = '12';
     document.getElementById('fIntervall').value = '';
     document.getElementById('customWrap').style.display = 'none';
     document.getElementById('fLetzte').value = '';
+    document.getElementById('fStundenbasiert').checked = false;
+    document.getElementById('stundenInfoWrap').style.display = 'none';
   } else {
     const e = data.find(x => x.id === id);
     document.getElementById('modalTitle').textContent = 'Anlage bearbeiten';
@@ -602,6 +643,9 @@ function openModal(id) {
     document.getElementById('fWKontakt').value = e.wKontakt || '';
     document.getElementById('fWTelefon').value = e.wTelefon || '';
     document.getElementById('fWEmail').value   = e.wEmail   || '';
+    document.getElementById('fStundenbasiert').checked = !!e.stundenbasiert;
+    document.getElementById('fStundenInfo').value = e.stundenInfo || '';
+    onStundenChange();
     const presets = ['1','2','3','6','12','24'];
     const iv = String(e.intervallMonate);
     if (presets.includes(iv)) {
@@ -643,6 +687,8 @@ async function saveModal() {
     wKontakt:  document.getElementById('fWKontakt').value.trim(),
     wTelefon:  document.getElementById('fWTelefon').value.trim(),
     wEmail:    document.getElementById('fWEmail').value.trim(),
+    stundenbasiert: document.getElementById('fStundenbasiert').checked,
+    stundenInfo:    document.getElementById('fStundenInfo').value.trim(),
   };
   try {
     let res;
