@@ -201,6 +201,7 @@
   <div class="filter-schnell">
     <button class="btn-schnell" onclick="schnell('heute',this)">Heute</button>
     <button class="btn-schnell" onclick="schnell('woche',this)">Diese Woche</button>
+    <button class="btn-schnell" onclick="schnell('vorwoche',this)">Letzte Woche</button>
     <button class="btn-schnell aktiv" onclick="schnell('monat',this)">Dieser Monat</button>
     <button class="btn-schnell" onclick="schnell('90',this)">Letzte 90 Tage</button>
   </div>
@@ -310,7 +311,7 @@
 
   function schnell(modus, btn) {
     const heute = new Date();
-    const bis = heute;
+    let bis = heute;
     let von = new Date();
 
     if (modus === 'heute') {
@@ -320,6 +321,15 @@
       const tag = heute.getDay() === 0 ? 6 : heute.getDay() - 1; // 0=Mo
       von = new Date(heute);
       von.setDate(heute.getDate() - tag);
+    } else if (modus === 'vorwoche') {
+      // Montag bis Sonntag der vorigen Kalenderwoche
+      const tag = heute.getDay() === 0 ? 6 : heute.getDay() - 1; // 0=Mo
+      const montagDiese = new Date(heute);
+      montagDiese.setDate(heute.getDate() - tag);
+      von = new Date(montagDiese);
+      von.setDate(montagDiese.getDate() - 7); // Montag letzte Woche
+      bis = new Date(montagDiese);
+      bis.setDate(montagDiese.getDate() - 1); // Sonntag letzte Woche
     } else if (modus === 'monat') {
       // 1. des aktuellen Monats
       von = new Date(heute.getFullYear(), heute.getMonth(), 1);
