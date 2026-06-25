@@ -15,11 +15,12 @@ $LogPfad   = Join-Path $ScriptDir 'Sync_Lackformeln.log'
 
 # ----- Konfiguration -----
 $SUPABASE_URL = 'https://tldkqifblxkdligypffr.supabase.co'
-$MASTER_XLSX  = 'C:\Users\lisina\einhaus-gmbh.de\Lackierung - Dokumente\4. Lackformeln\Lackformeln.xlsx'
+# Quelle ist jetzt die saubere, strukturierte Eingabedatei (nicht mehr die alte block-Excel).
+$MASTER_XLSX  = 'C:\Users\lisina\einhaus-gmbh.de\Lackierung - Dokumente\4. Lackformeln\Lackformeln_Strukturiert.xlsx'
 $COMPANION    = 'C:\Users\lisina\einhaus-gmbh.de\Lackierung - Dokumente\4. Lackformeln\Dashboard_Neu.xlsx'
 $Python       = 'python'
 
-$ParserPy   = Join-Path $ScriptDir 'parse_lackformeln.py'
+$ParserPy   = Join-Path $ScriptDir 'parse_strukturiert.py'
 $EingangPy  = Join-Path $ScriptDir 'eingang_to_excel.py'
 $ParsedJson = Join-Path $ScriptDir 'parsed.json'
 $EingangJson= Join-Path $ScriptDir 'eingang_new.json'
