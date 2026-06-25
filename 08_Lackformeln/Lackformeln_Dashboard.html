@@ -72,11 +72,14 @@
     font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 20px;
     background: #eef2f7; color: #3d5168; border: 1px solid #d4deea;
   }
-  .badge.code   { background: #e7f0fb; color: #1F4E79; border-color: #c4d8f0; }
-  .badge.typ    { background: #f0ebfb; color: #5b3da8; border-color: #ddd0f5; }
-  .badge.system { background: #e9f7ee; color: #1a7a3c; border-color: #c5e9d2; }
-  .badge.neu    { background: #fff3da; color: #9a6700; border-color: #f3dca0; }
-  .badge.warn   { background: #fde8e6; color: #b23222; border-color: #f3c2bb; }
+  .badge.code    { background: #e7f0fb; color: #1F4E79; border-color: #c4d8f0; }
+  .badge.typ     { background: #f0ebfb; color: #5b3da8; border-color: #ddd0f5; }
+  .badge.system  { background: #e9f7ee; color: #1a7a3c; border-color: #c5e9d2; }
+  .badge.neu     { background: #fff3da; color: #9a6700; border-color: #f3dca0; }
+  .badge.warn    { background: #fde8e6; color: #b23222; border-color: #f3c2bb; }
+  .badge.archiv  { background: #f0f0f0; color: #666; border-color: #ccc; }
+  .card.archiv-card { border-left: 4px solid #bbb; opacity: .88; }
+  .btn-archiv.active { background: #c8d8ea; color: #1F4E79; border-color: #a0bcd8; }
 
   table.komp { width: 100%; border-collapse: collapse; margin: 10px 0 4px; font-size: 13px; }
   table.komp th, table.komp td { text-align: right; padding: 4px 6px; }
@@ -163,6 +166,7 @@
     <option value="">Alle Typen</option>
   </select>
   <button class="btn ghost" onclick="ladeFormeln()">↻ Aktualisieren</button>
+  <button class="btn ghost btn-archiv" id="btnArchiv" onclick="toggleArchiv()" title="Archivierte Formeln (Canyon u.a.) ein-/ausblenden">📦 Archiv</button>
   <button class="btn" onclick="oeffneModal()">+ Neue Formel</button>
   <span class="count" id="count"></span>
 </div>
@@ -216,6 +220,7 @@
   const H = { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON };
 
   let ALLE = [];
+  let zeigArchiv = false;
 
   function toast(msg) {
     const t = document.getElementById('toast');
@@ -241,16 +246,27 @@
     }
   }
 
+  function toggleArchiv() {
+    zeigArchiv = !zeigArchiv;
+    const btn = document.getElementById('btnArchiv');
+    btn.classList.toggle('active', zeigArchiv);
+    btn.textContent = zeigArchiv ? '📦 Archiv ✓' : '📦 Archiv';
+    fuelleKundenFilter();
+    render();
+  }
+
   function fuelleKundenFilter() {
+    const sichtbar = zeigArchiv ? ALLE : ALLE.filter(f => f.quelle_blatt !== 'Archiv');
     const sel = document.getElementById('fKunde');
     const cur = sel.value;
-    const kunden = [...new Set(ALLE.map(f => f.kunde))].sort((a, b) => a.localeCompare(b, 'de'));
+    const kunden = [...new Set(sichtbar.map(f => f.kunde))].sort((a, b) => a.localeCompare(b, 'de'));
     sel.innerHTML = '<option value="">Alle Kunden</option>' +
       kunden.map(k => `<option${k === cur ? ' selected' : ''}>${esc(k)}</option>`).join('');
+    if (!kunden.includes(cur)) sel.value = '';
     // Typ-Filter dynamisch aus den Daten (funktioniert mit beliebigen Typ-Werten)
     const tsel = document.getElementById('fTyp');
     const tcur = tsel.value;
-    const typen = [...new Set(ALLE.map(f => f.typ).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'de'));
+    const typen = [...new Set(sichtbar.map(f => f.typ).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'de'));
     tsel.innerHTML = '<option value="">Alle Typen</option>' +
       typen.map(t => `<option${t === tcur ? ' selected' : ''}>${esc(t)}</option>`).join('');
   }
@@ -259,8 +275,10 @@
     const q = document.getElementById('suche').value.trim().toLowerCase();
     const fk = document.getElementById('fKunde').value;
     const ft = document.getElementById('fTyp').value;
+    const archivCount = ALLE.filter(f => f.quelle_blatt === 'Archiv').length;
 
     let list = ALLE.filter(f => {
+      if (!zeigArchiv && f.quelle_blatt === 'Archiv') return false;
       if (fk && f.kunde !== fk) return false;
       if (ft && f.typ !== ft) return false;
       if (q) {
@@ -270,7 +288,11 @@
       return true;
     });
 
-    document.getElementById('count').textContent = `${list.length} von ${ALLE.length} Formeln`;
+    const aktivGesamt = ALLE.length - archivCount;
+    const basisText = zeigArchiv
+      ? `${list.length} von ${ALLE.length} Formeln (inkl. ${archivCount} Archiv)`
+      : `${list.length} von ${aktivGesamt} Formeln`;
+    document.getElementById('count').textContent = basisText;
     const wrap = document.getElementById('wrap');
     if (!list.length) { wrap.innerHTML = '<div class="empty">Keine Formeln gefunden.</div>'; return; }
 
@@ -288,13 +310,15 @@
     const komp = Array.isArray(f.komponenten) ? f.komponenten : [];
     const total = komp.reduce((s, k) => s + (Number(k.gramm) || 0), 0);
     const isNeu = (f.quelle_blatt === 'Dashboard') || /^Dashboard-Neuanlage/.test(f.notiz || '');
+    const isArchiv = f.quelle_blatt === 'Archiv';
 
     const badges = [
       f.farbcode ? `<span class="badge code">${esc(f.farbcode)}</span>` : '',
       f.system   ? `<span class="badge system">${esc(f.system)}</span>` : '',
       f.typ      ? `<span class="badge typ">${esc(f.typ)}</span>` : '',
       isNeu      ? `<span class="badge neu">Neuanlage</span>` : '',
-      !f.geprueft && !isNeu ? `<span class="badge warn">ungeprüft</span>` : ''
+      isArchiv   ? `<span class="badge archiv">Archiv</span>` : '',
+      !f.geprueft && !isNeu && !isArchiv ? `<span class="badge warn">ungeprüft</span>` : ''
     ].join('');
 
     let lastGrp = null, rows = '';
@@ -321,7 +345,7 @@
     ].join('');
 
     const cid = 'c' + f.id;
-    return `<div class="card" id="${cid}">
+    return `<div class="card${isArchiv ? ' archiv-card' : ''}" id="${cid}">
       <div class="card-head"><div class="card-name">${esc(f.farbname)}</div></div>
       <div class="badges">${badges}</div>
       <table class="komp">

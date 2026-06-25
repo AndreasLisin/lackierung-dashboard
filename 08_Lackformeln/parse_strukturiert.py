@@ -34,31 +34,17 @@ def txt(v):
     s=str(v).strip()
     return s if s else None
 
-def main():
-    src = sys.argv[1] if len(sys.argv)>1 and not sys.argv[1].startswith("--") else DEFAULT_XLSX
-    out = None
-    if "--out" in sys.argv:
-        out = sys.argv[sys.argv.index("--out")+1]
+RANK = {"Grundton": 0, "": 1, "Effekt": 2}
 
-    # Robust gegen Datei-Sperre (Koloristin hat die Datei evtl. offen): in Temp kopieren.
-    tmp = os.path.join(tempfile.gettempdir(), "_lackformeln_struktur_read.xlsx")
-    try:
-        shutil.copyfile(src, tmp); read_path = tmp
-    except Exception:
-        read_path = src
-    wb = openpyxl.load_workbook(read_path, data_only=True)
-    if SHEET not in wb.sheetnames:
-        sys.stderr.write("Blatt '%s' nicht gefunden\n" % SHEET); sys.exit(1)
-    ws = wb[SHEET]
-
-    records=[]; cur=None
-    for r in range(2, ws.max_row+1):
-        def cell(c): return ws.cell(r,c).value
+def parse_sheet(ws, quelle_blatt):
+    records = []; cur = None
+    for r in range(2, ws.max_row + 1):
+        def cell(c, _r=r): return ws.cell(_r, c).value
         name = txt(cell(C_NAME))
         if name:
             notiz = txt(cell(C_NOTIZ)) or ""
             cc = txt(cell(C_CC)); verh = txt(cell(C_VERH))
-            extra=[]
+            extra = []
             if cc:   extra.append("Klarlack-Toenpaste: %s" % cc)
             if verh: extra.append("Verhaeltnis: %s" % verh)
             if extra:
@@ -75,12 +61,11 @@ def main():
                 "haerter": txt(cell(C_HAE)),
                 "vorlage_nr": txt(cell(C_VOR)),
                 "notiz": notiz or None,
-                "quelle_blatt": "Strukturiert",
+                "quelle_blatt": quelle_blatt,
                 "quelle_zeile": r,
                 "geprueft": txt(cell(C_STATUS)) is None,
             }
             records.append(cur)
-        # Komponente (auch in der Kopfzeile)
         code = txt(cell(C_TP))
         if cur is not None and code:
             cur["komponenten"].append({
@@ -88,21 +73,43 @@ def main():
                 "gramm": num(cell(C_G)),
                 "gruppe": txt(cell(C_BER)) or "",
             })
-
-    # Formeln ohne jede Komponente verwerfen (Leer-/Junk-Zeilen)
     records = [x for x in records if x["komponenten"]]
-    # Komponenten gruppieren: erst Grundton, dann Effekt (stabil, Reihenfolge bleibt sonst)
-    RANK = {"Grundton": 0, "": 1, "Effekt": 2}
     for x in records:
         x["komponenten"].sort(key=lambda k: RANK.get(k.get("gruppe", ""), 1))
+    return records
+
+def main():
+    src = sys.argv[1] if len(sys.argv)>1 and not sys.argv[1].startswith("--") else DEFAULT_XLSX
+    out = None
+    if "--out" in sys.argv:
+        out = sys.argv[sys.argv.index("--out")+1]
+
+    # Robust gegen Datei-Sperre (Koloristin hat die Datei evtl. offen): in Temp kopieren.
+    tmp = os.path.join(tempfile.gettempdir(), "_lackformeln_struktur_read.xlsx")
+    try:
+        shutil.copyfile(src, tmp); read_path = tmp
+    except Exception:
+        read_path = src
+    wb = openpyxl.load_workbook(read_path, data_only=True)
+    if SHEET not in wb.sheetnames:
+        sys.stderr.write("Blatt '%s' nicht gefunden\n" % SHEET); sys.exit(1)
+
+    records = parse_sheet(wb[SHEET], "Strukturiert")
+    # Archiv-Blatt (Canyon u.a.) ebenfalls einspielen, aber als quelle_blatt="Archiv"
+    if "Archiv" in wb.sheetnames:
+        archiv = parse_sheet(wb["Archiv"], "Archiv")
+        records += archiv
+        sys.stderr.write("%d Archiv-Formeln eingelesen\n" % len(archiv))
+
     data = json.dumps(records, ensure_ascii=False)
     if out:
         with open(out, "w", encoding="utf-8") as f: f.write(data)
     else:
         sys.stdout.write(data)
-    ok = sum(1 for x in records if x["geprueft"])
-    sys.stderr.write("%d Formeln aus strukturierter Datei, %d geprueft, %d zu pruefen\n"
-                     % (len(records), ok, len(records)-ok))
+    aktiv = [x for x in records if x["quelle_blatt"] != "Archiv"]
+    ok = sum(1 for x in aktiv if x["geprueft"])
+    sys.stderr.write("%d Formeln gesamt (%d aktiv, %d geprueft, %d zu pruefen)\n"
+                     % (len(records), len(aktiv), ok, len(aktiv)-ok))
 
 if __name__ == "__main__":
     main()
