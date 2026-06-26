@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lackaufbauten | EINHAUS</title>
+<style>
+  :root{ --blue:#1F4E79; --bg:#eef1f5; --card:#ffffff; --border:#e2e5ea; --text:#1f2430; --muted:#6b7280;
+         --info-bg:#E6F1FB; --info-tx:#0C447C; --warn-bg:#FAEEDA; --warn-tx:#854F0B; --succ-bg:#EAF3DE; --succ-tx:#3B6D11; }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--text);}
+  .topbar{background:#1F4E79;color:#fff;padding:0 28px;display:flex;align-items:center;justify-content:space-between;min-height:62px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.3);}
+  .topbar-left{display:flex;align-items:center;gap:16px;}
+  .topbar-logo{font-size:22px;font-weight:700;letter-spacing:.5px;color:#fff;}
+  .topbar-logo span{color:#BDD7EE;}
+  .topbar-sub{font-size:12px;color:rgba(255,255,255,.7);margin-top:2px;}
+  .topbar-center{text-align:center;}
+  .topbar-center .titel{font-size:17px;font-weight:700;letter-spacing:.5px;}
+  .topbar-center .untertitel{font-size:11px;opacity:.7;}
+  .topbar-right{display:flex;align-items:center;gap:12px;}
+  .btn-back{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);color:#fff;text-decoration:none;border-radius:6px;padding:6px 14px;font-size:13px;font-weight:bold;border:1px solid rgba(255,255,255,.3);transition:background .2s;cursor:pointer;}
+  .btn-back:hover{background:rgba(255,255,255,.25);}
+  @media(max-width:640px){.topbar{padding:8px 14px;}.topbar-left{display:none;}}
+  .wrap{max-width:1180px;margin:0 auto;padding:18px 24px 60px;}
+  .viewtabs{display:flex;gap:0;background:#e2e7ee;border-radius:10px;padding:4px;width:fit-content;margin:4px 0 14px;}
+  .viewtab{font-size:14px;font-weight:600;padding:8px 20px;border-radius:7px;border:none;background:transparent;color:var(--muted);cursor:pointer;}
+  .viewtab.active{background:#fff;color:var(--blue);box-shadow:0 1px 4px rgba(0,0,0,.12);}
+  .controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0 6px;}
+  .chip{font-size:13px;padding:6px 13px;border-radius:8px;border:1px solid #cfd4dc;background:#fff;color:var(--text);cursor:pointer;}
+  .chip.active{background:var(--info-bg);color:var(--info-tx);border-color:#85B7EB;font-weight:600;}
+  .flabel{font-size:11px;color:var(--muted);margin:8px 0 0;text-transform:uppercase;letter-spacing:.04em;}
+  #q{width:100%;padding:9px 12px;font-size:14px;border:1px solid #cfd4dc;border-radius:8px;margin:6px 0 6px;}
+  .hint{font-size:12px;color:var(--muted);margin:0 0 16px;}
+  .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;}
+  .tile{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;cursor:pointer;transition:border-color .12s,box-shadow .12s;display:flex;flex-direction:column;gap:6px;min-height:92px;}
+  .tile:hover{border-color:var(--blue);box-shadow:0 2px 10px rgba(31,78,121,.10);}
+  .tile .title{font-weight:600;font-size:14.5px;color:var(--blue);line-height:1.3;}
+  .tile .meta{font-size:12px;color:var(--muted);margin-top:auto;display:flex;justify-content:space-between;align-items:center;gap:8px;}
+  .tile .arrow{color:#9aa0aa;}
+  .empty{grid-column:1/-1;text-align:center;color:var(--muted);font-size:14px;padding:40px 10px;}
+  .badge{display:inline-block;font-size:10.5px;background:var(--warn-bg);color:var(--warn-tx);border-radius:6px;padding:1px 7px;margin-left:6px;}
+  .overlay{position:fixed;inset:0;background:rgba(20,28,40,.5);display:none;align-items:center;justify-content:center;padding:20px;z-index:50;}
+  .overlay.open{display:flex;}
+  .modal{background:#fff;border-radius:14px;max-width:600px;width:100%;max-height:88vh;overflow:auto;padding:0;}
+  .mhead{background:var(--blue);color:#fff;padding:16px 20px;border-radius:14px 14px 0 0;position:sticky;top:0;}
+  .mhead .mt{font-size:16px;font-weight:600;line-height:1.35;}
+  .mhead .ms{font-size:12.5px;opacity:.9;margin-top:3px;}
+  .mclose{position:absolute;top:12px;right:14px;background:rgba(255,255,255,.18);border:none;color:#fff;width:28px;height:28px;border-radius:7px;font-size:17px;cursor:pointer;line-height:1;}
+  .mbody{padding:16px 20px 20px;}
+  .mrow{display:flex;gap:10px;align-items:baseline;padding:8px 0;border-bottom:1px solid #eef0f3;}
+  .tag{flex:0 0 86px;font-size:11px;padding:3px 8px;border-radius:6px;text-align:center;}
+  .t-Stammlack{background:var(--info-bg);color:var(--info-tx);} .t-Härter{background:var(--warn-bg);color:var(--warn-tx);} .t-Verdünner{background:var(--succ-bg);color:var(--succ-tx);} .t-Basislack{background:#E1F5EE;color:#0F6E56;} .t-Zusatz{background:#EDE7F6;color:#5E35B1;}
+  .mat{flex:1;font-size:13.5px;} .rnr{font-size:11.5px;color:#7a8089;font-family:Consolas,monospace;white-space:nowrap;}
+  .mv{margin-top:10px;font-size:12.5px;color:#475063;background:#f1f3f6;padding:8px 11px;border-radius:8px;}
+  .mv b{color:var(--blue);font-weight:600;}
+  .src{margin-top:10px;font-size:12px;color:var(--muted);line-height:1.5;}
+  .src b{color:var(--blue);font-weight:600;}
+  .modal-foot{margin-top:16px;padding-top:14px;border-top:1px solid #eef0f3;display:flex;justify-content:flex-end;}
+  .modal-arch{background:#fff;border:1px solid #d7dbe2;color:#6b7280;font-size:13px;font-weight:600;cursor:pointer;padding:8px 16px;border-radius:8px;}
+  .modal-arch:hover{border-color:#85B7EB;color:var(--blue);background:var(--info-bg);}
+  .modal-arch.restore{border-color:#9CCB7B;color:var(--succ-tx);}
+  .modal-arch.restore:hover{background:var(--succ-bg);}
+  .variant{border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:14px;}
+  .variant-head{font-size:12px;color:var(--muted);margin-bottom:8px;}
+  .variant-head b{color:var(--text);}
+  .schicht{margin:10px 0 4px;}
+  .schicht-title{font-size:13px;font-weight:700;color:var(--blue);border-bottom:2px solid var(--info-bg);padding-bottom:3px;display:flex;justify-content:space-between;}
+  .schicht-title .h{font-weight:500;color:var(--muted);font-size:12px;}
+  footer{text-align:center;font-size:11px;color:var(--muted);padding:18px;}
+  /* Login */
+  #login{position:fixed;inset:0;background:#eef1f5;display:flex;align-items:center;justify-content:center;z-index:200;}
+  .login-card{background:#fff;border-radius:14px;box-shadow:0 8px 30px rgba(20,28,40,.18);padding:30px 28px;width:340px;max-width:92vw;}
+  .login-logo{font-size:20px;font-weight:700;color:var(--blue);text-align:center;}
+  .login-logo span{color:#9bb6d4;}
+  .login-sub{font-size:12px;color:var(--muted);text-align:center;margin:4px 0 20px;}
+  .login-card label{font-size:12px;color:var(--muted);display:block;margin:10px 0 4px;}
+  .login-card input{width:100%;padding:9px 11px;font-size:14px;border:1px solid #cfd4dc;border-radius:8px;}
+  .login-btn{width:100%;margin-top:18px;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;}
+  .login-btn:hover{background:#163a5c;}
+  .login-err{color:#C00000;font-size:12.5px;margin-top:12px;min-height:16px;text-align:center;}
+  #loading{position:fixed;inset:0;background:#eef1f5;display:flex;align-items:center;justify-content:center;z-index:150;color:var(--muted);font-size:14px;}
+</style>
+</head>
+<body>
+
+<div id="login" style="display:none">
+  <div class="login-card">
+    <div class="login-logo">EINHAUS <span>Lackaufbauten</span></div>
+    <div class="login-sub">Interner Zugang – bitte anmelden</div>
+    <form id="loginform" onsubmit="return doLogin(event)">
+      <label for="email">E-Mail</label>
+      <input id="email" type="email" autocomplete="username" required>
+      <label for="pw">Passwort</label>
+      <input id="pw" type="password" autocomplete="current-password" required>
+      <button class="login-btn" type="submit">Anmelden</button>
+      <div class="login-err" id="loginerr"></div>
+    </form>
+  </div>
+</div>
+
+<div id="loading">Lade Daten …</div>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <div>
+      <div class="topbar-logo">EINHAUS <span>Oberflächenveredelung GmbH</span></div>
+      <div class="topbar-sub">Industrielackierung · 55411 Bingen-Dietersheim</div>
+    </div>
+  </div>
+  <div class="topbar-center">
+    <div class="titel">Lackaufbauten</div>
+    <div class="untertitel">Lackierung | <span id="headerDatum"></span></div>
+  </div>
+  <div class="topbar-right">
+    <button class="btn-back" onclick="logout()">Abmelden</button>
+    <a class="btn-back" href="../index.html">← Zurück</a>
+  </div>
+</div>
+<div class="wrap">
+  <div class="viewtabs">
+    <button class="viewtab" id="tab-mat" onclick="setView('mat')">Einzelne Materialien</button>
+    <button class="viewtab" id="tab-farb" onclick="setView('farb')">Farbton-Aufbauten</button>
+  </div>
+  <div class="flabel">Status</div>
+  <div class="controls" id="statusrow">
+    <button class="chip" id="st-aktiv" onclick="setStatus('aktiv')">Im Einsatz</button>
+    <button class="chip" id="st-archiv" onclick="setStatus('archiv')">Archiv</button>
+  </div>
+  <div id="filters-mat">
+    <div class="flabel">Hersteller</div>
+    <div class="controls" id="chips"></div>
+    <div class="flabel">Schicht</div>
+    <div class="controls" id="schichtchips"></div>
+  </div>
+  <div id="filters-farb" style="display:none">
+    <div class="flabel">Kunde</div>
+    <div class="controls" id="kundechips"></div>
+  </div>
+  <input id="q" type="text" placeholder="Suchen …">
+  <p class="hint" id="hint"></p>
+  <div class="tiles" id="tiles"></div>
+</div>
+<div class="overlay" id="overlay">
+  <div class="modal" id="modal"></div>
+</div>
+<footer>Quelle: Prozessvorschriften &amp; Datenblätter (Lackierung – Dokumente) · R-Nummern aus „Lackmaterial inkl. Verfallsdatum". · Interner Zugang.</footer>
+<script>
+const SUPABASE_URL="https://tldkqifblxkdligypffr.supabase.co";
+const SUPABASE_ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsZGtxaWZibHhrZGxpZ3lwZmZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1NjkwMzEsImV4cCI6MjA5NjE0NTAzMX0.Zg0Yy9uAIvuFwNfYVzfLWqmQUvTnXivYmGIXLCOa6TM";
+const SKEY="lackaufbauten_session";
+function getSession(){ try{return JSON.parse(localStorage.getItem(SKEY)||"null");}catch(e){return null;} }
+function setSession(s){ localStorage.setItem(SKEY,JSON.stringify(s)); }
+function clearSession(){ localStorage.removeItem(SKEY); }
+function show(id,on){ document.getElementById(id).style.display=on?"":"none"; }
+
+async function login(email,pw){
+  const r=await fetch(SUPABASE_URL+"/auth/v1/token?grant_type=password",{method:"POST",headers:{apikey:SUPABASE_ANON,"Content-Type":"application/json"},body:JSON.stringify({email:email,password:pw})});
+  if(!r.ok) throw new Error("login");
+  setSession(await r.json());
+}
+async function refreshSession(){
+  const s=getSession(); if(!s||!s.refresh_token) return false;
+  const r=await fetch(SUPABASE_URL+"/auth/v1/token?grant_type=refresh_token",{method:"POST",headers:{apikey:SUPABASE_ANON,"Content-Type":"application/json"},body:JSON.stringify({refresh_token:s.refresh_token})});
+  if(!r.ok){ clearSession(); return false; }
+  setSession(await r.json()); return true;
+}
+async function sbFetch(path){
+  let s=getSession();
+  let r=await fetch(SUPABASE_URL+"/rest/v1/"+path,{headers:{apikey:SUPABASE_ANON,Authorization:"Bearer "+(s?s.access_token:"")}});
+  if(r.status===401){ if(await refreshSession()){ s=getSession(); r=await fetch(SUPABASE_URL+"/rest/v1/"+path,{headers:{apikey:SUPABASE_ANON,Authorization:"Bearer "+s.access_token}}); } }
+  if(!r.ok) throw new Error("fetch "+r.status);
+  return await r.json();
+}
+
+function showLogin(){ show("loading",false); show("login",true); }
+function logout(){ clearSession(); location.reload(); }
+
+async function doLogin(ev){
+  ev.preventDefault();
+  const err=document.getElementById("loginerr"); err.textContent="";
+  try{
+    await login(document.getElementById("email").value.trim(), document.getElementById("pw").value);
+    show("login",false); show("loading",true);
+    await start();
+  }catch(e){ err.textContent="Anmeldung fehlgeschlagen. E-Mail/Passwort prüfen."; }
+  return false;
+}
+
+async function start(){
+  let rows;
+  try{ rows=await sbFetch("lackaufbauten?order=sort.asc&limit=2000"); }
+  catch(e){ showLogin(); return; }
+  BLOCKS=rows.filter(r=>r.typ==="block").map(r=>r.data);
+  FARB  =rows.filter(r=>r.typ==="farbton").map(r=>r.data);
+  prepData(); buildChips(); show("loading",false); setView("mat");
+}
+
+// ===================== UI (wie Offline-Variante) =====================
+let BLOCKS=[], FARB=[], KUNDEN=["Alle"];
+function esc(s){return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function prepData(){
+  BLOCKS.forEach((b,i)=>{b._i=i;const s=b.rows.find(r=>r.art==="Stammlack");b._name=s?s.mat:(b.her||"—");b._aid="M:"+(b.her||"")+"|"+(b.sch||"")+"|"+b.rows.map(r=>r.art+":"+r.mat).join("~");});
+  FARB.forEach((f,i)=>{f._i=i;f._aid="F:"+f.farbton.toLowerCase();});
+}
+
+const AKEY="lackaufbauten_archiv";
+let ARCH=new Set(JSON.parse(localStorage.getItem(AKEY)||"[]"));
+function saveArch(){localStorage.setItem(AKEY,JSON.stringify([...ARCH]));}
+function isArch(id){return ARCH.has(id);}
+let status="aktiv";
+function setStatus(s){status=s;render();}
+function updStatus(dataset){
+  const na=dataset.filter(x=>isArch(x._aid)).length;
+  document.getElementById("st-aktiv").textContent="Im Einsatz ("+(dataset.length-na)+")";
+  document.getElementById("st-archiv").textContent="Archiv ("+na+")";
+  document.getElementById("st-aktiv").classList.toggle("active",status==="aktiv");
+  document.getElementById("st-archiv").classList.toggle("active",status==="archiv");
+}
+let modalId=null, modalName="";
+function modalArchBtn(){
+  if(!modalId) return "";
+  const arch=isArch(modalId);
+  return `<div class="modal-foot"><button class="${arch?"modal-arch restore":"modal-arch"}" onclick="archiveFromModal()">${arch?"↩ Zurück in den Einsatz":"In das Archiv verschieben"}</button></div>`;
+}
+function archiveFromModal(){
+  if(!modalId) return;
+  if(isArch(modalId)){ ARCH.delete(modalId); saveArch(); }
+  else{ if(!confirm("„"+modalName+"“ wirklich ins Archiv verschieben?\n\nEs erscheint dann nur noch unter „Archiv“ und kann dort jederzeit zurückgeholt werden.")) return; ARCH.add(modalId); saveArch(); }
+  closeModal(); render();
+}
+
+const GROUPS=[["Alle",b=>true],["Wörwag",b=>/wörwag/i.test(b.her)],["Spies Hecker",b=>/spies/i.test(b.her)],["BASF",b=>/basf|glasurit/i.test(b.her)],["Peter Lacke",b=>/peter/i.test(b.her)],["Mankiewicz",b=>/mankiewicz/i.test(b.her)],["Schramm",b=>/schramm/i.test(b.her)],["Sonstige",b=>!/wörwag|spies|basf|glasurit|peter|mankiewicz|schramm/i.test(b.her)]];
+const SCHICHT=[["Alle",b=>true],["Primer",b=>/primer|grundier|füller|fueller|haftvermittler|haftgrund/i.test(b.sch)],["Basislack",b=>/basis|basecoat/i.test(b.sch)],["Decklack",b=>/decklack|einschicht|softlack|hydroeffekt|topcoat/i.test(b.sch)],["Klarlack",b=>/klar/i.test(b.sch)]];
+let view="mat", active=0, schicht=0, kunde=0, query="";
+const tiles=document.getElementById("tiles"), chips=document.getElementById("chips"),
+      schipsEl=document.getElementById("schichtchips"), kundeEl=document.getElementById("kundechips");
+
+function buildChips(){
+  chips.innerHTML=""; schipsEl.innerHTML=""; kundeEl.innerHTML="";
+  GROUPS.forEach((g,i)=>{const c=document.createElement("button");c.className="chip";c.textContent=g[0]+" ("+BLOCKS.filter(g[1]).length+")";c.onclick=()=>{active=i;render();};chips.appendChild(c);});
+  SCHICHT.forEach((g,i)=>{const c=document.createElement("button");c.className="chip";c.textContent=g[0]+" ("+BLOCKS.filter(g[1]).length+")";c.onclick=()=>{schicht=i;render();};schipsEl.appendChild(c);});
+  KUNDEN=["Alle",...Array.from(new Set(FARB.flatMap(f=>f.kunden))).filter(Boolean).sort()];
+  KUNDEN.forEach((k,i)=>{const c=document.createElement("button");c.className="chip";const n=i===0?FARB.length:FARB.filter(f=>f.kunden.includes(k)).length;c.textContent=k+" ("+n+")";c.onclick=()=>{kunde=i;render();};kundeEl.appendChild(c);});
+}
+
+function setView(v){view=v;
+  document.getElementById("tab-mat").classList.toggle("active",v==="mat");
+  document.getElementById("tab-farb").classList.toggle("active",v==="farb");
+  document.getElementById("filters-mat").style.display=v==="mat"?"":"none";
+  document.getElementById("filters-farb").style.display=v==="farb"?"":"none";
+  document.getElementById("q").placeholder=v==="mat"?"Lack suchen (z. B. R3203H, Oryxwhite, Klarlack) …":"Farbton suchen (z. B. Iridiumsilber, Schiefergrau) …";
+  render();
+}
+function render(){ view==="mat"?renderMat():renderFarb(); }
+function renderMat(){
+  updStatus(BLOCKS);
+  Array.from(chips.children).forEach((c,i)=>c.classList.toggle("active",i===active));
+  Array.from(schipsEl.children).forEach((c,i)=>c.classList.toggle("active",i===schicht));
+  const f=GROUPS[active][1], sf=SCHICHT[schicht][1], arch=status==="archiv";
+  const list=BLOCKS.filter(b=>isArch(b._aid)===arch).filter(f).filter(sf).filter(b=>{if(!query)return true;const t=(b.her+" "+b.sch+" "+b.mv+" "+b.rows.map(r=>r.mat+" "+(r.rnr||"")).join(" ")).toLowerCase();return t.includes(query);});
+  document.getElementById("hint").innerHTML=(arch?"<b>Archiv</b> – nicht im Einsatz. ":"Auf eine Kachel klicken für den kompletten Material-Block. ")+"<b>"+list.length+"</b> Materialien.";
+  tiles.innerHTML=list.length?list.map(b=>`<div class="tile" onclick="openMat(${b._i})"><div class="title">${esc(b._name)}</div><div class="meta"><span>${esc(b.her||"—")} · ${esc(b.sch)}</span><span class="arrow">▸</span></div></div>`).join(""):`<div class="empty">${arch?"Kein Material im Archiv.":"Keine Materialien gefunden."}</div>`;
+}
+function renderFarb(){
+  updStatus(FARB);
+  Array.from(kundeEl.children).forEach((c,i)=>c.classList.toggle("active",i===kunde));
+  const k=KUNDEN[kunde], arch=status==="archiv";
+  let list=FARB.filter(f=>isArch(f._aid)===arch).filter(f=>kunde===0||f.kunden.includes(k));
+  list=list.filter(f=>{if(!query)return true;const t=(f.farbton+" "+f.kunden.join(" ")+" "+f.varianten.flatMap(v=>v.bauteile).join(" ")+" "+f.varianten.flatMap(v=>v.schichten.flatMap(s=>s.rows.map(r=>r.mat+" "+(r.rnr||"")))).join(" ")).toLowerCase();return t.includes(query);});
+  list.sort((a,b)=>a.farbton.toLowerCase().localeCompare(b.farbton.toLowerCase()));
+  document.getElementById("hint").innerHTML=(arch?"<b>Archiv</b> – nicht im Einsatz. ":"Auf einen Farbton klicken für den kompletten Lackaufbau (Primer, Basislack, Klarlack, Härter, Verdünner, Zusatz, R-Nummern). ")+"<b>"+list.length+"</b> Farbtöne.";
+  tiles.innerHTML=list.length?list.map(f=>{
+    const vb=f.n_varianten>1?`<span class="badge">${f.n_varianten} Varianten</span>`:"";
+    const bt=f.n_bauteile===1?"1 Bauteil":f.n_bauteile+" Bauteile";
+    return `<div class="tile" onclick="openFarb(${f._i})"><div class="title">${esc(f.farbton)}${vb}</div><div class="meta"><span>${esc(f.kunden.join(", ")||"—")} · ${bt}</span><span class="arrow">▸</span></div></div>`;
+  }).join(""):`<div class="empty">${arch?"Kein Farbton im Archiv.":"Keine Farbtöne gefunden."}</div>`;
+}
+function rowsHtml(rows){
+  return rows.map(r=>`<div class="mrow"><span class="tag t-${esc(r.art)}">${esc(r.art)}</span><span class="mat">${esc(r.mat)}${r.rnr?` <span class="rnr">(${esc(r.rnr)})</span>`:""}</span></div>`).join("");
+}
+function openMat(i){
+  const b=BLOCKS[i];
+  const q=b.quelle||[];
+  const qstr=q.length?(q.slice(0,4).join("; ")+(q.length>4?`  (+${q.length-4} weitere)`:"")):"";
+  const src=qstr?`<div class="src"><b>Quelle:</b> ${esc(qstr)}</div>`:"";
+  modalId=b._aid; modalName=b._name;
+  document.getElementById("modal").innerHTML=`<div class="mhead"><button class="mclose" onclick="closeModal()">×</button><div class="mt">${esc(b._name)}</div><div class="ms">${esc(b.her||"—")} · ${esc(b.sch)}</div></div><div class="mbody">${rowsHtml(b.rows)}${b.mv?`<div class="mv"><b>Mischverhältnis:</b> ${esc(b.mv)}</div>`:""}${src}${modalArchBtn()}</div>`;
+  document.getElementById("overlay").classList.add("open");
+}
+function openFarb(i){
+  const f=FARB[i];
+  const vh=f.varianten.map((v,vi)=>{
+    const head=f.varianten.length>1?`<div class="variant-head"><b>Variante ${vi+1}</b> · Bauteile: ${esc(v.bauteile.join(", ")||"—")}</div>`:`<div class="variant-head">Bauteile: <b>${esc(v.bauteile.join(", ")||"—")}</b></div>`;
+    const sh=v.schichten.map(s=>`<div class="schicht"><div class="schicht-title"><span>${esc(s.schicht)}</span><span class="h">${esc(s.hersteller||"")}</span></div>${rowsHtml(s.rows)}${s.mv?`<div class="mv"><b>MV:</b> ${esc(s.mv)}</div>`:""}</div>`).join("");
+    return `<div class="variant">${head}${sh}</div>`;
+  }).join("");
+  modalId=f._aid; modalName=f.farbton;
+  document.getElementById("modal").innerHTML=`<div class="mhead"><button class="mclose" onclick="closeModal()">×</button><div class="mt">${esc(f.farbton)}</div><div class="ms">${esc(f.kunden.join(", ")||"—")}${f.lacksystem?" · "+esc(f.lacksystem):""}</div></div><div class="mbody">${vh}${modalArchBtn()}</div>`;
+  document.getElementById("overlay").classList.add("open");
+}
+function closeModal(){document.getElementById("overlay").classList.remove("open");}
+document.getElementById("overlay").addEventListener("click",e=>{if(e.target.id==="overlay")closeModal();});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal();});
+document.getElementById("q").addEventListener("input",e=>{query=e.target.value.toLowerCase().trim();render();});
+document.getElementById("headerDatum").textContent=new Date().toLocaleDateString("de-DE",{weekday:"short",day:"2-digit",month:"2-digit",year:"numeric"});
+
+// ---- Einstieg: Sitzung pruefen ----
+(async function(){
+  if(getSession() && await refreshSession()){ await start(); }
+  else { showLogin(); }
+})();
+</script>
+</body>
+</html>
