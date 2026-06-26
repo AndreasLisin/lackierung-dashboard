@@ -156,6 +156,7 @@
   </div>
   <div class="topbar-right">
     <span id="stamp" style="font-size:11px;opacity:.7;"></span>
+    <button class="btn-back" onclick="kopierePfad()" title="Pfad der Excel-Quelldatei in Zwischenablage kopieren">📂 Excel-Quelle</button>
     <a class="btn-back" href="../index.html">← Zurück</a>
   </div>
 </div>
@@ -453,6 +454,11 @@
     } finally {
       btn.disabled = false; btn.textContent = 'Speichern';
     }
+  }
+
+  function kopierePfad() {
+    const pfad = 'C:\\Users\\lisina\\einhaus-gmbh.de\\Lackierung - Dokumente\\4. Lackformeln\\Lackformeln_Strukturiert.xlsx';
+    navigator.clipboard.writeText(pfad).then(() => toast('Pfad kopiert – in Explorer-Adressleiste einfügen (Strg+L)'));
   }
 
   document.getElementById('suche').addEventListener('input', render);
