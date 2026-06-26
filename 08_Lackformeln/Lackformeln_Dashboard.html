@@ -139,9 +139,38 @@
     .grid { display: block; }
     .card { break-inside: avoid; box-shadow: none; margin-bottom: 12px; }
   }
+
+  /* ── Login-Overlay ── */
+  #login{position:fixed;inset:0;background:#EEF2F7;display:none;align-items:center;justify-content:center;z-index:200;}
+  .login-card{background:#fff;border-radius:14px;box-shadow:0 8px 30px rgba(20,28,40,.18);padding:30px 28px;width:340px;max-width:92vw;}
+  .login-logo{font-size:20px;font-weight:700;color:#1F4E79;text-align:center;}
+  .login-logo span{color:#9bb6d4;}
+  .login-sub{font-size:12px;color:#6b7280;text-align:center;margin:4px 0 20px;}
+  .login-card label{font-size:12px;color:#6b7280;display:block;margin:10px 0 4px;}
+  .login-card input{width:100%;padding:9px 11px;font-size:14px;border:1px solid #c4cfdc;border-radius:8px;}
+  .login-btn{width:100%;margin-top:18px;background:#1F4E79;color:#fff;border:none;border-radius:8px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;}
+  .login-btn:hover{background:#163a5c;}
+  .login-err{color:#C00000;font-size:12.5px;margin-top:12px;min-height:16px;text-align:center;}
+  #loading{position:fixed;inset:0;background:#EEF2F7;display:none;align-items:center;justify-content:center;z-index:150;color:#6b7280;font-size:14px;}
 </style>
 </head>
 <body>
+
+<div id="login" style="display:none">
+  <div class="login-card">
+    <div class="login-logo">EINHAUS <span>Lackformeln</span></div>
+    <div class="login-sub">Interner Zugang – bitte anmelden</div>
+    <form id="loginform" onsubmit="return doLogin(event)">
+      <label for="lemail">E-Mail</label>
+      <input id="lemail" type="email" autocomplete="username" required>
+      <label for="lpw">Passwort</label>
+      <input id="lpw" type="password" autocomplete="current-password" required>
+      <button class="login-btn" type="submit">Anmelden</button>
+      <div class="login-err" id="loginerr"></div>
+    </form>
+  </div>
+</div>
+<div id="loading" style="display:none">Lade Formeln …</div>
 
 <div class="topbar">
   <div class="topbar-left">
@@ -157,6 +186,7 @@
   <div class="topbar-right">
     <span id="stamp" style="font-size:11px;opacity:.7;"></span>
     <button class="btn-back" onclick="kopierePfad()" title="Pfad der Excel-Quelldatei in Zwischenablage kopieren">📂 Excel-Quelle</button>
+    <button class="btn-back" onclick="logout()">Abmelden</button>
     <a class="btn-back" href="../index.html">← Zurück</a>
   </div>
 </div>
@@ -219,7 +249,65 @@
   // ── Konfiguration ──
   const SUPABASE_URL  = 'https://tldkqifblxkdligypffr.supabase.co';
   const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsZGtxaWZibHhrZGxpZ3lwZmZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1NjkwMzEsImV4cCI6MjA5NjE0NTAzMX0.Zg0Yy9uAIvuFwNfYVzfLWqmQUvTnXivYmGIXLCOa6TM';
-  const H = { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON };
+  const SKEY = 'lackformeln_session';
+
+  function getSession(){ try{ return JSON.parse(localStorage.getItem(SKEY)||'null'); }catch(e){ return null; } }
+  function setSession(s){ localStorage.setItem(SKEY, JSON.stringify(s)); }
+  function clearSession(){ localStorage.removeItem(SKEY); }
+  function showEl(id, on){ document.getElementById(id).style.display = on ? 'flex' : 'none'; }
+  function showLogin(){ showEl('loading', false); showEl('login', true); }
+  function logout(){ clearSession(); location.reload(); }
+
+  async function authLogin(email, pw) {
+    const r = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=password', {
+      method: 'POST', headers: { apikey: SUPABASE_ANON, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: pw })
+    });
+    if (!r.ok) throw new Error('login');
+    setSession(await r.json());
+  }
+  async function refreshSession() {
+    const s = getSession(); if (!s || !s.refresh_token) return false;
+    const r = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=refresh_token', {
+      method: 'POST', headers: { apikey: SUPABASE_ANON, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: s.refresh_token })
+    });
+    if (!r.ok) { clearSession(); return false; }
+    setSession(await r.json()); return true;
+  }
+  function authH(extra = {}) {
+    const s = getSession();
+    return { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + (s ? s.access_token : ''), ...extra };
+  }
+  async function sbFetch(path) {
+    let r = await fetch(SUPABASE_URL + '/rest/v1/' + path, { headers: authH() });
+    if (r.status === 401) {
+      if (await refreshSession()) { r = await fetch(SUPABASE_URL + '/rest/v1/' + path, { headers: authH() }); }
+      else { showLogin(); return null; }
+    }
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return await r.json();
+  }
+  async function sbPost(path, payload) {
+    const h = authH({ 'Content-Type': 'application/json', Prefer: 'return=minimal' });
+    let r = await fetch(SUPABASE_URL + '/rest/v1/' + path, { method: 'POST', headers: h, body: JSON.stringify(payload) });
+    if (r.status === 401) {
+      if (await refreshSession()) { r = await fetch(SUPABASE_URL + '/rest/v1/' + path, { method: 'POST', headers: authH({ 'Content-Type': 'application/json', Prefer: 'return=minimal' }), body: JSON.stringify(payload) }); }
+      else { showLogin(); return null; }
+    }
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r;
+  }
+  async function doLogin(ev) {
+    ev.preventDefault();
+    const err = document.getElementById('loginerr'); err.textContent = '';
+    try {
+      await authLogin(document.getElementById('lemail').value.trim(), document.getElementById('lpw').value);
+      showEl('login', false); showEl('loading', true);
+      await ladeFormeln();
+      showEl('loading', false);
+    } catch(e) { err.textContent = 'Anmeldung fehlgeschlagen. E-Mail/Passwort prüfen.'; }
+  }
 
   let ALLE = [];
   let zeigArchiv = false;
@@ -235,9 +323,9 @@
   async function ladeFormeln() {
     document.getElementById('wrap').innerHTML = '<div class="empty">Lade Formeln …</div>';
     try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/lackformeln?order=kunde.asc,farbname.asc`, { headers: H });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      ALLE = await res.json();
+      const data = await sbFetch('lackformeln?order=kunde.asc,farbname.asc');
+      if (!data) return;
+      ALLE = data;
       fuelleKundenFilter();
       render();
       document.getElementById('stamp').textContent = 'Stand: ' + new Date().toLocaleString('de-DE');
@@ -441,12 +529,8 @@
     const btn = document.getElementById('mSave');
     btn.disabled = true; btn.textContent = 'Speichert …';
     try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/lackformeln_eingang`, {
-        method: 'POST',
-        headers: { ...H, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
-        body: JSON.stringify(payload)
-      });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const res = await sbPost('lackformeln_eingang', payload);
+      if (!res) return;
       schliesseModal();
       toast('Formel gespeichert – erscheint nach dem nächsten Sync (max. 1 Std.)');
     } catch (e) {
@@ -466,7 +550,10 @@
   document.getElementById('fTyp').addEventListener('change', render);
   document.getElementById('modalBg').addEventListener('click', e => { if (e.target.id === 'modalBg') schliesseModal(); });
 
-  ladeFormeln();
+  (async function() {
+    if (getSession() && await refreshSession()) { await ladeFormeln(); }
+    else { showLogin(); }
+  })();
 </script>
 </body>
 </html>
