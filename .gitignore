@@ -1,0 +1,26 @@
+# ============================================================
+#  EINHAUS Lackierung-Dashboard – was NICHT auf GitHub (oeffentlich) darf
+# ============================================================
+
+# --- Geheimnisse / Zugangsdaten – niemals veroeffentlichen ---
+*.key
+*service_role*
+*_Zugang*
+*.tmp
+py_stderr.tmp
+.claude/
+
+# --- Excel-Quelldaten gehoeren nicht auf die oeffentliche Seite ---
+*.xlsx
+*.xls
+
+# --- Lackaufbauten: NUR die Online-Seite (index.html) veroeffentlichen.
+#     Offline-HTML mit eingebetteten Rezepturen + alle Daten bleiben intern. ---
+10_Lackaufbauten/*
+!10_Lackaufbauten/index.html
+
+# --- interne Roh-/Parserdaten (Daten liegen in Supabase, nicht im Repo) ---
+parsed.json
+*_view.json
+blocks_view.json
+farbton_view.json
