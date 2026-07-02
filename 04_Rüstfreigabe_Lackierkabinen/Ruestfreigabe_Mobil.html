@@ -36,16 +36,29 @@ body {
 }
 
 /* ── Header ── */
-.app-header {
-  background: var(--primary);
-  padding: 16px 18px 14px;
+.topbar {
+  background: var(--primary); color: #fff;
+  padding: 0 24px; display: flex; align-items: center;
+  justify-content: space-between; height: 62px;
   position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,.3);
 }
-.app-header-top { display: flex; align-items: center; justify-content: space-between; }
-.app-logo { font-size: 11px; font-weight: 700; color: rgba(255,255,255,.7); letter-spacing: 1px; text-transform: uppercase; }
-.app-title { font-size: 18px; font-weight: 700; color: #fff; margin-top: 4px; }
-.app-sub { font-size: 12px; color: rgba(255,255,255,.65); margin-top: 2px; }
-.progress-bar { height: 4px; background: rgba(255,255,255,.2); border-radius: 2px; margin-top: 12px; overflow: hidden; }
+.topbar-left { display: flex; align-items: center; gap: 16px; }
+.topbar-logo { font-size: 20px; font-weight: 700; letter-spacing: .5px; color: #fff; }
+.topbar-logo span { color: #BDD7EE; }
+.topbar-sub { font-size: 12px; color: rgba(255,255,255,.7); margin-top: 2px; }
+.topbar-center { text-align: center; }
+.topbar-title { font-size: 16px; font-weight: 700; letter-spacing: .3px; }
+.topbar-subtitle { font-size: 11px; opacity: .7; margin-top: 2px; }
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+.badge-fb { background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3);
+  border-radius: 6px; padding: 4px 10px; font-size: 12px; }
+.btn-back {
+  background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3);
+  color: #fff; padding: 5px 14px; border-radius: 6px; cursor: pointer; font-size: 13px;
+  display: flex; align-items: center; gap: 6px; text-decoration: none;
+}
+.progress-bar { height: 4px; background: rgba(255,255,255,.2); overflow: hidden; }
 .progress-fill { height: 100%; background: #7FDBFF; border-radius: 2px; transition: width .4s ease; }
 
 /* ── Content ── */
@@ -57,6 +70,7 @@ body {
   margin-bottom: 14px; box-shadow: 0 1px 6px rgba(0,0,0,.08);
   display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
 }
+.meta-full { grid-column: 1 / -1; }
 .field-label {
   font-size: 11px; font-weight: 700; color: var(--gray);
   text-transform: uppercase; letter-spacing: .6px; margin-bottom: 6px;
@@ -72,6 +86,17 @@ body {
 }
 .field-input[readonly] { background: var(--gray-light); color: var(--gray); }
 
+/* ── Art der Prüfung Toggle ── */
+.pruef-group { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 0; }
+.pruef-btn {
+  height: 44px; border: 2px solid var(--border); border-radius: 8px;
+  font-size: 13px; font-weight: 700; background: #fff; cursor: pointer;
+  transition: all .15s; font-family: inherit; color: var(--gray);
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.pruef-btn:active { transform: scale(.96); }
+.pruef-btn.sel { background: var(--primary-light); border-color: var(--primary-med); color: var(--primary); }
+
 /* ── Section ── */
 .section {
   background: #fff; border-radius: var(--radius); margin-bottom: 14px;
@@ -83,6 +108,15 @@ body {
   display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #D0E4F5;
 }
 .section-head .sec-icon { font-size: 16px; }
+
+/* ── Sub-Section Header ── */
+.sub-head {
+  background: #F8F8F6; padding: 9px 16px;
+  font-size: 11px; font-weight: 700; color: var(--gray);
+  text-transform: uppercase; letter-spacing: .7px;
+  border-bottom: 1px solid var(--border); border-top: 1px solid var(--border);
+}
+.sub-head:first-child { border-top: none; }
 
 /* ── Checkpoint Row ── */
 .cp-row {
@@ -203,28 +237,28 @@ body {
   background: var(--primary); color: #fff; border: none; border-radius: 8px;
   padding: 12px 28px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; width: 100%;
 }
-  .btn-back {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: rgba(255,255,255,.15); color: #fff; text-decoration: none;
-    border-radius: 6px; padding: 6px 14px; font-size: 13px; font-weight: bold;
-    border: 1px solid rgba(255,255,255,.3); transition: background .2s;
-  }
-  .btn-back:hover { background: rgba(255,255,255,.25); }
 </style>
 </head>
 <body>
 
 <!-- ── Header ── -->
-<div class="app-header">
-  <div class="app-header-top">
-    <div class="app-logo">EINHAUS Oberflächenveredelung GmbH</div>
-    <span style="font-size:11px;color:rgba(255,255,255,.5);">FB-64</span>
+<div class="topbar">
+  <div class="topbar-left">
+    <div>
+      <div class="topbar-logo">EINHAUS <span>Oberflächenveredelung GmbH</span></div>
+      <div class="topbar-sub">Industrielackierung · 55411 Bingen-Dietersheim</div>
+    </div>
+  </div>
+  <div class="topbar-center">
+    <div class="topbar-title">Rüstfreigabe Lackierkabinen</div>
+    <div class="topbar-subtitle">Pre-Release Checkliste · Lackierung</div>
+  </div>
+  <div class="topbar-right">
+    <span class="badge-fb">FB-64</span>
     <a class="btn-back" href="../index.html">← Zurück</a>
   </div>
-  <div class="app-title">Rüstfreigabe Lackierkabinen</div>
-  <div class="app-sub">Pre-Release Checkliste · Lackierung</div>
-  <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
 </div>
+<div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
 
 <!-- ── Formular ── -->
 <div id="form-screen">
@@ -244,13 +278,22 @@ body {
         <option>A. Svezencev</option>
       </select>
     </div>
+    <div class="meta-full">
+      <div class="field-label">I. Art der Prüfung *</div>
+      <div class="pruef-group">
+        <button class="pruef-btn" id="btn-erstpruef" onclick="selectPruefungsart('Erstprüfung')">☐ Erstprüfung</button>
+        <button class="pruef-btn" id="btn-wiederholpruef" onclick="selectPruefungsart('Wiederholungsprüfung')">☐ Wiederholungsprüfung</button>
+      </div>
+    </div>
   </div>
 
-  <!-- I. Anlagenprüfung -->
+  <!-- II. Anlagenprüfung & Serienstand -->
   <div class="section">
-    <div class="section-head"><span class="sec-icon">🔧</span> I. Anlagenprüfung & Serienstand</div>
+    <div class="section-head"><span class="sec-icon">🔧</span> II. Angaben über den Umfang der Prüfung</div>
+
+    <div class="sub-head">Bestätigung serienorientierter Prozess</div>
     <div class="cp-row">
-      <div class="cp-label required">Betriebsmittel / Hilfsmittel gemäß BA vorhanden</div>
+      <div class="cp-label required">Betriebsmittel / Hilfsmittel gemäß BA vorhanden, Prozessablauf entspricht dem Serienstand</div>
       <div class="toggle-group" data-key="betriebsmittel">
         <button class="toggle-btn" onclick="select(this,'io','betriebsmittel')">✓ i.O.</button>
         <button class="toggle-btn" onclick="select(this,'bio','betriebsmittel')">⚠ b.i.O.</button>
@@ -258,7 +301,24 @@ body {
       </div>
     </div>
     <div class="cp-row">
-      <div class="cp-label required">Painting Cabin 1 – Zustand & Funktion</div>
+      <div class="cp-label required">Painting Cabin 1</div>
+      <div style="font-size:12px;font-weight:600;color:var(--gray);margin-bottom:2px;">Kabinentemperatur</div>
+      <div class="soll-ist-row">
+        <span class="soll-badge">SOLL: +21°C ±5°C</span>
+        <input type="number" class="ist-input" id="f-cabin1-temp" placeholder="IST °C">
+      </div>
+      <div style="font-size:12px;font-weight:600;color:var(--gray);margin-top:8px;margin-bottom:2px;">Kabinendruck</div>
+      <div class="soll-ist-row">
+        <span class="soll-badge">SOLL: 0–10 Pa</span>
+        <input type="number" class="ist-input" id="f-cabin1-druck" placeholder="IST Pa">
+      </div>
+      <div style="font-size:12px;font-weight:600;color:var(--gray);margin-top:8px;margin-bottom:2px;">Beleuchtung</div>
+      <div class="toggle-group" data-key="beleuchtung1">
+        <button class="toggle-btn" onclick="select(this,'io','beleuchtung1')">✓ i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'bio','beleuchtung1')">⚠ b.i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'nio','beleuchtung1')">✗ n.i.O.</button>
+      </div>
+      <div style="font-size:12px;font-weight:600;color:var(--gray);margin-top:8px;margin-bottom:2px;">Gesamtbewertung Kabine 1</div>
       <div class="toggle-group" data-key="cabin1">
         <button class="toggle-btn" onclick="select(this,'io','cabin1')">✓ i.O.</button>
         <button class="toggle-btn" onclick="select(this,'bio','cabin1')">⚠ b.i.O.</button>
@@ -266,7 +326,24 @@ body {
       </div>
     </div>
     <div class="cp-row">
-      <div class="cp-label required">Painting Cabin 2 – Zustand & Funktion</div>
+      <div class="cp-label required">Painting Cabin 2</div>
+      <div style="font-size:12px;font-weight:600;color:var(--gray);margin-bottom:2px;">Kabinentemperatur</div>
+      <div class="soll-ist-row">
+        <span class="soll-badge">SOLL: +21°C ±5°C</span>
+        <input type="number" class="ist-input" id="f-cabin2-temp" placeholder="IST °C">
+      </div>
+      <div style="font-size:12px;font-weight:600;color:var(--gray);margin-top:8px;margin-bottom:2px;">Kabinendruck</div>
+      <div class="soll-ist-row">
+        <span class="soll-badge">SOLL: 0–10 Pa</span>
+        <input type="number" class="ist-input" id="f-cabin2-druck" placeholder="IST Pa">
+      </div>
+      <div style="font-size:12px;font-weight:600;color:var(--gray);margin-top:8px;margin-bottom:2px;">Beleuchtung</div>
+      <div class="toggle-group" data-key="beleuchtung2">
+        <button class="toggle-btn" onclick="select(this,'io','beleuchtung2')">✓ i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'bio','beleuchtung2')">⚠ b.i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'nio','beleuchtung2')">✗ n.i.O.</button>
+      </div>
+      <div style="font-size:12px;font-weight:600;color:var(--gray);margin-top:8px;margin-bottom:2px;">Gesamtbewertung Kabine 2</div>
       <div class="toggle-group" data-key="cabin2">
         <button class="toggle-btn" onclick="select(this,'io','cabin2')">✓ i.O.</button>
         <button class="toggle-btn" onclick="select(this,'bio','cabin2')">⚠ b.i.O.</button>
@@ -274,7 +351,24 @@ body {
       </div>
     </div>
     <div class="cp-row">
-      <div class="cp-label required">Painting Cabin 3 – Zustand & Funktion</div>
+      <div class="cp-label required">Painting Cabin 3</div>
+      <div style="font-size:12px;font-weight:600;color:var(--gray);margin-bottom:2px;">Kabinentemperatur</div>
+      <div class="soll-ist-row">
+        <span class="soll-badge">SOLL: +21°C ±5°C</span>
+        <input type="number" class="ist-input" id="f-cabin3-temp" placeholder="IST °C">
+      </div>
+      <div style="font-size:12px;font-weight:600;color:var(--gray);margin-top:8px;margin-bottom:2px;">Kabinendruck</div>
+      <div class="soll-ist-row">
+        <span class="soll-badge">SOLL: 0–10 Pa</span>
+        <input type="number" class="ist-input" id="f-cabin3-druck" placeholder="IST Pa">
+      </div>
+      <div style="font-size:12px;font-weight:600;color:var(--gray);margin-top:8px;margin-bottom:2px;">Beleuchtung</div>
+      <div class="toggle-group" data-key="beleuchtung3">
+        <button class="toggle-btn" onclick="select(this,'io','beleuchtung3')">✓ i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'bio','beleuchtung3')">⚠ b.i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'nio','beleuchtung3')">✗ n.i.O.</button>
+      </div>
+      <div style="font-size:12px;font-weight:600;color:var(--gray);margin-top:8px;margin-bottom:2px;">Gesamtbewertung Kabine 3</div>
       <div class="toggle-group" data-key="cabin3">
         <button class="toggle-btn" onclick="select(this,'io','cabin3')">✓ i.O.</button>
         <button class="toggle-btn" onclick="select(this,'bio','cabin3')">⚠ b.i.O.</button>
@@ -282,108 +376,46 @@ body {
       </div>
     </div>
     <div class="cp-row">
-      <div class="cp-label required">Painting Cabin 4 – Zustand & Funktion</div>
+      <div class="cp-label required">Painting Cabin 4</div>
+      <div style="font-size:12px;font-weight:600;color:var(--gray);margin-bottom:2px;">Kabinentemperatur</div>
+      <div class="soll-ist-row">
+        <span class="soll-badge">SOLL: +21°C ±5°C</span>
+        <input type="number" class="ist-input" id="f-cabin4-temp" placeholder="IST °C">
+      </div>
+      <div style="font-size:12px;font-weight:600;color:var(--gray);margin-top:8px;margin-bottom:2px;">Kabinendruck</div>
+      <div class="soll-ist-row">
+        <span class="soll-badge">SOLL: 0–10 Pa</span>
+        <input type="number" class="ist-input" id="f-cabin4-druck" placeholder="IST Pa">
+      </div>
+      <div style="font-size:12px;font-weight:600;color:var(--gray);margin-top:8px;margin-bottom:2px;">Beleuchtung</div>
+      <div class="toggle-group" data-key="beleuchtung4">
+        <button class="toggle-btn" onclick="select(this,'io','beleuchtung4')">✓ i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'bio','beleuchtung4')">⚠ b.i.O.</button>
+        <button class="toggle-btn" onclick="select(this,'nio','beleuchtung4')">✗ n.i.O.</button>
+      </div>
+      <div style="font-size:12px;font-weight:600;color:var(--gray);margin-top:8px;margin-bottom:2px;">Gesamtbewertung Kabine 4</div>
       <div class="toggle-group" data-key="cabin4">
         <button class="toggle-btn" onclick="select(this,'io','cabin4')">✓ i.O.</button>
         <button class="toggle-btn" onclick="select(this,'bio','cabin4')">⚠ b.i.O.</button>
         <button class="toggle-btn" onclick="select(this,'nio','cabin4')">✗ n.i.O.</button>
       </div>
     </div>
-    <div class="cp-row">
-      <div class="cp-label required">Dryer 1 – Funktion & Dichtheit</div>
-      <div class="toggle-group" data-key="dryer1">
-        <button class="toggle-btn" onclick="select(this,'io','dryer1')">✓ i.O.</button>
-        <button class="toggle-btn" onclick="select(this,'bio','dryer1')">⚠ b.i.O.</button>
-        <button class="toggle-btn" onclick="select(this,'nio','dryer1')">✗ n.i.O.</button>
-      </div>
-    </div>
-    <div class="cp-row">
-      <div class="cp-label required">Dryer 2 – Funktion & Dichtheit</div>
-      <div class="toggle-group" data-key="dryer2">
-        <button class="toggle-btn" onclick="select(this,'io','dryer2')">✓ i.O.</button>
-        <button class="toggle-btn" onclick="select(this,'bio','dryer2')">⚠ b.i.O.</button>
-        <button class="toggle-btn" onclick="select(this,'nio','dryer2')">✗ n.i.O.</button>
-      </div>
-    </div>
-  </div>
 
-  <!-- II. Prozessbedingungen -->
-  <div class="section">
-    <div class="section-head"><span class="sec-icon">🌡</span> II. Prozessbedingungen</div>
+    <div class="sub-head">Prozessbedingungen & Rüst-Freigabeprozess</div>
     <div class="cp-row">
-      <div class="cp-label required">Sauberkeit, Ergonomie, Lichtverhältnisse ok?</div>
+      <div class="cp-label required">Eignung, Sauberkeit, Ergonomie, Lichtverhältnisse bewertet und ok; Arbeitsplatzfreigabe (Ordnung und Sauberkeit); Funktionsfreigabe</div>
       <div class="toggle-group" data-key="sauberkeit">
         <button class="toggle-btn" onclick="select(this,'io','sauberkeit')">✓ i.O.</button>
         <button class="toggle-btn" onclick="select(this,'bio','sauberkeit')">⚠ b.i.O.</button>
         <button class="toggle-btn" onclick="select(this,'nio','sauberkeit')">✗ n.i.O.</button>
       </div>
     </div>
-    <div class="cp-row">
-      <div class="cp-label required">Druckluft-Qualität geprüft (öl-/wasserfrei)</div>
-      <div class="toggle-group" data-key="druckluft">
-        <button class="toggle-btn" onclick="select(this,'io','druckluft')">✓ i.O.</button>
-        <button class="toggle-btn" onclick="select(this,'bio','druckluft')">⚠ b.i.O.</button>
-        <button class="toggle-btn" onclick="select(this,'nio','druckluft')">✗ n.i.O.</button>
-      </div>
-    </div>
-    <div class="cp-row">
-      <div class="cp-label required">Arbeitsplatzfreigabe (Ordnung & Sauberkeit) + Funktionsfreigabe</div>
-      <div class="toggle-group" data-key="arbeitsplatz">
-        <button class="toggle-btn" onclick="select(this,'io','arbeitsplatz')">✓ i.O.</button>
-        <button class="toggle-btn" onclick="select(this,'bio','arbeitsplatz')">⚠ b.i.O.</button>
-        <button class="toggle-btn" onclick="select(this,'nio','arbeitsplatz')">✗ n.i.O.</button>
-      </div>
-    </div>
-  </div>
 
-  <!-- III. Kabinentemperatur -->
-  <div class="section">
-    <div class="section-head"><span class="sec-icon">🌡</span> III. Kabinentemperatur SOLL / IST</div>
-    <div class="cp-row">
-      <div class="cp-label required">Primer [°C]</div>
-      <div class="soll-ist-row">
-        <span class="soll-badge">SOLL: 20–23 °C</span>
-        <input type="number" class="ist-input" id="f-primer" placeholder="IST °C">
-      </div>
-      <div class="toggle-group" data-key="primer">
-        <button class="toggle-btn" onclick="select(this,'io','primer')">✓ i.O.</button>
-        <button class="toggle-btn" onclick="select(this,'bio','primer')">⚠ b.i.O.</button>
-        <button class="toggle-btn" onclick="select(this,'nio','primer')">✗ n.i.O.</button>
-      </div>
-    </div>
-    <div class="cp-row">
-      <div class="cp-label required">Basislack [°C]</div>
-      <div class="soll-ist-row">
-        <span class="soll-badge">SOLL: 20–23 °C</span>
-        <input type="number" class="ist-input" id="f-basis" placeholder="IST °C">
-      </div>
-      <div class="toggle-group" data-key="basislack">
-        <button class="toggle-btn" onclick="select(this,'io','basislack')">✓ i.O.</button>
-        <button class="toggle-btn" onclick="select(this,'bio','basislack')">⚠ b.i.O.</button>
-        <button class="toggle-btn" onclick="select(this,'nio','basislack')">✗ n.i.O.</button>
-      </div>
-    </div>
-    <div class="cp-row">
-      <div class="cp-label required">Klarlack [°C]</div>
-      <div class="soll-ist-row">
-        <span class="soll-badge">SOLL: 20–23 °C</span>
-        <input type="number" class="ist-input" id="f-klar" placeholder="IST °C">
-      </div>
-      <div class="toggle-group" data-key="klarlack">
-        <button class="toggle-btn" onclick="select(this,'io','klarlack')">✓ i.O.</button>
-        <button class="toggle-btn" onclick="select(this,'bio','klarlack')">⚠ b.i.O.</button>
-        <button class="toggle-btn" onclick="select(this,'nio','klarlack')">✗ n.i.O.</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- IV. Trocknertemperatur -->
-  <div class="section">
-    <div class="section-head"><span class="sec-icon">🔥</span> IV. Trocknertemperatur SOLL / IST</div>
+    <div class="sub-head">Trocknertemperatur SOLL-IST</div>
     <div class="cp-row">
       <div class="cp-label required">Großraumtrockner [°C]</div>
       <div class="soll-ist-row">
-        <span class="soll-badge">SOLL: 80–90 °C</span>
+        <span class="soll-badge">SOLL: +90°C ±5°C</span>
         <input type="number" class="ist-input" id="f-grtrockner" placeholder="IST °C">
       </div>
       <div class="toggle-group" data-key="grtrockner">
@@ -395,84 +427,13 @@ body {
     <div class="cp-row">
       <div class="cp-label required">Trockner Kabine 4 [°C]</div>
       <div class="soll-ist-row">
-        <span class="soll-badge">SOLL: 80–90 °C</span>
+        <span class="soll-badge">SOLL: +82°C ±5°C</span>
         <input type="number" class="ist-input" id="f-kab4" placeholder="IST °C">
       </div>
       <div class="toggle-group" data-key="kab4trockner">
         <button class="toggle-btn" onclick="select(this,'io','kab4trockner')">✓ i.O.</button>
         <button class="toggle-btn" onclick="select(this,'bio','kab4trockner')">⚠ b.i.O.</button>
         <button class="toggle-btn" onclick="select(this,'nio','kab4trockner')">✗ n.i.O.</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- V. Lack-Informationen -->
-  <div class="section">
-    <div class="section-head"><span class="sec-icon">🎨</span> V. Lack-Informationen</div>
-    <div class="cp-row">
-      <div class="cp-label required">Chargennummer Lack</div>
-      <input type="text" class="text-input" id="f-charge" placeholder="z.B. 2026-A451">
-    </div>
-    <div class="cp-row">
-      <div class="cp-label required">Viskosität (DIN-Cup 4, Sekunden)</div>
-      <div class="soll-ist-row">
-        <span class="soll-badge">SOLL: 18–22 Sek.</span>
-        <input type="number" class="ist-input" id="f-viskos" placeholder="IST Sek.">
-      </div>
-      <div class="toggle-group" data-key="viskositat">
-        <button class="toggle-btn" onclick="select(this,'io','viskositat')">✓ i.O.</button>
-        <button class="toggle-btn" onclick="select(this,'bio','viskositat')">⚠ b.i.O.</button>
-        <button class="toggle-btn" onclick="select(this,'nio','viskositat')">✗ n.i.O.</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- VI. Arbeitssicherheit -->
-  <div class="section">
-    <div class="section-head"><span class="sec-icon">🦺</span> VI. Arbeitssicherheit</div>
-    <div class="cp-row">
-      <div class="cp-label required">PSA vollständig & in Ordnung</div>
-      <div class="toggle-group" data-key="psa">
-        <button class="toggle-btn" onclick="select(this,'io','psa')">✓ i.O.</button>
-        <button class="toggle-btn" onclick="select(this,'bio','psa')">⚠ b.i.O.</button>
-        <button class="toggle-btn" onclick="select(this,'nio','psa')">✗ n.i.O.</button>
-      </div>
-    </div>
-    <div class="cp-row">
-      <div class="cp-label required">ATEX-Einrichtungen geprüft & ok</div>
-      <div class="toggle-group" data-key="atex">
-        <button class="toggle-btn" onclick="select(this,'io','atex')">✓ i.O.</button>
-        <button class="toggle-btn" onclick="select(this,'bio','atex')">⚠ b.i.O.</button>
-        <button class="toggle-btn" onclick="select(this,'nio','atex')">✗ n.i.O.</button>
-      </div>
-    </div>
-    <div class="cp-row">
-      <div class="cp-label required">Entsorgungsbehälter beschriftet & dicht</div>
-      <div class="toggle-group" data-key="entsorgung">
-        <button class="toggle-btn" onclick="select(this,'io','entsorgung')">✓ i.O.</button>
-        <button class="toggle-btn" onclick="select(this,'bio','entsorgung')">⚠ b.i.O.</button>
-        <button class="toggle-btn" onclick="select(this,'nio','entsorgung')">✗ n.i.O.</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- VII. Qualitätssicherung -->
-  <div class="section">
-    <div class="section-head"><span class="sec-icon">✅</span> VII. Qualitätssicherung</div>
-    <div class="cp-row">
-      <div class="cp-label required">Erstmuster / Probeteil bewertet & freigegeben</div>
-      <div class="toggle-group" data-key="erstmuster">
-        <button class="toggle-btn" onclick="select(this,'io','erstmuster')">✓ i.O.</button>
-        <button class="toggle-btn" onclick="select(this,'bio','erstmuster')">⚠ b.i.O.</button>
-        <button class="toggle-btn" onclick="select(this,'nio','erstmuster')">✗ n.i.O.</button>
-      </div>
-    </div>
-    <div class="cp-row">
-      <div class="cp-label required">Farbton-Freigabe dokumentiert</div>
-      <div class="toggle-group" data-key="farbton">
-        <button class="toggle-btn" onclick="select(this,'io','farbton')">✓ i.O.</button>
-        <button class="toggle-btn" onclick="select(this,'bio','farbton')">⚠ b.i.O.</button>
-        <button class="toggle-btn" onclick="select(this,'nio','farbton')">✗ n.i.O.</button>
       </div>
     </div>
   </div>
@@ -536,16 +497,28 @@ const POWER_AUTOMATE_URL = 'https://default2d72196a437b42cda6064f0ad60544.1e.env
 
 // ── Init ─────────────────────────────────────────────────────────────
 const values = {};
-const KEYS = ['betriebsmittel','cabin1','cabin2','cabin3','cabin4','dryer1','dryer2',
-              'sauberkeit','druckluft','arbeitsplatz','primer','basislack','klarlack',
-              'grtrockner','kab4trockner','viskositat','psa','atex','entsorgung',
-              'erstmuster','farbton'];
+let pruefungsart = '';
+
+const KEYS = ['betriebsmittel',
+              'cabin1','beleuchtung1','cabin2','beleuchtung2',
+              'cabin3','beleuchtung3','cabin4','beleuchtung4',
+              'sauberkeit','grtrockner','kab4trockner'];
 const TOTAL = KEYS.length;
 
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('f-datum').value = new Date().toISOString().split('T')[0];
   updateProgress();
 });
+
+// ── Art der Prüfung ──────────────────────────────────────────────────
+function selectPruefungsart(val) {
+  pruefungsart = val;
+  document.getElementById('btn-erstpruef').classList.toggle('sel', val === 'Erstprüfung');
+  document.getElementById('btn-wiederholpruef').classList.toggle('sel', val === 'Wiederholungsprüfung');
+  document.getElementById('btn-erstpruef').textContent    = (val === 'Erstprüfung'          ? '☑' : '☐') + ' Erstprüfung';
+  document.getElementById('btn-wiederholpruef').textContent = (val === 'Wiederholungsprüfung' ? '☑' : '☐') + ' Wiederholungsprüfung';
+  updateProgress();
+}
 
 // ── Toggle select ────────────────────────────────────────────────────
 function select(btn, val, key) {
@@ -558,9 +531,10 @@ function select(btn, val, key) {
 
 // ── Progress ─────────────────────────────────────────────────────────
 function updateProgress() {
-  const done = Object.keys(values).length;
+  const done    = Object.keys(values).length;
   const pruefer = document.getElementById('f-pruefer').value ? 1 : 0;
-  const pct = Math.round(((done + pruefer) / (TOTAL + 1)) * 100);
+  const pruef   = pruefungsart ? 1 : 0;
+  const pct = Math.round(((done + pruefer + pruef) / (TOTAL + 2)) * 100);
   document.getElementById('progressFill').style.width = pct + '%';
 }
 document.getElementById('f-pruefer').addEventListener('change', updateProgress);
@@ -569,6 +543,7 @@ document.getElementById('f-pruefer').addEventListener('change', updateProgress);
 async function submitForm() {
   const pruefer = document.getElementById('f-pruefer').value;
   if (!pruefer) { alert('Bitte Prüfer auswählen.'); return; }
+  if (!pruefungsart) { alert('Bitte Art der Prüfung auswählen (Erstprüfung oder Wiederholungsprüfung).'); return; }
 
   const missing = KEYS.filter(k => !values[k]);
   if (missing.length > 0) {
@@ -586,45 +561,36 @@ async function submitForm() {
   const payload = {
     Datum:               datum,
     Pruefer:             pruefer,
+    ArtDerPruefung:      pruefungsart,
     Gesamtergebnis:      gesamt,
     IO_Anzahl:           io,
     BIO_Anzahl:          bio,
     NIO_Anzahl:          nio,
-    // I. Anlagenprüfung
+    // Anlagenprüfung
     Betriebsmittel:      values.betriebsmittel  || '',
     Cabin1:              values.cabin1           || '',
+    Cabin1_IST:          parseFloat(document.getElementById('f-cabin1-temp').value)  || null,
+    Cabin1_Druck:        parseFloat(document.getElementById('f-cabin1-druck').value) || null,
+    Cabin1_Beleuchtung:  values.beleuchtung1     || '',
     Cabin2:              values.cabin2           || '',
+    Cabin2_IST:          parseFloat(document.getElementById('f-cabin2-temp').value)  || null,
+    Cabin2_Druck:        parseFloat(document.getElementById('f-cabin2-druck').value) || null,
+    Cabin2_Beleuchtung:  values.beleuchtung2     || '',
     Cabin3:              values.cabin3           || '',
+    Cabin3_IST:          parseFloat(document.getElementById('f-cabin3-temp').value)  || null,
+    Cabin3_Druck:        parseFloat(document.getElementById('f-cabin3-druck').value) || null,
+    Cabin3_Beleuchtung:  values.beleuchtung3     || '',
     Cabin4:              values.cabin4           || '',
-    Dryer1:              values.dryer1           || '',
-    Dryer2:              values.dryer2           || '',
-    // II. Prozessbedingungen
+    Cabin4_IST:          parseFloat(document.getElementById('f-cabin4-temp').value)  || null,
+    Cabin4_Druck:        parseFloat(document.getElementById('f-cabin4-druck').value) || null,
+    Cabin4_Beleuchtung:  values.beleuchtung4     || '',
+    // Prozessbedingungen
     Sauberkeit:          values.sauberkeit       || '',
-    Druckluft:           values.druckluft        || '',
-    Arbeitsplatz:        values.arbeitsplatz     || '',
-    // III. Kabinentemperatur
-    Primer_Status:       values.primer           || '',
-    Primer_IST:          parseFloat(document.getElementById('f-primer').value)     || null,
-    Basislack_Status:    values.basislack        || '',
-    Basislack_IST:       parseFloat(document.getElementById('f-basis').value)      || null,
-    Klarlack_Status:     values.klarlack         || '',
-    Klarlack_IST:        parseFloat(document.getElementById('f-klar').value)       || null,
-    // IV. Trocknertemperatur
+    // Trocknertemperatur
     Grtrockner_Status:   values.grtrockner       || '',
     Grtrockner_IST:      parseFloat(document.getElementById('f-grtrockner').value) || null,
     Kab4Trockner_Status: values.kab4trockner     || '',
     Kab4Trockner_IST:    parseFloat(document.getElementById('f-kab4').value)       || null,
-    // V. Lack-Informationen
-    Lack_Charge:         document.getElementById('f-charge').value  || '',
-    Viskositat_Status:   values.viskositat       || '',
-    Viskositat_IST:      parseFloat(document.getElementById('f-viskos').value)     || null,
-    // VI. Arbeitssicherheit
-    PSA:                 values.psa              || '',
-    ATEX:                values.atex             || '',
-    Entsorgung:          values.entsorgung       || '',
-    // VII. Qualitätssicherung
-    Erstmuster:          values.erstmuster       || '',
-    Farbton:             values.farbton          || '',
     // Allgemein
     Bemerkung:           document.getElementById('f-bemerkung').value || ''
   };
@@ -636,7 +602,6 @@ async function submitForm() {
 
   // ── Noch nicht konfiguriert? ──────────────────────────────────────
   if (POWER_AUTOMATE_URL === 'HIER_POWER_AUTOMATE_URL_EINFÜGEN') {
-    // Demo-Modus: direkt Erfolgsbildschirm zeigen
     await new Promise(r => setTimeout(r, 800));
     zeigErfolg(datum, pruefer, io, bio, nio, gesamt);
     btn.disabled = false;
@@ -667,6 +632,7 @@ function zeigErfolg(datum, pruefer, io, bio, nio, gesamt) {
   document.getElementById('success-detail').innerHTML = `
     <div class="success-detail-row"><span class="success-detail-label">Datum:</span>   <span class="success-detail-val">${ds}</span></div>
     <div class="success-detail-row"><span class="success-detail-label">Prüfer:</span>  <span class="success-detail-val">${pruefer}</span></div>
+    <div class="success-detail-row"><span class="success-detail-label">Prüfungsart:</span><span class="success-detail-val">${pruefungsart}</span></div>
     <div class="success-detail-row"><span class="success-detail-label">i.O.:</span>    <span class="success-detail-val">${io} / ${KEYS.length} Punkte</span></div>
     <div class="success-detail-row"><span class="success-detail-label">Ergebnis:</span><span class="success-detail-val">${gesamt}</span></div>
     <div class="success-detail-row"><span class="success-detail-label">Charge:</span>  <span class="success-detail-val">${document.getElementById('f-charge').value || '—'}</span></div>
@@ -680,10 +646,17 @@ function zeigErfolg(datum, pruefer, io, bio, nio, gesamt) {
 // ── Reset ────────────────────────────────────────────────────────────
 function resetForm() {
   Object.keys(values).forEach(k => delete values[k]);
+  pruefungsart = '';
   document.querySelectorAll('.toggle-btn').forEach(b => b.className = 'toggle-btn');
+  document.getElementById('btn-erstpruef').classList.remove('sel');
+  document.getElementById('btn-wiederholpruef').classList.remove('sel');
+  document.getElementById('btn-erstpruef').textContent = '☐ Erstprüfung';
+  document.getElementById('btn-wiederholpruef').textContent = '☐ Wiederholungsprüfung';
   document.getElementById('f-datum').value    = new Date().toISOString().split('T')[0];
   document.getElementById('f-pruefer').value  = '';
-  ['f-primer','f-basis','f-klar','f-grtrockner','f-kab4','f-viskos','f-charge','f-bemerkung']
+  ['f-cabin1-temp','f-cabin1-druck','f-cabin2-temp','f-cabin2-druck',
+   'f-cabin3-temp','f-cabin3-druck','f-cabin4-temp','f-cabin4-druck',
+   'f-grtrockner','f-kab4','f-bemerkung']
     .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   document.getElementById('nio-alert').style.display      = 'none';
   document.getElementById('form-screen').style.display    = 'block';
