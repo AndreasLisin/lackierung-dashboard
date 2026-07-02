@@ -572,7 +572,9 @@
 
   // Datum anzeigen
   const heute = new Date();
-  const datumStr = heute.toISOString().slice(0, 10);
+  const datumStr = heute.getFullYear() + '-' +
+    String(heute.getMonth() + 1).padStart(2, '0') + '-' +
+    String(heute.getDate()).padStart(2, '0');
   document.getElementById('headerDatum').textContent =
     heute.toLocaleDateString('de-DE', { weekday:'short', day:'2-digit', month:'2-digit', year:'numeric' });
 

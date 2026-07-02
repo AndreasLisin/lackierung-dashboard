@@ -722,10 +722,8 @@ function buildCalendar(mi) {
 // ── SECTION LIST (dynamisch aus Echtzeitdaten) ────────────────────────────────
 const SECTION_DEFS = [
   { name:'🏭 Kabinen',               fields:['Cabin1','Cabin2','Cabin3','Cabin4'] },
-  { name:'🔧 Anlagen & Sauberkeit',  fields:['Betriebsmittel','Dryer1','Dryer2','Sauberkeit','Druckluft','Arbeitsplatz'] },
-  { name:'🎨 Lacke & Viskosität',    fields:['Primer_Status','Basislack_Status','Klarlack_Status','Viskositat_Status'] },
+  { name:'🔧 Anlagen & Sauberkeit',  fields:['Betriebsmittel','Sauberkeit'] },
   { name:'🌡️ Trockner-Temperaturen', fields:['Grtrockner_Status','Kab4Trockner_Status'] },
-  { name:'🛡️ Sicherheit & Qualität', fields:['PSA','ATEX','Entsorgung','Erstmuster','Farbton'] },
 ];
 
 function buildSections() {
@@ -818,7 +816,8 @@ function showDayDetail(dateStr) {
 
   const d = new Date(dateStr+'T12:00:00');
   document.getElementById('modal-date').textContent    = d.toLocaleDateString('de-DE',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-  document.getElementById('modal-pruefer').textContent = 'Prüfer: '+(entry.Pruefer||entry.pruefer||'–');
+  const pruefungsart = entry.ArtDerPruefung || '';
+  document.getElementById('modal-pruefer').textContent = 'Prüfer: '+(entry.Pruefer||entry.pruefer||'–') + (pruefungsart ? ' · ' + pruefungsart : '');
 
   const ges   = normVal(entry.gesamtergebnis||'');
   const badge = document.getElementById('modal-result-badge');
@@ -830,35 +829,16 @@ function showDayDetail(dateStr) {
   let html = '';
   html += '<div class="modal-sec-title">🏭 Kabinen & Anlagen</div><div class="modal-grid">';
   html += modalItem('Betriebsmittel', entry.Betriebsmittel);
-  html += modalItem('Kabine 1',       entry.Cabin1);
-  html += modalItem('Kabine 2',       entry.Cabin2);
-  html += modalItem('Kabine 3',       entry.Cabin3);
-  html += modalItem('Kabine 4',       entry.Cabin4);
-  html += modalItem('Trockner 1',     entry.Dryer1);
-  html += modalItem('Trockner 2',     entry.Dryer2);
-  html += modalItem('Sauberkeit',     entry.Sauberkeit);
-  html += modalItem('Druckluft',      entry.Druckluft);
-  html += modalItem('Arbeitsplatz',   entry.Arbeitsplatz);
-  html += '</div>';
-
-  html += '<div class="modal-sec-title">🎨 Lacke & Temperaturen</div><div class="modal-grid">';
-  html += modalItem('Primer',     entry.Primer_Status,    entry.Primer_IST     !=null ? entry.Primer_IST     +' °C':'');
-  html += modalItem('Basislack',  entry.Basislack_Status, entry.Basislack_IST  !=null ? entry.Basislack_IST  +' °C':'');
-  html += modalItem('Klarlack',   entry.Klarlack_Status,  entry.Klarlack_IST   !=null ? entry.Klarlack_IST   +' °C':'');
-  html += modalItem('Viskosität', entry.Viskositat_Status,entry.Viskositat_IST !=null ? entry.Viskositat_IST +' s' :'');
+  html += modalItem('Kabine 1', entry.Cabin1, entry.Cabin1_IST != null ? entry.Cabin1_IST + ' °C' : '');
+  html += modalItem('Kabine 2', entry.Cabin2, entry.Cabin2_IST != null ? entry.Cabin2_IST + ' °C' : '');
+  html += modalItem('Kabine 3', entry.Cabin3, entry.Cabin3_IST != null ? entry.Cabin3_IST + ' °C' : '');
+  html += modalItem('Kabine 4', entry.Cabin4, entry.Cabin4_IST != null ? entry.Cabin4_IST + ' °C' : '');
+  html += modalItem('Sauberkeit / Freigabe', entry.Sauberkeit);
   html += '</div>';
 
   html += '<div class="modal-sec-title">🌡️ Trockner-Temperaturen</div><div class="modal-grid">';
-  html += modalItem('Großtrockner',     entry.Grtrockner_Status,   entry.Grtrockner_IST   !=null ? entry.Grtrockner_IST   +' °C':'');
-  html += modalItem('Kab. 4 Trockner', entry.Kab4Trockner_Status, entry.Kab4Trockner_IST !=null ? entry.Kab4Trockner_IST +' °C':'');
-  html += '</div>';
-
-  html += '<div class="modal-sec-title">🛡️ Sicherheit & Qualität</div><div class="modal-grid">';
-  html += modalItem('PSA',        entry.PSA);
-  html += modalItem('ATEX',       entry.ATEX);
-  html += modalItem('Entsorgung', entry.Entsorgung);
-  html += modalItem('Erstmuster', entry.Erstmuster);
-  html += modalItem('Farbton',    entry.Farbton);
+  html += modalItem('Großtrockner',     entry.Grtrockner_Status,   entry.Grtrockner_IST   != null ? entry.Grtrockner_IST   + ' °C' : '');
+  html += modalItem('Kab. 4 Trockner', entry.Kab4Trockner_Status, entry.Kab4Trockner_IST != null ? entry.Kab4Trockner_IST + ' °C' : '');
   html += '</div>';
 
   const charge = entry.Lack_Charge||'';
