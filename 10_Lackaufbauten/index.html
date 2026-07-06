@@ -113,6 +113,8 @@
     <div class="untertitel">Lackierung | <span id="headerDatum"></span></div>
   </div>
   <div class="topbar-right">
+    <span id="stamp" style="font-size:11px;opacity:.7;white-space:nowrap;"></span>
+    <button class="btn-back" onclick="kopierePfad()" title="Pfad der Excel-Quelldatei kopieren">📂 Excel-Quelle</button>
     <button class="btn-back" onclick="logout()">Abmelden</button>
     <a class="btn-back" href="../index.html">← Zurück</a>
   </div>
@@ -191,9 +193,19 @@ async function start(){
   let rows;
   try{ rows=await sbFetch("lackaufbauten?order=sort.asc&limit=2000"); }
   catch(e){ showLogin(); return; }
+  const meta=rows.find(r=>r.typ==="meta");
+  if(meta&&meta.data){
+    const d=meta.data;
+    document.getElementById("stamp").textContent=
+      "Stand: "+(d.synced_at||"")+"  |  Quelle: "+(d.quelle||"");
+  }
   BLOCKS=rows.filter(r=>r.typ==="block").map(r=>r.data);
   FARB  =rows.filter(r=>r.typ==="farbton").map(r=>r.data);
   prepData(); buildChips(); show("loading",false); setView("mat");
+}
+function kopierePfad(){
+  const p="C:\\Users\\lisina\\einhaus-gmbh.de\\Lackierung - Dokumente\\37. Dashboard Lackierung\\10_Lackaufbauten\\Lackaufbauten_Pflege.xlsx";
+  navigator.clipboard.writeText(p).then(()=>{ const s=document.getElementById("stamp"); const old=s.textContent; s.textContent="✓ Pfad kopiert!"; setTimeout(()=>s.textContent=old,2000); });
 }
 
 // ===================== UI (wie Offline-Variante) =====================
