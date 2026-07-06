@@ -558,6 +558,12 @@ async function submitForm() {
   const io      = KEYS.filter(k => values[k] === 'io').length;
   const gesamt  = nio > 0 ? 'n.i.O.' : bio > 0 ? 'b.i.O.' : 'i.O.';
 
+  // Zahl auslesen: leeres Feld -> null, sonst auch 0 korrekt übernehmen (kein "|| null"!)
+  function feldZahl(id) {
+    const n = parseFloat(document.getElementById(id).value);
+    return isNaN(n) ? null : n;
+  }
+
   // ── JSON-Payload für Power Automate / SharePoint ──────────────────
   const payload = {
     Datum:               datum,
@@ -570,28 +576,28 @@ async function submitForm() {
     // Anlagenprüfung
     Betriebsmittel:      values.betriebsmittel  || '',
     Cabin1:              values.cabin1           || '',
-    Cabin1_IST:          parseFloat(document.getElementById('f-cabin1-temp').value)  || null,
-    Cabin1_Druck:        parseFloat(document.getElementById('f-cabin1-druck').value) || null,
+    Cabin1_IST:          feldZahl('f-cabin1-temp'),
+    Cabin1_Druck:        feldZahl('f-cabin1-druck'),
     Cabin1_Beleuchtung:  values.beleuchtung1     || '',
     Cabin2:              values.cabin2           || '',
-    Cabin2_IST:          parseFloat(document.getElementById('f-cabin2-temp').value)  || null,
-    Cabin2_Druck:        parseFloat(document.getElementById('f-cabin2-druck').value) || null,
+    Cabin2_IST:          feldZahl('f-cabin2-temp'),
+    Cabin2_Druck:        feldZahl('f-cabin2-druck'),
     Cabin2_Beleuchtung:  values.beleuchtung2     || '',
     Cabin3:              values.cabin3           || '',
-    Cabin3_IST:          parseFloat(document.getElementById('f-cabin3-temp').value)  || null,
-    Cabin3_Druck:        parseFloat(document.getElementById('f-cabin3-druck').value) || null,
+    Cabin3_IST:          feldZahl('f-cabin3-temp'),
+    Cabin3_Druck:        feldZahl('f-cabin3-druck'),
     Cabin3_Beleuchtung:  values.beleuchtung3     || '',
     Cabin4:              values.cabin4           || '',
-    Cabin4_IST:          parseFloat(document.getElementById('f-cabin4-temp').value)  || null,
-    Cabin4_Druck:        parseFloat(document.getElementById('f-cabin4-druck').value) || null,
+    Cabin4_IST:          feldZahl('f-cabin4-temp'),
+    Cabin4_Druck:        feldZahl('f-cabin4-druck'),
     Cabin4_Beleuchtung:  values.beleuchtung4     || '',
     // Prozessbedingungen
     Sauberkeit:          values.sauberkeit       || '',
     // Trocknertemperatur
     Grtrockner_Status:   values.grtrockner       || '',
-    Grtrockner_IST:      parseFloat(document.getElementById('f-grtrockner').value) || null,
+    Grtrockner_IST:      feldZahl('f-grtrockner'),
     Kab4Trockner_Status: values.kab4trockner     || '',
-    Kab4Trockner_IST:    parseFloat(document.getElementById('f-kab4').value)       || null,
+    Kab4Trockner_IST:    feldZahl('f-kab4'),
     // Allgemein
     Bemerkung:           document.getElementById('f-bemerkung').value || ''
   };
@@ -611,17 +617,29 @@ async function submitForm() {
   }
 
   // ── Echter POST an Power Automate ─────────────────────────────────
+  // Hinweis: mode 'no-cors', da Power Automate keine CORS-Header zurückgibt.
+  // Der Browser kann die Antwort dann zwar nicht lesen, der POST kommt aber
+  // trotzdem an – ohne 'no-cors' wirft fetch() sonst fälschlich einen Fehler,
+  // obwohl die Daten bereits erfolgreich übertragen wurden.
+  const controller = new AbortController();
+  const timeoutId  = setTimeout(() => controller.abort(), 20000);
   try {
-    const res = await fetch(POWER_AUTOMATE_URL, {
+    await fetch(POWER_AUTOMATE_URL, {
       method:  'POST',
+      mode:    'no-cors',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify(payload)
+      body:    JSON.stringify(payload),
+      signal:  controller.signal
     });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
     zeigErfolg(datum, pruefer, io, bio, nio, gesamt);
   } catch (err) {
-    alert('⚠️ Übertragung fehlgeschlagen.\n\nBitte Internetverbindung prüfen oder Schichtleiter informieren.\n\nFehler: ' + err.message);
+    if (err.name === 'AbortError') {
+      alert('⚠️ Keine Antwort innerhalb von 20 Sekunden.\n\nDie Rüstfreigabe wurde eventuell trotzdem übertragen – bitte im Rüstfreigabe-Dashboard prüfen, bevor erneut abgesendet wird.');
+    } else {
+      alert('⚠️ Übertragung fehlgeschlagen.\n\nBitte Internetverbindung prüfen oder Schichtleiter informieren.\n\nFehler: ' + err.message);
+    }
   } finally {
+    clearTimeout(timeoutId);
     btn.disabled = false;
     btn.innerHTML = '<span>✓</span> Rüstfreigabe absenden';
   }
