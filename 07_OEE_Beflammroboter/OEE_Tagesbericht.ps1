@@ -52,6 +52,32 @@ function OeeBg { param($v)
 Write-Log ('=' * 60)
 Write-Log "EINHAUS OEE Tagesbericht Beflammroboter gestartet"
 
+# Heute bereits erfolgreich gesendet? Dann still beenden (verhindert Doppelversand bei Retry)
+$heuteStr = (Get-Date).ToString('yyyy-MM-dd')
+if ((Test-Path $LogPfad) -and (Get-Content $LogPfad -Encoding UTF8 | Where-Object { $_ -match $heuteStr -and $_ -match 'Abgeschlossen' })) {
+    Write-Log "Heute bereits gesendet - kein Doppelversand."
+    Write-Log ('-' * 60)
+    exit 0
+}
+
+# Netz-Warteschleife: bis zu 8 Minuten auf Internetverbindung warten
+$netOk = $false
+$netDeadline = (Get-Date).AddMinutes(8)
+while ((Get-Date) -lt $netDeadline) {
+    try {
+        $null = [System.Net.Dns]::GetHostAddresses('tldkqifblxkdligypffr.supabase.co')
+        $netOk = $true
+        break
+    } catch { }
+    Write-Log "Warte auf Netzverbindung..."
+    Start-Sleep -Seconds 20
+}
+if (-not $netOk) {
+    Write-Log "Keine Netzverbindung nach 8 Minuten - Abbruch." 'FEHLER'
+    Write-Log ('-' * 60)
+    exit 1
+}
+
 # Sonntag: kein Bericht
 if ((Get-Date).DayOfWeek -eq 'Sunday') {
     Write-Log "Sonntag - kein Bericht wird gesendet."
@@ -358,6 +384,7 @@ foreach ($empfaenger in $EMPFAENGER) {
         $mail.To       = $empfaenger
         $mail.Subject  = $betreff
         $mail.HTMLBody = $htmlBody
+        $mail.DeleteAfterSubmit = $true
         $mail.Send()
         $gesendet++
         Write-Log "Gesendet -> $empfaenger"

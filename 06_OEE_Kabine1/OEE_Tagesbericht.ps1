@@ -51,6 +51,28 @@ function OeeBg { param($v)
 Write-Log ('=' * 60)
 Write-Log "EINHAUS OEE Tagesbericht gestartet"
 
+# Heute bereits erfolgreich gesendet? Dann still beenden (verhindert Doppelversand bei Retry)
+$heuteStr = (Get-Date).ToString('yyyy-MM-dd')
+if ((Test-Path $LogPfad) -and (Get-Content $LogPfad -Encoding UTF8 | Where-Object { $_ -match $heuteStr -and $_ -match 'Abgeschlossen' })) {
+    Write-Log "Heute bereits gesendet - kein Doppelversand."
+    Write-Log ('-' * 60)
+    exit 0
+}
+
+# Netz-Warteschleife: bis zu 8 Minuten auf Internetverbindung warten
+$netOk = $false
+$netDeadline = (Get-Date).AddMinutes(8)
+while ((Get-Date) -lt $netDeadline) {
+    try { $null = [System.Net.Dns]::GetHostAddresses('tldkqifblxkdligypffr.supabase.co'); $netOk = $true; break } catch { }
+    Write-Log "Warte auf Netzverbindung..."
+    Start-Sleep -Seconds 20
+}
+if (-not $netOk) {
+    Write-Log "Keine Netzverbindung nach 8 Minuten - Abbruch." 'FEHLER'
+    Write-Log ('-' * 60)
+    exit 1
+}
+
 # Sonntag: kein Bericht
 if ((Get-Date).DayOfWeek -eq 'Sunday') {
     Write-Log "Sonntag - kein Bericht wird gesendet."
@@ -98,7 +120,9 @@ function GenVerlaufChart {
     } else {
         $labels = ($daten | ForEach-Object { "'" + [datetime]::Parse($_.datum).ToString('dd.MM') + "'" }) -join ','
         $oeeData = ($daten | ForEach-Object {
-            if ($null -ne $_.oee) { [math]::Round([double]$_.oee, 1) } else { 'null' }
+            # oee ist null wenn Qualitaet noch nicht eingetragen -> verfuegbarkeit als Fallback
+            $val = if ($null -ne $_.oee) { $_.oee } elseif ($null -ne $_.verfuegbarkeit) { $_.verfuegbarkeit } else { $null }
+            if ($null -ne $val) { [math]::Round([double]$val, 1) } else { 'null' }
         }) -join ','
     }
     $fill = if ($n -gt 0) { $n } else { 2 }
@@ -106,7 +130,8 @@ function GenVerlaufChart {
     # Punktfarben je Zone
     $ptColors = if ($n -gt 0) {
         ($daten | ForEach-Object {
-            $v = if ($null -ne $_.oee) { [double]$_.oee } else { 0 }
+            $val = if ($null -ne $_.oee) { $_.oee } elseif ($null -ne $_.verfuegbarkeit) { $_.verfuegbarkeit } else { $null }
+            $v = if ($null -ne $val) { [double]$val } else { 0 }
             if ($v -ge 85) { "'#1a7a3c'" } elseif ($v -ge 75) { "'#2E75B6'" } elseif ($v -ge 60) { "'#f39c12'" } else { "'#c0392b'" }
         }) -join ','
     } else { "'#ccc'" }
@@ -119,8 +144,8 @@ function GenVerlaufChart {
         "{label:'60%',data:[$(($fill..1 | ForEach-Object { '60' }) -join ',')],borderColor:'#c0392b',borderDash:[6,4],pointRadius:0,borderWidth:1.5,fill:false}" +
         "]},options:{legend:{display:false},scales:{yAxes:[{ticks:{fontSize:9,min:0,max:100},gridLines:{color:'rgba(0,0,0,0.05)'}}],xAxes:[{ticks:{fontSize:9}}]}}}"
 
-    # URL encodieren
-    $encoded = [System.Web.HttpUtility]::UrlEncode($chartConfig)
+    # URL encodieren (Net.WebUtility ist immer verfuegbar, auch NonInteractive)
+    $encoded = [Net.WebUtility]::UrlEncode($chartConfig)
     $url = "https://quickchart.io/chart?c=$encoded&w=380&h=185&backgroundColor=white&devicePixelRatio=2"
 
     # HTML-Legende unter dem Chart
@@ -376,6 +401,7 @@ foreach ($empfaenger in $EMPFAENGER) {
         $mail.To       = $empfaenger
         $mail.Subject  = $betreff
         $mail.HTMLBody = $htmlBody
+        $mail.DeleteAfterSubmit = $true
         $mail.Send()
         $gesendet++
         Write-Log "Gesendet -> $empfaenger"

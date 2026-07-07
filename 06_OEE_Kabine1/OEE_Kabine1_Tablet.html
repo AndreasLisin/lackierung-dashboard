@@ -603,15 +603,29 @@
 
   // Datum anzeigen
   const heute = new Date();
-  const datumStr = heute.toISOString().slice(0, 10);
+  const datumStr = heute.getFullYear() + '-' +
+    String(heute.getMonth() + 1).padStart(2, '0') + '-' +
+    String(heute.getDate()).padStart(2, '0');
   document.getElementById('headerDatum').textContent =
     heute.toLocaleDateString('de-DE', { weekday:'short', day:'2-digit', month:'2-digit', year:'numeric' });
+
+  const LS_START_KEY = 'oee_kabine1_start_' + datumStr;
+
+  // Seite bei Tageswechsel automatisch neu laden
+  setInterval(() => {
+    const jetzt = new Date();
+    const aktuell = jetzt.getFullYear() + '-' +
+      String(jetzt.getMonth() + 1).padStart(2, '0') + '-' +
+      String(jetzt.getDate()).padStart(2, '0');
+    if (aktuell !== datumStr) location.reload();
+  }, 60000);
 
   // Start einer neuen Produktionsphase (mehrfach pro Schicht moeglich)
   function produktionStart() {
     if (produktionLaeuft) return;            // laeuft bereits
     aktuellerStart = new Date();
     produktionLaeuft = true;
+    localStorage.setItem(LS_START_KEY, aktuellerStart.toISOString());
     document.getElementById('btnStart').disabled = true;
     document.getElementById('btnEnde').disabled = false;
     document.getElementById('btnEnde').classList.add('aktiv');
@@ -626,6 +640,7 @@
     produktionSegmente.push({ start: aktuellerStart, ende: new Date() });
     aktuellerStart = null;
     produktionLaeuft = false;
+    localStorage.removeItem(LS_START_KEY);
     document.getElementById('btnEnde').classList.remove('aktiv');
     document.getElementById('btnStart').disabled = false;   // naechste Phase erlauben
     updateProduktionStatus();
@@ -885,7 +900,22 @@
       }
     } catch (e) { /* offline -> ignorieren, dann wird beim ersten Speichern neu angelegt */ }
   }
-  ladeHeutigenStand();
+  // Laufenden Start aus localStorage wiederherstellen (Browser wurde zwischendurch geschlossen)
+  async function ladeGespeichertenStart() {
+    await ladeHeutigenStand();
+    const gespeicherterStart = localStorage.getItem(LS_START_KEY);
+    if (gespeicherterStart && !produktionLaeuft) {
+      aktuellerStart = new Date(gespeicherterStart);
+      produktionLaeuft = true;
+      document.getElementById('btnStart').disabled = true;
+      document.getElementById('btnEnde').disabled = false;
+      document.getElementById('btnEnde').classList.add('aktiv');
+      updateProduktionStatus();
+      berechne();
+      toast('Laufende Produktion wiederhergestellt (' + aktuellerStart.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'}) + ')');
+    }
+  }
+  ladeGespeichertenStart();
 
   function toast(msg) {
     const t = document.getElementById('toast');
