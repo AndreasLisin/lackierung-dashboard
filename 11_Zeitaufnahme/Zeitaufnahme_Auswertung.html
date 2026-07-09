@@ -78,6 +78,16 @@
     background: none; border: none; color: var(--rot); cursor: pointer; font-size: 0.85rem; padding: 2px 6px;
   }
   .btn-del:hover { text-decoration: underline; }
+  .btn-save {
+    background: none; border: none; color: var(--gruen); cursor: pointer; font-size: 0.85rem; padding: 2px 6px; font-weight: 700;
+  }
+  .btn-save:hover { text-decoration: underline; }
+  .tbl-input {
+    width: 64px; text-align: right; padding: 5px 6px; border: 2px solid var(--border);
+    border-radius: 6px; font-size: 0.85rem; font-family: inherit; background: var(--grau);
+  }
+  .tbl-input:focus { outline: none; border-color: var(--blau-hell); background: #fff; }
+  .tbl-input.geaendert { border-color: var(--gelb); background: #fff8e8; }
 
   .kapazitaet-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 14px; }
   @media (max-width: 800px) { .kapazitaet-grid { grid-template-columns: 1fr; } }
@@ -210,7 +220,7 @@
   <!-- Rohdaten -->
   <div class="card">
     <details>
-      <summary>Rohdaten (einzelne Zyklen) – zum Prüfen und Entfernen von Ausreißern</summary>
+      <summary>Rohdaten (einzelne Zyklen) – zum Prüfen, Korrigieren und Entfernen von Ausreißern</summary>
       <div class="table-scroll" style="margin-top:12px">
         <table id="tabelleRoh">
           <thead>
@@ -219,6 +229,7 @@
           <tbody id="bodyRoh"></tbody>
         </table>
       </div>
+      <div class="hinweis">Istzeit und Leistungsgrad sind direkt korrigierbar – nach Änderung erscheint der Rahmen gelb, mit "Speichern" übernehmen (Normalzeit wird automatisch neu berechnet).</div>
     </details>
   </div>
 
@@ -357,17 +368,39 @@
   function renderRohdaten(daten) {
     const body = document.getElementById('bodyRoh');
     if (!daten.length) { body.innerHTML = '<tr><td colspan="9" class="leer">Keine Daten für diesen Filter.</td></tr>'; return; }
-    body.innerHTML = daten.map(d => `<tr>
+    body.innerHTML = daten.map(d => `<tr data-id="${d.id}">
       <td>${new Date(d.datum).toLocaleDateString('de-DE')}</td>
       <td>${d.bauteil}</td>
       <td>${d.prozessschritt}</td>
       <td>${d.zyklus_nr}</td>
-      <td>${Number(d.istzeit_sek).toFixed(1)}</td>
-      <td>${Number(d.leistungsgrad).toFixed(0)}</td>
-      <td>${Number(d.normalzeit_sek).toFixed(1)}</td>
+      <td><input class="tbl-input istzeit-input" type="number" step="0.1" min="0" value="${Number(d.istzeit_sek).toFixed(1)}" oninput="this.classList.add('geaendert')"></td>
+      <td><input class="tbl-input lg-input" type="number" step="1" min="1" value="${Number(d.leistungsgrad).toFixed(0)}" oninput="this.classList.add('geaendert')"></td>
+      <td class="normalzeit-anzeige">${Number(d.normalzeit_sek).toFixed(1)}</td>
       <td>${d.erfasser || '–'}</td>
-      <td><button class="btn-del" onclick="loeschen(${d.id})">löschen</button></td>
+      <td>
+        <button class="btn-save" onclick="zeileSpeichern('${d.id}')">speichern</button>
+        <button class="btn-del" onclick="loeschen('${d.id}')">löschen</button>
+      </td>
     </tr>`).join('');
+  }
+
+  function zeileSpeichern(id) {
+    const tr = document.querySelector(`#bodyRoh tr[data-id="${id}"]`);
+    if (!tr) return;
+    const istzeit = parseFloat(tr.querySelector('.istzeit-input').value);
+    const leistungsgrad = parseFloat(tr.querySelector('.lg-input').value);
+    if (!isFinite(istzeit) || istzeit <= 0 || !isFinite(leistungsgrad) || leistungsgrad <= 0) {
+      alert('Bitte eine gültige Istzeit (> 0 s) und einen gültigen Leistungsgrad (> 0 %) eingeben.');
+      return;
+    }
+    const normalzeit = parseFloat((istzeit * leistungsgrad / 100).toFixed(2));
+    const eintrag = alleDaten.find(d => d.id === id);
+    if (!eintrag) return;
+    eintrag.istzeit_sek = parseFloat(istzeit.toFixed(2));
+    eintrag.leistungsgrad = leistungsgrad;
+    eintrag.normalzeit_sek = normalzeit;
+    localStorage.setItem(LS_DATEN, JSON.stringify(alleDaten));
+    render();
   }
 
   function loeschen(id) {
