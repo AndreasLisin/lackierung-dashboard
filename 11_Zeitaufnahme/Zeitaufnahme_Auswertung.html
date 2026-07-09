@@ -97,6 +97,14 @@
   details summary { cursor: pointer; font-weight: 700; color: var(--blau); font-size: 0.85rem; padding: 4px 0; }
 
   .hinweis { font-size: 0.8rem; color: #888; margin-top: 10px; }
+  .lokal-hinweis { text-align: center; font-size: 0.78rem; color: #888; padding: 8px 0 0; }
+  .btn-export {
+    background: var(--blau); color: #fff; border: none; border-radius: 8px;
+    padding: 10px 18px; font-size: 0.85rem; font-weight: 700; cursor: pointer;
+  }
+  .btn-export:hover { background: var(--blau-hell); }
+  .card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .card-head h2 { margin-bottom: 0; }
   .leer { text-align: center; color: #999; padding: 30px; font-size: 0.9rem; }
   .spacer { height: 24px; }
 </style>
@@ -120,11 +128,16 @@
   </div>
 </div>
 
+<div class="lokal-hinweis">⚠ Daten werden aktuell nur lokal in diesem Browser gelesen (gleicher Speicher wie das Erfassungs-Tablet) – nicht geräteübergreifend.</div>
+
 <div class="wrap">
 
   <!-- Filter -->
   <div class="card">
-    <h2>Filter</h2>
+    <div class="card-head">
+      <h2>Filter</h2>
+      <button class="btn-export" onclick="exportierenCsv()">⭳ Als CSV exportieren</button>
+    </div>
     <div class="filter-grid">
       <div class="feld">
         <label>Kabine</label>
@@ -213,8 +226,9 @@
 </div>
 
 <script>
-  const SUPABASE_URL  = 'https://tldkqifblxkdligypffr.supabase.co';
-  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsZGtxaWZibHhrZGxpZ3lwZmZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1NjkwMzEsImV4cCI6MjA5NjE0NTAzMX0.Zg0Yy9uAIvuFwNfYVzfLWqmQUvTnXivYmGIXLCOa6TM';
+  // Speicherung: aktuell nur lokal im Browser (localStorage), gleicher Schlüssel wie im Erfassungs-Tablet.
+  // Azure-Anbindung folgt später.
+  const LS_DATEN = 'zeitaufnahme_daten';
 
   const heute = new Date();
   document.getElementById('headerDatum').textContent =
@@ -222,15 +236,10 @@
 
   let alleDaten = [];
 
-  async function laden() {
-    try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/zeitaufnahme?order=datum.desc,zyklus_nr.asc`, {
-        headers: { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON }
-      });
-      alleDaten = await res.json();
-    } catch (e) {
-      alleDaten = [];
-    }
+  function laden() {
+    try { alleDaten = JSON.parse(localStorage.getItem(LS_DATEN)) || []; }
+    catch (e) { alleDaten = []; }
+    alleDaten.sort((a,b) => (a.datum < b.datum ? 1 : a.datum > b.datum ? -1 : a.zyklus_nr - b.zyklus_nr));
     fuelleFilter();
     render();
   }
@@ -361,17 +370,27 @@
     </tr>`).join('');
   }
 
-  async function loeschen(id) {
+  function loeschen(id) {
     if (!confirm('Diesen Zyklus wirklich löschen (z. B. Ausreißer/Fehlmessung)?')) return;
-    try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/zeitaufnahme?id=eq.${id}`, {
-        method: 'DELETE',
-        headers: { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON }
-      });
-      if (!res.ok) throw new Error(await res.text());
-      alleDaten = alleDaten.filter(d => d.id !== id);
-      render();
-    } catch (e) { alert('Fehler beim Löschen: ' + e.message); }
+    alleDaten = alleDaten.filter(d => d.id !== id);
+    localStorage.setItem(LS_DATEN, JSON.stringify(alleDaten));
+    render();
+  }
+
+  function exportierenCsv() {
+    const daten = gefiltert();
+    if (!daten.length) { alert('Keine Daten für diesen Filter zum Exportieren.'); return; }
+    const spalten = ['datum','kabine','bauteil','prozessschritt','zyklus_nr','istzeit_sek','leistungsgrad','normalzeit_sek','bemerkung','erfasser'];
+    const zeilen = [spalten.join(';')].concat(
+      daten.map(d => spalten.map(s => String(d[s] ?? '').replace(/;/g, ',')).join(';'))
+    );
+    const blob = new Blob(['﻿' + zeilen.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'Zeitaufnahme_Export_' + new Date().toISOString().slice(0,10) + '.csv';
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   laden();

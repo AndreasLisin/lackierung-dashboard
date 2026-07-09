@@ -283,6 +283,13 @@
   #toast.show { opacity: 1; }
 
   .spacer { height: 20px; }
+
+  .lokal-hinweis {
+    text-align: center;
+    font-size: 0.78rem;
+    color: #888;
+    padding: 8px 14px 0;
+  }
 </style>
 <script defer src="../assets/zurueck-kontext.js"></script>
 </head>
@@ -303,6 +310,8 @@
     <a class="btn-back" href="../index.html">← Zurück</a>
   </div>
 </div>
+
+<div class="lokal-hinweis">⚠ Daten werden aktuell nur lokal in diesem Browser gespeichert – nicht auf einem anderen Gerät sichtbar.</div>
 
 <!-- Stammdaten -->
 <div class="card">
@@ -392,9 +401,22 @@
 
 <script>
   // ═══════════════════════════════════════════════════
-  const SUPABASE_URL  = 'https://tldkqifblxkdligypffr.supabase.co';
-  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsZGtxaWZibHhrZGxpZ3lwZmZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1NjkwMzEsImV4cCI6MjA5NjE0NTAzMX0.Zg0Yy9uAIvuFwNfYVzfLWqmQUvTnXivYmGIXLCOa6TM';
+  // Speicherung: aktuell nur lokal im Browser (localStorage).
+  // Eine Azure-Anbindung ist geplant, aber noch nicht entschieden/eingerichtet.
+  // Alle Zyklen liegen unter LS_DATEN als ein JSON-Array.
   // ═══════════════════════════════════════════════════
+  const LS_DATEN = 'zeitaufnahme_daten';
+
+  function alleDatenLesen() {
+    try { return JSON.parse(localStorage.getItem(LS_DATEN)) || []; }
+    catch (e) { return []; }
+  }
+  function alleDatenSchreiben(arr) {
+    localStorage.setItem(LS_DATEN, JSON.stringify(arr));
+  }
+  function neueId() {
+    return Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+  }
 
   const heute = new Date();
   const datumStr = heute.getFullYear() + '-' + String(heute.getMonth()+1).padStart(2,'0') + '-' + String(heute.getDate()).padStart(2,'0');
@@ -461,19 +483,16 @@
     }
   }
 
-  // Bereits erfasste Zyklen dieser Kombination aus Supabase laden (Fortsetzung nach Reload/Tageswechsel)
-  async function ladeKombination() {
+  // Bereits erfasste Zyklen dieser Kombination aus dem lokalen Speicher laden (Fortsetzung nach Reload/Tageswechsel)
+  function ladeKombination() {
     const k = document.getElementById('kabine').value.trim();
     const b = document.getElementById('bauteil').value.trim();
     if (!k || !b || !aktuellerSchritt) return;
-    try {
-      const url = `${SUPABASE_URL}/rest/v1/zeitaufnahme?kabine=eq.${encodeURIComponent(k)}&bauteil=eq.${encodeURIComponent(b)}&prozessschritt=eq.${encodeURIComponent(aktuellerSchritt)}&order=zyklus_nr.asc`;
-      const res = await fetch(url, { headers: { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON } });
-      const rows = await res.json();
-      zyklen = (rows || []).map(r => ({ id: r.id, zyklus_nr: r.zyklus_nr, istzeit_sek: r.istzeit_sek, leistungsgrad: r.leistungsgrad, normalzeit_sek: r.normalzeit_sek }));
-      naechsteZyklusNr = zyklen.length ? Math.max(...zyklen.map(z => z.zyklus_nr)) + 1 : 1;
-      renderZyklusListe();
-    } catch (e) { /* offline -> ab Zyklus 1 weiter */ }
+    const rows = alleDatenLesen().filter(r => r.kabine === k && r.bauteil === b && r.prozessschritt === aktuellerSchritt);
+    rows.sort((a,z) => a.zyklus_nr - z.zyklus_nr);
+    zyklen = rows.map(r => ({ id: r.id, zyklus_nr: r.zyklus_nr, istzeit_sek: r.istzeit_sek, leistungsgrad: r.leistungsgrad, normalzeit_sek: r.normalzeit_sek }));
+    naechsteZyklusNr = zyklen.length ? Math.max(...zyklen.map(z => z.zyklus_nr)) + 1 : 1;
+    renderZyklusListe();
   }
 
   function stoppToggle() {
@@ -528,7 +547,7 @@
     letzteIstzeit = null;
   }
 
-  async function zyklusSpeichern() {
+  function zyklusSpeichern() {
     if (letzteIstzeit === null) return;
     const k = document.getElementById('kabine').value.trim();
     const b = document.getElementById('bauteil').value.trim();
@@ -537,36 +556,29 @@
     const istzeit = parseFloat(letzteIstzeit.toFixed(2));
     const normalzeit = parseFloat((istzeit * gewaehlterLg / 100).toFixed(2));
     const zyklusNr = naechsteZyklusNr;
+    const id = neueId();
 
-    const payload = {
-      datum: datumStr, kabine: k, bauteil: b, prozessschritt: aktuellerSchritt,
+    const eintrag = {
+      id, datum: datumStr, kabine: k, bauteil: b, prozessschritt: aktuellerSchritt,
       zyklus_nr: zyklusNr, istzeit_sek: istzeit, leistungsgrad: gewaehlterLg,
       normalzeit_sek: normalzeit, bemerkung, erfasser
     };
 
     const btn = document.getElementById('btnLgSpeichern');
-    btn.disabled = true; btn.textContent = 'Wird gespeichert…';
+    btn.disabled = true;
 
-    try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/zeitaufnahme`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON, Prefer: 'return=representation' },
-        body: JSON.stringify(payload)
-      });
-      if (!res.ok) throw new Error(await res.text());
-      const rows = await res.json();
-      zyklen.push({ id: rows[0]?.id, zyklus_nr: zyklusNr, istzeit_sek: istzeit, leistungsgrad: gewaehlterLg, normalzeit_sek: normalzeit });
-      naechsteZyklusNr++;
-      renderZyklusListe();
-      document.getElementById('lgOverlay').classList.remove('show');
-      document.getElementById('stoppTimer').textContent = '00:00,0';
-      letzteIstzeit = null;
-      toast(`✓ Zyklus ${zyklusNr} gespeichert (${istzeit.toFixed(1)} s, ${gewaehlterLg}%)`);
-    } catch (e) {
-      toast('Fehler beim Speichern: ' + e.message);
-    } finally {
-      btn.disabled = false; btn.textContent = 'Zyklus speichern';
-    }
+    const alle = alleDatenLesen();
+    alle.push(eintrag);
+    alleDatenSchreiben(alle);
+
+    zyklen.push({ id, zyklus_nr: zyklusNr, istzeit_sek: istzeit, leistungsgrad: gewaehlterLg, normalzeit_sek: normalzeit });
+    naechsteZyklusNr++;
+    renderZyklusListe();
+    document.getElementById('lgOverlay').classList.remove('show');
+    document.getElementById('stoppTimer').textContent = '00:00,0';
+    letzteIstzeit = null;
+    toast(`✓ Zyklus ${zyklusNr} gespeichert (${istzeit.toFixed(1)} s, ${gewaehlterLg}%)`);
+    btn.disabled = false; btn.textContent = 'Zyklus speichern';
   }
 
   function renderZyklusListe() {
