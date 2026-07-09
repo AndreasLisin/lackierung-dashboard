@@ -654,7 +654,6 @@ function zeigErfolg(datum, pruefer, io, bio, nio, gesamt) {
     <div class="success-detail-row"><span class="success-detail-label">Prüfungsart:</span><span class="success-detail-val">${pruefungsart}</span></div>
     <div class="success-detail-row"><span class="success-detail-label">i.O.:</span>    <span class="success-detail-val">${io} / ${KEYS.length} Punkte</span></div>
     <div class="success-detail-row"><span class="success-detail-label">Ergebnis:</span><span class="success-detail-val">${gesamt}</span></div>
-    <div class="success-detail-row"><span class="success-detail-label">Charge:</span>  <span class="success-detail-val">${document.getElementById('f-charge').value || '—'}</span></div>
   `;
   if (nio > 0) document.getElementById('nio-alert').style.display = 'block';
   document.getElementById('form-screen').style.display  = 'none';
