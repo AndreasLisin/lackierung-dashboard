@@ -153,6 +153,9 @@
     background: var(--rot);
     animation: pulse 1.4s infinite;
   }
+  #btnStopp.inaktiv {
+    background: #b7c3cd;
+  }
   @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .75; } }
 
   /* ── Leistungsgrad-Overlay ── */
@@ -342,16 +345,16 @@
 <div class="card">
   <h2>Prozessschritt</h2>
   <div class="schritt-grid" id="schrittGrid">
-    <div class="btn-schritt" onclick="schrittWaehlen(this,'Einlegen / Bestücken')">Einlegen /<br>Bestücken</div>
-    <div class="btn-schritt" onclick="schrittWaehlen(this,'Vorbehandlung / Reinigung')">Vorbehandlung /<br>Reinigung</div>
-    <div class="btn-schritt" onclick="schrittWaehlen(this,'Lack anmischen')">Lack anmischen</div>
-    <div class="btn-schritt" onclick="schrittWaehlen(this,'Grundierung / Primer')">Grundierung /<br>Primer</div>
-    <div class="btn-schritt" onclick="schrittWaehlen(this,'Basislack')">Basislack</div>
-    <div class="btn-schritt" onclick="schrittWaehlen(this,'Ablüften')">Ablüften</div>
-    <div class="btn-schritt" onclick="schrittWaehlen(this,'Klarlack')">Klarlack</div>
-    <div class="btn-schritt" onclick="schrittWaehlen(this,'Zwischentrocknung')">Zwischen-<br>trocknung</div>
-    <div class="btn-schritt" onclick="schrittWaehlen(this,'Ofentrocknung')">Ofentrocknung</div>
-    <div class="btn-schritt" onclick="schrittWaehlen(this,'Abkühlen')">Abkühlen</div>
+    <div class="btn-schritt" data-schritt="Einlegen / Bestücken" onclick="schrittWaehlen(this,this.dataset.schritt)">Einlegen /<br>Bestücken</div>
+    <div class="btn-schritt" data-schritt="Vorbehandlung / Reinigung" onclick="schrittWaehlen(this,this.dataset.schritt)">Vorbehandlung /<br>Reinigung</div>
+    <div class="btn-schritt" data-schritt="Lack anmischen" onclick="schrittWaehlen(this,this.dataset.schritt)">Lack anmischen</div>
+    <div class="btn-schritt" data-schritt="Grundierung / Primer" onclick="schrittWaehlen(this,this.dataset.schritt)">Grundierung /<br>Primer</div>
+    <div class="btn-schritt" data-schritt="Basislack" onclick="schrittWaehlen(this,this.dataset.schritt)">Basislack</div>
+    <div class="btn-schritt" data-schritt="Ablüften" onclick="schrittWaehlen(this,this.dataset.schritt)">Ablüften</div>
+    <div class="btn-schritt" data-schritt="Klarlack" onclick="schrittWaehlen(this,this.dataset.schritt)">Klarlack</div>
+    <div class="btn-schritt" data-schritt="Zwischentrocknung" onclick="schrittWaehlen(this,this.dataset.schritt)">Zwischen-<br>trocknung</div>
+    <div class="btn-schritt" data-schritt="Ofentrocknung" onclick="schrittWaehlen(this,this.dataset.schritt)">Ofentrocknung</div>
+    <div class="btn-schritt" data-schritt="Abkühlen" onclick="schrittWaehlen(this,this.dataset.schritt)">Abkühlen</div>
     <div class="btn-schritt eigen" onclick="schrittEigenerZeigen()">Eigener Schritt…</div>
   </div>
   <div class="feld" id="schrittEigenWrap" style="display:none;margin-top:10px">
@@ -366,7 +369,7 @@
   <h2>Stoppuhr</h2>
   <div class="stopp-wrap">
     <div class="stopp-timer" id="stoppTimer">00:00,0</div>
-    <button id="btnStopp" onclick="stoppToggle()" disabled>▶ START</button>
+    <button id="btnStopp" class="inaktiv" onclick="stoppToggle()">▶ START</button>
   </div>
 </div>
 
@@ -456,6 +459,7 @@
     btn.classList.add('aktiv');
     document.getElementById('schrittEigenWrap').style.display = 'none';
     aktuellerSchritt = schritt;
+    localStorage.setItem('zeitaufnahme_schritt', schritt);
     ladeKombination();
     aktualisiereAuswahlAnzeige();
   }
@@ -469,8 +473,31 @@
   function schrittEigenUebernehmen() {
     const wert = document.getElementById('schrittEigen').value.trim();
     aktuellerSchritt = wert || null;
-    if (aktuellerSchritt) { ladeKombination(); aktualisiereAuswahlAnzeige(); }
+    if (aktuellerSchritt) {
+      localStorage.setItem('zeitaufnahme_schritt', aktuellerSchritt);
+      ladeKombination();
+      aktualisiereAuswahlAnzeige();
+    }
   }
+
+  // Zuletzt gewählten Prozessschritt wiederherstellen (Kabine/Bauteil werden schon oben wiederhergestellt –
+  // sonst bleibt der Schritt nach einem Reload leer, während Kabine/Bauteil ausgefüllt aussehen, und der
+  // Start-Button wirkt "kaputt", weil er stumm deaktiviert bleibt).
+  (function schrittWiederherstellen() {
+    const gespeichert = localStorage.getItem('zeitaufnahme_schritt');
+    if (!gespeichert) return;
+    const tile = [...document.querySelectorAll('#schrittGrid > .btn-schritt[data-schritt]')]
+      .find(t => t.dataset.schritt === gespeichert);
+    if (tile) {
+      schrittWaehlen(tile, gespeichert);
+    } else {
+      document.getElementById('schrittEigenWrap').style.display = 'block';
+      document.getElementById('schrittEigen').value = gespeichert;
+      aktuellerSchritt = gespeichert;
+      ladeKombination();
+      aktualisiereAuswahlAnzeige();
+    }
+  })();
 
   function aktualisiereAuswahlAnzeige() {
     const k = document.getElementById('kabine').value.trim();
@@ -479,10 +506,10 @@
     const btnStopp = document.getElementById('btnStopp');
     if (k && b && aktuellerSchritt) {
       box.innerHTML = `<b>${k}</b> · <b>${b}</b> · <b>${aktuellerSchritt}</b>`;
-      btnStopp.disabled = false;
+      btnStopp.classList.remove('inaktiv');
     } else {
       box.textContent = 'Bitte Kabine, Bauteil und Prozessschritt wählen.';
-      btnStopp.disabled = true;
+      btnStopp.classList.add('inaktiv');
     }
   }
 
@@ -499,7 +526,17 @@
   }
 
   function stoppToggle() {
-    if (!laeuft) stoppStart(); else stoppStop();
+    if (!laeuft) {
+      const k = document.getElementById('kabine').value.trim();
+      const b = document.getElementById('bauteil').value.trim();
+      if (!k || !b || !aktuellerSchritt) {
+        toast('Bitte zuerst Kabine, Bauteil und Prozessschritt wählen.');
+        return;
+      }
+      stoppStart();
+    } else {
+      stoppStop();
+    }
   }
 
   function stoppStart() {
