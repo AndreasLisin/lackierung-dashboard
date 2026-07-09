@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>REFA-Zeitaufnahme Erfassung</title>
+<style>
+  :root {
+    --blau: #1F4E79;
+    --blau-hell: #2E75B6;
+    --gruen: #1a7a3c;
+    --gelb: #c47a00;
+    --rot: #c0392b;
+    --grau: #f4f6f8;
+    --border: #dce1e7;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #eef1f5;
+    color: #222;
+    min-height: 100vh;
+  }
+
+  /* ── Header (einheitlicher Topbar-Standard) ── */
+  .topbar {
+    background: var(--blau);
+    color: #fff;
+    padding: 0 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 62px;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,.3);
+  }
+  .topbar-left   { display: flex; align-items: center; gap: 16px; }
+  .topbar-logo   { font-size: 22px; font-weight: 700; letter-spacing: .5px; color: #fff; }
+  .topbar-logo span { color: #BDD7EE; }
+  .topbar-sub    { font-size: 12px; color: rgba(255,255,255,.7); margin-top: 2px; }
+  .topbar-center { text-align: center; }
+  .topbar-center .titel { font-size: 17px; font-weight: 700; letter-spacing: .5px; }
+  .topbar-center .untertitel { font-size: 11px; opacity: .7; }
+  .topbar-right  { display: flex; align-items: center; gap: 12px; }
+  .btn-back {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,.15); color: #fff; text-decoration: none;
+    border-radius: 6px; padding: 6px 14px; font-size: 13px; font-weight: bold;
+    border: 1px solid rgba(255,255,255,.3); transition: background .2s;
+  }
+  .btn-back:hover { background: rgba(255,255,255,.25); }
+  @media (max-width: 640px) {
+    .topbar { padding: 8px 14px; }
+    .topbar-left { display: none; }
+  }
+
+  .card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin: 14px 14px 0;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+  .card h2 {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--blau);
+    margin-bottom: 12px;
+  }
+
+  .feld { margin-bottom: 12px; }
+  .feld label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+  .feld input[type=text] {
+    width: 100%;
+    padding: 14px 12px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    background: var(--grau);
+  }
+  .feld input:focus { outline: none; border-color: var(--blau-hell); background: #fff; }
+
+  .schritt-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .btn-schritt {
+    padding: 14px 8px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    background: var(--grau);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-align: center;
+    cursor: pointer;
+    transition: all .15s;
+    line-height: 1.25;
+  }
+  .btn-schritt.aktiv {
+    background: var(--blau);
+    border-color: var(--blau);
+    color: #fff;
+  }
+  .btn-schritt.eigen { grid-column: 1 / -1; }
+
+  .aktuelle-auswahl {
+    text-align: center;
+    padding: 10px;
+    margin: 14px 14px 0;
+    font-size: 0.9rem;
+    color: #555;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+  .aktuelle-auswahl b { color: var(--blau); }
+
+  /* ── Stoppuhr ── */
+  .stopp-wrap { text-align: center; }
+  .stopp-timer {
+    font-size: 3rem;
+    font-weight: 800;
+    color: var(--blau);
+    margin: 6px 0 16px;
+    font-variant-numeric: tabular-nums;
+  }
+  #btnStopp {
+    width: 100%;
+    padding: 28px;
+    border: none;
+    border-radius: 14px;
+    font-size: 1.3rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .2s;
+    background: var(--gruen);
+    color: #fff;
+    letter-spacing: .03em;
+  }
+  #btnStopp.laeuft {
+    background: var(--rot);
+    animation: pulse 1.4s infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .75; } }
+
+  /* ── Leistungsgrad-Overlay ── */
+  #lgOverlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 100;
+    overflow-y: auto;
+    padding: 20px 14px 30px;
+  }
+  #lgOverlay.show { display: block; }
+  .lg-box {
+    background: #fff;
+    border-radius: 14px;
+    padding: 20px;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+  .lg-box h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--blau);
+    margin-bottom: 4px;
+    text-align: center;
+  }
+  .lg-box .lg-sub {
+    text-align: center;
+    font-size: 0.85rem;
+    color: #888;
+    margin-bottom: 16px;
+  }
+  .lg-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  .btn-lg {
+    padding: 14px 4px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    background: var(--grau);
+    font-size: 0.95rem;
+    font-weight: 700;
+    text-align: center;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .btn-lg.aktiv { background: var(--blau); border-color: var(--blau); color: #fff; }
+  .btn-lg.empfohlen { border-color: var(--blau-hell); }
+  #lgNotiz {
+    width: 100%;
+    margin-top: 14px;
+    padding: 12px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    background: var(--grau);
+    resize: none;
+    height: 60px;
+  }
+  #lgNotiz:focus { outline: none; border-color: var(--blau-hell); background: #fff; }
+  .btn-lg-speichern {
+    width: 100%;
+    margin-top: 14px;
+    padding: 16px;
+    background: var(--blau);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .btn-lg-speichern:disabled { background: #aaa; }
+  .btn-abbrechen {
+    width: 100%;
+    margin-top: 10px;
+    padding: 12px;
+    background: none;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #888;
+    cursor: pointer;
+  }
+
+  /* ── Zyklus-Liste ── */
+  .zyklus-liste { display: flex; flex-direction: column; gap: 6px; }
+  .zyklus-eintrag {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--grau);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+  }
+  .zyklus-eintrag .nr { font-weight: 700; color: var(--blau); }
+  .zyklus-eintrag .zeit { font-weight: 700; }
+  .zyklus-eintrag .lg { color: #888; font-size: 0.78rem; }
+  .zyklus-stat {
+    margin-top: 10px;
+    text-align: center;
+    font-size: 0.88rem;
+    color: #555;
+    font-weight: 600;
+  }
+
+  #toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #222;
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 30px;
+    font-size: 0.9rem;
+    opacity: 0;
+    transition: opacity .3s;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  #toast.show { opacity: 1; }
+
+  .spacer { height: 20px; }
+</style>
+<script defer src="../assets/zurueck-kontext.js"></script>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <div>
+      <div class="topbar-logo">EINHAUS <span>Oberflächenveredelung GmbH</span></div>
+      <div class="topbar-sub">Industrielackierung · 55411 Bingen-Dietersheim</div>
+    </div>
+  </div>
+  <div class="topbar-center">
+    <div class="titel">⏱ REFA-Zeitaufnahme Erfassung</div>
+    <div class="untertitel">Lackierung | <span id="headerDatum"></span></div>
+  </div>
+  <div class="topbar-right">
+    <a class="btn-back" href="../index.html">← Zurück</a>
+  </div>
+</div>
+
+<!-- Stammdaten -->
+<div class="card">
+  <h2>Stammdaten</h2>
+  <div class="feld">
+    <label>Kabine / Anlage</label>
+    <input type="text" id="kabine" list="kabineListe" placeholder="z. B. Kabine 1" oninput="stammdatenGeaendert()">
+    <datalist id="kabineListe">
+      <option value="Kabine 1">
+      <option value="Kabine 2">
+      <option value="Lackierroboter">
+      <option value="Beflammroboter">
+    </datalist>
+  </div>
+  <div class="feld">
+    <label>Bauteil (Kunde / Bezeichnung)</label>
+    <input type="text" id="bauteil" placeholder="z. B. Rehau Stoßfänger E2618" oninput="stammdatenGeaendert()">
+  </div>
+  <div class="feld">
+    <label>Erfasser</label>
+    <input type="text" id="erfasser" placeholder="Name">
+  </div>
+</div>
+
+<!-- Prozessschritt -->
+<div class="card">
+  <h2>Prozessschritt</h2>
+  <div class="schritt-grid" id="schrittGrid">
+    <div class="btn-schritt" onclick="schrittWaehlen(this,'Einlegen / Bestücken')">Einlegen /<br>Bestücken</div>
+    <div class="btn-schritt" onclick="schrittWaehlen(this,'Vorbehandlung / Reinigung')">Vorbehandlung /<br>Reinigung</div>
+    <div class="btn-schritt" onclick="schrittWaehlen(this,'Grundierung / Primer')">Grundierung /<br>Primer</div>
+    <div class="btn-schritt" onclick="schrittWaehlen(this,'Basislack')">Basislack</div>
+    <div class="btn-schritt" onclick="schrittWaehlen(this,'Klarlack')">Klarlack</div>
+    <div class="btn-schritt" onclick="schrittWaehlen(this,'Zwischentrocknung')">Zwischen-<br>trocknung</div>
+    <div class="btn-schritt" onclick="schrittWaehlen(this,'Ofentrocknung')">Ofentrocknung</div>
+    <div class="btn-schritt" onclick="schrittWaehlen(this,'Abkühlen')">Abkühlen</div>
+    <div class="btn-schritt" onclick="schrittWaehlen(this,'Entnehmen / Verpacken')">Entnehmen /<br>Verpacken</div>
+    <div class="btn-schritt eigen" onclick="schrittEigenerZeigen()">Eigener Schritt…</div>
+  </div>
+  <div class="feld" id="schrittEigenWrap" style="display:none;margin-top:10px">
+    <input type="text" id="schrittEigen" placeholder="Bezeichnung eingeben…" oninput="schrittEigenUebernehmen()">
+  </div>
+</div>
+
+<div class="aktuelle-auswahl" id="aktuelleAuswahl">Bitte Kabine, Bauteil und Prozessschritt wählen.</div>
+
+<!-- Stoppuhr -->
+<div class="card">
+  <h2>Stoppuhr</h2>
+  <div class="stopp-wrap">
+    <div class="stopp-timer" id="stoppTimer">00:00,0</div>
+    <button id="btnStopp" onclick="stoppToggle()" disabled>▶ START</button>
+  </div>
+</div>
+
+<!-- Zykluen dieser Kombination -->
+<div class="card">
+  <h2>Erfasste Zyklen (diese Kombination)</h2>
+  <div class="zyklus-liste" id="zyklusListe"><div style="color:#999;font-size:0.85rem">Noch keine Zyklen erfasst.</div></div>
+  <div class="zyklus-stat" id="zyklusStat"></div>
+</div>
+
+<div class="spacer"></div>
+
+<!-- Leistungsgrad-Overlay -->
+<div id="lgOverlay">
+  <div class="lg-box">
+    <h3>Leistungsgrad beurteilen</h3>
+    <div class="lg-sub">Istzeit: <b id="lgIstzeit"></b> · Bezugsleistung = 100 %</div>
+    <div class="lg-grid">
+      <div class="btn-lg" onclick="lgWaehlen(this,80)">80%</div>
+      <div class="btn-lg" onclick="lgWaehlen(this,85)">85%</div>
+      <div class="btn-lg" onclick="lgWaehlen(this,90)">90%</div>
+      <div class="btn-lg" onclick="lgWaehlen(this,95)">95%</div>
+      <div class="btn-lg empfohlen" onclick="lgWaehlen(this,100)">100%</div>
+      <div class="btn-lg" onclick="lgWaehlen(this,105)">105%</div>
+      <div class="btn-lg" onclick="lgWaehlen(this,110)">110%</div>
+      <div class="btn-lg" onclick="lgWaehlen(this,120)">120%</div>
+    </div>
+    <textarea id="lgNotiz" placeholder="Bemerkung (optional, z. B. Störung während Messung)"></textarea>
+    <button class="btn-lg-speichern" id="btnLgSpeichern" onclick="zyklusSpeichern()" disabled>Zyklus speichern</button>
+    <button class="btn-abbrechen" onclick="lgAbbrechen()">Messung verwerfen</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  // ═══════════════════════════════════════════════════
+  const SUPABASE_URL  = 'https://tldkqifblxkdligypffr.supabase.co';
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsZGtxaWZibHhrZGxpZ3lwZmZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1NjkwMzEsImV4cCI6MjA5NjE0NTAzMX0.Zg0Yy9uAIvuFwNfYVzfLWqmQUvTnXivYmGIXLCOa6TM';
+  // ═══════════════════════════════════════════════════
+
+  const heute = new Date();
+  const datumStr = heute.getFullYear() + '-' + String(heute.getMonth()+1).padStart(2,'0') + '-' + String(heute.getDate()).padStart(2,'0');
+  document.getElementById('headerDatum').textContent =
+    heute.toLocaleDateString('de-DE', { weekday:'short', day:'2-digit', month:'2-digit', year:'numeric' });
+
+  let aktuellerSchritt = null;
+  let laeuft = false;
+  let startZeit = null;
+  let timerInterval = null;
+  let letzteIstzeit = null;
+  let gewaehlterLg = 100;
+  let zyklen = []; // lokale Liste der aktuellen Kombination { zyklus_nr, istzeit_sek, leistungsgrad, normalzeit_sek }
+  let naechsteZyklusNr = 1;
+
+  // Stammdaten aus localStorage wiederherstellen
+  ['kabine','bauteil','erfasser'].forEach(id => {
+    const v = localStorage.getItem('zeitaufnahme_' + id);
+    if (v) document.getElementById(id).value = v;
+  });
+
+  function stammdatenGeaendert() {
+    localStorage.setItem('zeitaufnahme_kabine', document.getElementById('kabine').value);
+    localStorage.setItem('zeitaufnahme_bauteil', document.getElementById('bauteil').value);
+    if (aktuellerSchritt) ladeKombination();
+    aktualisiereAuswahlAnzeige();
+  }
+  document.getElementById('erfasser').addEventListener('input', () => {
+    localStorage.setItem('zeitaufnahme_erfasser', document.getElementById('erfasser').value);
+  });
+
+  function schrittWaehlen(btn, schritt) {
+    document.querySelectorAll('.btn-schritt').forEach(b => b.classList.remove('aktiv'));
+    btn.classList.add('aktiv');
+    document.getElementById('schrittEigenWrap').style.display = 'none';
+    aktuellerSchritt = schritt;
+    ladeKombination();
+    aktualisiereAuswahlAnzeige();
+  }
+
+  function schrittEigenerZeigen() {
+    document.querySelectorAll('.btn-schritt').forEach(b => b.classList.remove('aktiv'));
+    document.getElementById('schrittEigenWrap').style.display = 'block';
+    document.getElementById('schrittEigen').focus();
+  }
+
+  function schrittEigenUebernehmen() {
+    const wert = document.getElementById('schrittEigen').value.trim();
+    aktuellerSchritt = wert || null;
+    if (aktuellerSchritt) { ladeKombination(); aktualisiereAuswahlAnzeige(); }
+  }
+
+  function aktualisiereAuswahlAnzeige() {
+    const k = document.getElementById('kabine').value.trim();
+    const b = document.getElementById('bauteil').value.trim();
+    const box = document.getElementById('aktuelleAuswahl');
+    const btnStopp = document.getElementById('btnStopp');
+    if (k && b && aktuellerSchritt) {
+      box.innerHTML = `<b>${k}</b> · <b>${b}</b> · <b>${aktuellerSchritt}</b>`;
+      btnStopp.disabled = false;
+    } else {
+      box.textContent = 'Bitte Kabine, Bauteil und Prozessschritt wählen.';
+      btnStopp.disabled = true;
+    }
+  }
+
+  // Bereits erfasste Zyklen dieser Kombination aus Supabase laden (Fortsetzung nach Reload/Tageswechsel)
+  async function ladeKombination() {
+    const k = document.getElementById('kabine').value.trim();
+    const b = document.getElementById('bauteil').value.trim();
+    if (!k || !b || !aktuellerSchritt) return;
+    try {
+      const url = `${SUPABASE_URL}/rest/v1/zeitaufnahme?kabine=eq.${encodeURIComponent(k)}&bauteil=eq.${encodeURIComponent(b)}&prozessschritt=eq.${encodeURIComponent(aktuellerSchritt)}&order=zyklus_nr.asc`;
+      const res = await fetch(url, { headers: { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON } });
+      const rows = await res.json();
+      zyklen = (rows || []).map(r => ({ id: r.id, zyklus_nr: r.zyklus_nr, istzeit_sek: r.istzeit_sek, leistungsgrad: r.leistungsgrad, normalzeit_sek: r.normalzeit_sek }));
+      naechsteZyklusNr = zyklen.length ? Math.max(...zyklen.map(z => z.zyklus_nr)) + 1 : 1;
+      renderZyklusListe();
+    } catch (e) { /* offline -> ab Zyklus 1 weiter */ }
+  }
+
+  function stoppToggle() {
+    if (!laeuft) stoppStart(); else stoppStop();
+  }
+
+  function stoppStart() {
+    laeuft = true;
+    startZeit = performance.now();
+    document.getElementById('btnStopp').textContent = '⏹ STOPP';
+    document.getElementById('btnStopp').classList.add('laeuft');
+    timerInterval = setInterval(updateTimerAnzeige, 100);
+  }
+
+  function updateTimerAnzeige() {
+    const sek = (performance.now() - startZeit) / 1000;
+    document.getElementById('stoppTimer').textContent = formatZeit(sek);
+  }
+
+  function formatZeit(sek) {
+    const m = String(Math.floor(sek / 60)).padStart(2,'0');
+    const s = String(Math.floor(sek % 60)).padStart(2,'0');
+    const z = String(Math.floor((sek % 1) * 10));
+    return `${m}:${s},${z}`;
+  }
+
+  function stoppStop() {
+    laeuft = false;
+    clearInterval(timerInterval);
+    letzteIstzeit = (performance.now() - startZeit) / 1000;
+    document.getElementById('btnStopp').textContent = '▶ START';
+    document.getElementById('btnStopp').classList.remove('laeuft');
+    document.getElementById('stoppTimer').textContent = formatZeit(letzteIstzeit);
+    gewaehlterLg = 100;
+    document.getElementById('lgIstzeit').textContent = letzteIstzeit.toFixed(1) + ' s';
+    document.querySelectorAll('.btn-lg').forEach(b => b.classList.remove('aktiv'));
+    document.querySelector('.btn-lg.empfohlen').classList.add('aktiv');
+    document.getElementById('lgNotiz').value = '';
+    document.getElementById('btnLgSpeichern').disabled = false;
+    document.getElementById('lgOverlay').classList.add('show');
+  }
+
+  function lgWaehlen(btn, wert) {
+    document.querySelectorAll('.btn-lg').forEach(b => b.classList.remove('aktiv'));
+    btn.classList.add('aktiv');
+    gewaehlterLg = wert;
+  }
+
+  function lgAbbrechen() {
+    document.getElementById('lgOverlay').classList.remove('show');
+    document.getElementById('stoppTimer').textContent = '00:00,0';
+    letzteIstzeit = null;
+  }
+
+  async function zyklusSpeichern() {
+    if (letzteIstzeit === null) return;
+    const k = document.getElementById('kabine').value.trim();
+    const b = document.getElementById('bauteil').value.trim();
+    const erfasser = document.getElementById('erfasser').value.trim() || null;
+    const bemerkung = document.getElementById('lgNotiz').value.trim() || null;
+    const istzeit = parseFloat(letzteIstzeit.toFixed(2));
+    const normalzeit = parseFloat((istzeit * gewaehlterLg / 100).toFixed(2));
+    const zyklusNr = naechsteZyklusNr;
+
+    const payload = {
+      datum: datumStr, kabine: k, bauteil: b, prozessschritt: aktuellerSchritt,
+      zyklus_nr: zyklusNr, istzeit_sek: istzeit, leistungsgrad: gewaehlterLg,
+      normalzeit_sek: normalzeit, bemerkung, erfasser
+    };
+
+    const btn = document.getElementById('btnLgSpeichern');
+    btn.disabled = true; btn.textContent = 'Wird gespeichert…';
+
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/zeitaufnahme`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON, Prefer: 'return=representation' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const rows = await res.json();
+      zyklen.push({ id: rows[0]?.id, zyklus_nr: zyklusNr, istzeit_sek: istzeit, leistungsgrad: gewaehlterLg, normalzeit_sek: normalzeit });
+      naechsteZyklusNr++;
+      renderZyklusListe();
+      document.getElementById('lgOverlay').classList.remove('show');
+      document.getElementById('stoppTimer').textContent = '00:00,0';
+      letzteIstzeit = null;
+      toast(`✓ Zyklus ${zyklusNr} gespeichert (${istzeit.toFixed(1)} s, ${gewaehlterLg}%)`);
+    } catch (e) {
+      toast('Fehler beim Speichern: ' + e.message);
+    } finally {
+      btn.disabled = false; btn.textContent = 'Zyklus speichern';
+    }
+  }
+
+  function renderZyklusListe() {
+    const liste = document.getElementById('zyklusListe');
+    if (!zyklen.length) {
+      liste.innerHTML = '<div style="color:#999;font-size:0.85rem">Noch keine Zyklen erfasst.</div>';
+      document.getElementById('zyklusStat').textContent = '';
+      return;
+    }
+    liste.innerHTML = '';
+    zyklen.forEach(z => {
+      const div = document.createElement('div');
+      div.className = 'zyklus-eintrag';
+      div.innerHTML = `<span class="nr">#${z.zyklus_nr}</span>
+        <span class="zeit">${z.istzeit_sek.toFixed(1)} s</span>
+        <span class="lg">LG ${z.leistungsgrad}%</span>
+        <span class="zeit">NZ ${z.normalzeit_sek.toFixed(1)} s</span>`;
+      liste.appendChild(div);
+    });
+    const n = zyklen.length;
+    const oeIst = zyklen.reduce((s,z)=>s+z.istzeit_sek,0) / n;
+    const oeNz  = zyklen.reduce((s,z)=>s+z.normalzeit_sek,0) / n;
+    document.getElementById('zyklusStat').textContent =
+      `n = ${n} · Ø Istzeit ${oeIst.toFixed(1)} s · Ø Normalzeit ${oeNz.toFixed(1)} s`;
+  }
+
+  function toast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REFA-Zeitaufnahme Auswertung</title>
+<style>
+  :root {
+    --blau: #1F4E79;
+    --blau-hell: #2E75B6;
+    --gruen: #1a7a3c;
+    --gelb: #c47a00;
+    --rot: #c0392b;
+    --grau: #f4f6f8;
+    --border: #dce1e7;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #eef1f5; color: #222; }
+
+  .topbar {
+    background: var(--blau); color: #fff; padding: 0 28px;
+    display: flex; align-items: center; justify-content: space-between;
+    min-height: 62px; position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,.3);
+  }
+  .topbar-left   { display: flex; align-items: center; gap: 16px; }
+  .topbar-logo   { font-size: 22px; font-weight: 700; letter-spacing: .5px; color: #fff; }
+  .topbar-logo span { color: #BDD7EE; }
+  .topbar-sub    { font-size: 12px; color: rgba(255,255,255,.7); margin-top: 2px; }
+  .topbar-center { text-align: center; }
+  .topbar-center .titel { font-size: 17px; font-weight: 700; letter-spacing: .5px; }
+  .topbar-center .untertitel { font-size: 11px; opacity: .7; }
+  .topbar-right  { display: flex; align-items: center; gap: 12px; }
+  .btn-back {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,.15); color: #fff; text-decoration: none;
+    border-radius: 6px; padding: 6px 14px; font-size: 13px; font-weight: bold;
+    border: 1px solid rgba(255,255,255,.3); transition: background .2s;
+  }
+  .btn-back:hover { background: rgba(255,255,255,.25); }
+  @media (max-width: 640px) {
+    .topbar { padding: 8px 14px; }
+    .topbar-left { display: none; }
+  }
+
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 14px; }
+
+  .card {
+    background: #fff; border-radius: 12px; padding: 18px 20px;
+    margin: 14px 0 0; box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+  .card h2 {
+    font-size: 0.78rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--blau); margin-bottom: 12px;
+  }
+
+  .filter-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  @media (max-width: 800px) { .filter-grid { grid-template-columns: 1fr 1fr; } }
+  .feld label {
+    display: block; font-size: 0.72rem; font-weight: 700; color: #888;
+    margin-bottom: 5px; text-transform: uppercase; letter-spacing: .04em;
+  }
+  .feld select, .feld input {
+    width: 100%; padding: 10px 10px; border: 2px solid var(--border);
+    border-radius: 8px; font-size: 0.92rem; background: var(--grau); font-family: inherit;
+  }
+  .feld select:focus, .feld input:focus { outline: none; border-color: var(--blau-hell); background: #fff; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+  th, td { padding: 9px 10px; text-align: right; border-bottom: 1px solid var(--border); }
+  th:first-child, td:first-child, th:nth-child(2), td:nth-child(2) { text-align: left; }
+  th { color: #888; font-weight: 700; text-transform: uppercase; font-size: 0.7rem; letter-spacing: .04em; }
+  tbody tr:hover { background: var(--grau); }
+  tr.bauteil-summe { background: #eaf1f8; font-weight: 700; }
+  tr.bauteil-summe td { border-top: 2px solid var(--blau); color: var(--blau); }
+  .table-scroll { overflow-x: auto; }
+  .btn-del {
+    background: none; border: none; color: var(--rot); cursor: pointer; font-size: 0.85rem; padding: 2px 6px;
+  }
+  .btn-del:hover { text-decoration: underline; }
+
+  .kapazitaet-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+  @media (max-width: 800px) { .kapazitaet-grid { grid-template-columns: 1fr; } }
+
+  .kap-eingabe { display: flex; flex-direction: column; gap: 10px; }
+  .kap-eingabe .feld { display: flex; align-items: center; gap: 10px; }
+  .kap-eingabe .feld label { flex: 1; margin: 0; text-transform: none; font-size: 0.85rem; font-weight: 600; color: #555; }
+  .kap-eingabe .feld input { width: 90px; text-align: center; font-weight: 700; }
+
+  .kap-ergebnis {
+    background: var(--grau); border-radius: 10px; padding: 14px; text-align: center;
+  }
+  .kap-ergebnis .label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #888; letter-spacing: .04em; margin-bottom: 6px; }
+  .kap-ergebnis .wert { font-size: 1.7rem; font-weight: 800; color: var(--blau); }
+  .kap-ergebnis .wert.gross { font-size: 2.2rem; color: var(--gruen); }
+
+  details summary { cursor: pointer; font-weight: 700; color: var(--blau); font-size: 0.85rem; padding: 4px 0; }
+
+  .hinweis { font-size: 0.8rem; color: #888; margin-top: 10px; }
+  .leer { text-align: center; color: #999; padding: 30px; font-size: 0.9rem; }
+  .spacer { height: 24px; }
+</style>
+<script defer src="../assets/zurueck-kontext.js"></script>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <div>
+      <div class="topbar-logo">EINHAUS <span>Oberflächenveredelung GmbH</span></div>
+      <div class="topbar-sub">Industrielackierung · 55411 Bingen-Dietersheim</div>
+    </div>
+  </div>
+  <div class="topbar-center">
+    <div class="titel">📊 REFA-Zeitaufnahme Auswertung</div>
+    <div class="untertitel">Kapazitätsplanung | <span id="headerDatum"></span></div>
+  </div>
+  <div class="topbar-right">
+    <a class="btn-back" href="../index.html">← Zurück</a>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- Filter -->
+  <div class="card">
+    <h2>Filter</h2>
+    <div class="filter-grid">
+      <div class="feld">
+        <label>Kabine</label>
+        <select id="fKabine" onchange="render()"><option value="">Alle</option></select>
+      </div>
+      <div class="feld">
+        <label>Bauteil</label>
+        <select id="fBauteil" onchange="render()"><option value="">Alle</option></select>
+      </div>
+      <div class="feld">
+        <label>Von</label>
+        <input type="date" id="fVon" onchange="render()">
+      </div>
+      <div class="feld">
+        <label>Bis</label>
+        <input type="date" id="fBis" onchange="render()">
+      </div>
+    </div>
+  </div>
+
+  <!-- Vorgabezeiten je Bauteil / Prozessschritt -->
+  <div class="card">
+    <h2>Vorgabezeiten je Bauteil &amp; Prozessschritt</h2>
+    <div class="filter-grid" style="margin-bottom:14px;grid-template-columns:1fr 1fr">
+      <div class="feld">
+        <label>Verteilzeit-Zuschlag (%)</label>
+        <input type="number" id="verteilzeit" value="5" min="0" step="0.5" oninput="render()">
+      </div>
+      <div class="feld">
+        <label>Erholzeit-Zuschlag (%)</label>
+        <input type="number" id="erholzeit" value="9" min="0" step="0.5" oninput="render()">
+      </div>
+    </div>
+    <div class="table-scroll">
+      <table id="tabelleSchritte">
+        <thead>
+          <tr>
+            <th>Bauteil</th><th>Prozessschritt</th><th>n</th>
+            <th>Ø Istzeit (s)</th><th>Ø Leistungsgrad</th><th>Ø Normalzeit (s)</th>
+            <th>Vorgabezeit (s)</th>
+          </tr>
+        </thead>
+        <tbody id="bodySchritte"></tbody>
+      </table>
+    </div>
+    <div class="hinweis">Vorgabezeit = Normalzeit × (1 + (Verteilzeit + Erholzeit) / 100). Die "Bauteil gesamt"-Zeile summiert alle Prozessschritte eines Bauteils = Vorgabezeit pro Stück bei serieller Bearbeitung an dieser Kabine.</div>
+  </div>
+
+  <!-- Kapazitätsrechner -->
+  <div class="card">
+    <h2>Kapazitätsrechner</h2>
+    <div class="kapazitaet-grid">
+      <div class="kap-eingabe">
+        <div class="feld"><label>Bauteil wählen</label></div>
+        <select id="kapBauteil" onchange="render()" style="width:100%;padding:10px;border:2px solid var(--border);border-radius:8px;background:var(--grau)"></select>
+        <div class="feld"><label>Verfügbare Zeit / Schicht (min)</label><input type="number" id="schichtMin" value="480" min="1" oninput="render()"></div>
+      </div>
+      <div class="kap-ergebnis">
+        <div class="label">Vorgabezeit / Stück</div>
+        <div class="wert" id="kapVorgabezeit">–</div>
+      </div>
+      <div class="kap-ergebnis">
+        <div class="label">Mögliche Stückzahl / Schicht</div>
+        <div class="wert gross" id="kapStueckzahl">–</div>
+      </div>
+    </div>
+    <div class="hinweis">Ohne Rüst-/Wechselzeiten – reine Fertigungszeit pro Stück auf Basis der gemessenen Prozessschritte.</div>
+  </div>
+
+  <!-- Rohdaten -->
+  <div class="card">
+    <details>
+      <summary>Rohdaten (einzelne Zyklen) – zum Prüfen und Entfernen von Ausreißern</summary>
+      <div class="table-scroll" style="margin-top:12px">
+        <table id="tabelleRoh">
+          <thead>
+            <tr><th>Datum</th><th>Bauteil</th><th>Schritt</th><th>#</th><th>Istzeit (s)</th><th>LG %</th><th>Normalzeit (s)</th><th>Erfasser</th><th></th></tr>
+          </thead>
+          <tbody id="bodyRoh"></tbody>
+        </table>
+      </div>
+    </details>
+  </div>
+
+  <div class="spacer"></div>
+</div>
+
+<script>
+  const SUPABASE_URL  = 'https://tldkqifblxkdligypffr.supabase.co';
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsZGtxaWZibHhrZGxpZ3lwZmZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1NjkwMzEsImV4cCI6MjA5NjE0NTAzMX0.Zg0Yy9uAIvuFwNfYVzfLWqmQUvTnXivYmGIXLCOa6TM';
+
+  const heute = new Date();
+  document.getElementById('headerDatum').textContent =
+    heute.toLocaleDateString('de-DE', { weekday:'short', day:'2-digit', month:'2-digit', year:'numeric' });
+
+  let alleDaten = [];
+
+  async function laden() {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/zeitaufnahme?order=datum.desc,zyklus_nr.asc`, {
+        headers: { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON }
+      });
+      alleDaten = await res.json();
+    } catch (e) {
+      alleDaten = [];
+    }
+    fuelleFilter();
+    render();
+  }
+
+  function fuelleFilter() {
+    const kabinen = [...new Set(alleDaten.map(d => d.kabine))].sort();
+    const bauteile = [...new Set(alleDaten.map(d => d.bauteil))].sort();
+    const selK = document.getElementById('fKabine');
+    const selB = document.getElementById('fBauteil');
+    const selKap = document.getElementById('kapBauteil');
+    const merkeK = selK.value, merkeB = selB.value, merkeKap = selKap.value;
+    selK.innerHTML = '<option value="">Alle</option>' + kabinen.map(k => `<option value="${k}">${k}</option>`).join('');
+    selB.innerHTML = '<option value="">Alle</option>' + bauteile.map(b => `<option value="${b}">${b}</option>`).join('');
+    selKap.innerHTML = bauteile.map(b => `<option value="${b}">${b}</option>`).join('') || '<option value="">Keine Daten</option>';
+    if (kabinen.includes(merkeK)) selK.value = merkeK;
+    if (bauteile.includes(merkeB)) selB.value = merkeB;
+    if (bauteile.includes(merkeKap)) selKap.value = merkeKap;
+  }
+
+  function gefiltert() {
+    const k = document.getElementById('fKabine').value;
+    const b = document.getElementById('fBauteil').value;
+    const von = document.getElementById('fVon').value;
+    const bis = document.getElementById('fBis').value;
+    return alleDaten.filter(d =>
+      (!k || d.kabine === k) &&
+      (!b || d.bauteil === b) &&
+      (!von || d.datum >= von) &&
+      (!bis || d.datum <= bis)
+    );
+  }
+
+  function render() {
+    const daten = gefiltert();
+    renderSchrittTabelle(daten);
+    renderKapazitaet(daten);
+    renderRohdaten(daten);
+  }
+
+  function gruppiereSchritte(daten) {
+    const gruppen = {};
+    daten.forEach(d => {
+      const key = d.bauteil + '␟' + d.prozessschritt;
+      if (!gruppen[key]) gruppen[key] = { bauteil: d.bauteil, prozessschritt: d.prozessschritt, rows: [] };
+      gruppen[key].rows.push(d);
+    });
+    return Object.values(gruppen);
+  }
+
+  function renderSchrittTabelle(daten) {
+    const vz = parseFloat(document.getElementById('verteilzeit').value) || 0;
+    const ez = parseFloat(document.getElementById('erholzeit').value) || 0;
+    const zuschlagFaktor = 1 + (vz + ez) / 100;
+
+    const gruppen = gruppiereSchritte(daten);
+    const body = document.getElementById('bodySchritte');
+    if (!gruppen.length) { body.innerHTML = '<tr><td colspan="7" class="leer">Keine Daten für diesen Filter.</td></tr>'; return; }
+
+    // nach Bauteil sortieren, dann Schritt-Reihenfolge nach erstem Auftreten
+    const bauteile = [...new Set(gruppen.map(g => g.bauteil))].sort();
+    let html = '';
+    bauteile.forEach(bauteil => {
+      const schritteDesBauteils = gruppen.filter(g => g.bauteil === bauteil);
+      let summeVorgabe = 0;
+      schritteDesBauteils.forEach(g => {
+        const n = g.rows.length;
+        const oeIst = g.rows.reduce((s,r)=>s+Number(r.istzeit_sek),0) / n;
+        const oeLg  = g.rows.reduce((s,r)=>s+Number(r.leistungsgrad),0) / n;
+        const oeNz  = g.rows.reduce((s,r)=>s+Number(r.normalzeit_sek),0) / n;
+        const vorgabe = oeNz * zuschlagFaktor;
+        summeVorgabe += vorgabe;
+        html += `<tr>
+          <td>${bauteil}</td><td>${g.prozessschritt}</td><td>${n}</td>
+          <td>${oeIst.toFixed(1)}</td><td>${oeLg.toFixed(0)} %</td><td>${oeNz.toFixed(1)}</td>
+          <td>${vorgabe.toFixed(1)}</td>
+        </tr>`;
+      });
+      html += `<tr class="bauteil-summe"><td colspan="6">${bauteil} — gesamt (alle Prozessschritte)</td><td>${summeVorgabe.toFixed(1)}</td></tr>`;
+    });
+    body.innerHTML = html;
+  }
+
+  function vorgabezeitProBauteil(daten, bauteil) {
+    const vz = parseFloat(document.getElementById('verteilzeit').value) || 0;
+    const ez = parseFloat(document.getElementById('erholzeit').value) || 0;
+    const zuschlagFaktor = 1 + (vz + ez) / 100;
+    const gruppen = gruppiereSchritte(daten.filter(d => d.bauteil === bauteil));
+    let summe = 0;
+    gruppen.forEach(g => {
+      const n = g.rows.length;
+      const oeNz = g.rows.reduce((s,r)=>s+Number(r.normalzeit_sek),0) / n;
+      summe += oeNz * zuschlagFaktor;
+    });
+    return summe; // Sekunden
+  }
+
+  function renderKapazitaet(daten) {
+    const bauteil = document.getElementById('kapBauteil').value;
+    const schichtMin = parseFloat(document.getElementById('schichtMin').value) || 0;
+    if (!bauteil) {
+      document.getElementById('kapVorgabezeit').textContent = '–';
+      document.getElementById('kapStueckzahl').textContent = '–';
+      return;
+    }
+    const vorgabeSek = vorgabezeitProBauteil(daten, bauteil);
+    document.getElementById('kapVorgabezeit').textContent = vorgabeSek > 0 ? vorgabeSek.toFixed(1) + ' s' : '–';
+    if (vorgabeSek > 0) {
+      const stueck = Math.floor((schichtMin * 60) / vorgabeSek);
+      document.getElementById('kapStueckzahl').textContent = stueck.toLocaleString('de-DE') + ' Stk';
+    } else {
+      document.getElementById('kapStueckzahl').textContent = '–';
+    }
+  }
+
+  function renderRohdaten(daten) {
+    const body = document.getElementById('bodyRoh');
+    if (!daten.length) { body.innerHTML = '<tr><td colspan="9" class="leer">Keine Daten für diesen Filter.</td></tr>'; return; }
+    body.innerHTML = daten.map(d => `<tr>
+      <td>${new Date(d.datum).toLocaleDateString('de-DE')}</td>
+      <td>${d.bauteil}</td>
+      <td>${d.prozessschritt}</td>
+      <td>${d.zyklus_nr}</td>
+      <td>${Number(d.istzeit_sek).toFixed(1)}</td>
+      <td>${Number(d.leistungsgrad).toFixed(0)}</td>
+      <td>${Number(d.normalzeit_sek).toFixed(1)}</td>
+      <td>${d.erfasser || '–'}</td>
+      <td><button class="btn-del" onclick="loeschen(${d.id})">löschen</button></td>
+    </tr>`).join('');
+  }
+
+  async function loeschen(id) {
+    if (!confirm('Diesen Zyklus wirklich löschen (z. B. Ausreißer/Fehlmessung)?')) return;
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/zeitaufnahme?id=eq.${id}`, {
+        method: 'DELETE',
+        headers: { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON }
+      });
+      if (!res.ok) throw new Error(await res.text());
+      alleDaten = alleDaten.filter(d => d.id !== id);
+      render();
+    } catch (e) { alert('Fehler beim Löschen: ' + e.message); }
+  }
+
+  laden();
+</script>
+</body>
+</html>
