@@ -171,14 +171,10 @@
   <!-- Vorgabezeiten je Bauteil / Prozessschritt -->
   <div class="card">
     <h2>Vorgabezeiten je Bauteil &amp; Prozessschritt</h2>
-    <div class="filter-grid" style="margin-bottom:14px;grid-template-columns:1fr 1fr">
+    <div class="filter-grid" style="margin-bottom:14px;grid-template-columns:1fr">
       <div class="feld">
         <label>Verteilzeit-Zuschlag (%)</label>
-        <input type="number" id="verteilzeit" value="5" min="0" step="0.5" oninput="render()">
-      </div>
-      <div class="feld">
-        <label>Erholzeit-Zuschlag (%)</label>
-        <input type="number" id="erholzeit" value="9" min="0" step="0.5" oninput="render()">
+        <input type="number" id="verteilzeit" value="15" min="0" step="0.5" oninput="render()">
       </div>
     </div>
     <div class="table-scroll">
@@ -193,7 +189,7 @@
         <tbody id="bodySchritte"></tbody>
       </table>
     </div>
-    <div class="hinweis">Vorgabezeit = Normalzeit × (1 + (Verteilzeit + Erholzeit) / 100). Die "Bauteil gesamt"-Zeile summiert alle Prozessschritte eines Bauteils = Vorgabezeit pro Stück bei serieller Bearbeitung an dieser Kabine.</div>
+    <div class="hinweis">Vorgabezeit = Normalzeit × (1 + Verteilzeit / 100). Die "Bauteil gesamt"-Zeile summiert alle Prozessschritte eines Bauteils = Vorgabezeit pro Stück bei serieller Bearbeitung an dieser Kabine.</div>
   </div>
 
   <!-- Kapazitätsrechner -->
@@ -302,8 +298,7 @@
 
   function renderSchrittTabelle(daten) {
     const vz = parseFloat(document.getElementById('verteilzeit').value) || 0;
-    const ez = parseFloat(document.getElementById('erholzeit').value) || 0;
-    const zuschlagFaktor = 1 + (vz + ez) / 100;
+    const zuschlagFaktor = 1 + vz / 100;
 
     const gruppen = gruppiereSchritte(daten);
     const body = document.getElementById('bodySchritte');
@@ -335,8 +330,7 @@
 
   function vorgabezeitProBauteil(daten, bauteil) {
     const vz = parseFloat(document.getElementById('verteilzeit').value) || 0;
-    const ez = parseFloat(document.getElementById('erholzeit').value) || 0;
-    const zuschlagFaktor = 1 + (vz + ez) / 100;
+    const zuschlagFaktor = 1 + vz / 100;
     const gruppen = gruppiereSchritte(daten.filter(d => d.bauteil === bauteil));
     let summe = 0;
     gruppen.forEach(g => {
