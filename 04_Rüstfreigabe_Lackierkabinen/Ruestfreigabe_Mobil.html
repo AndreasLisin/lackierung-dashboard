@@ -150,8 +150,11 @@ body {
   border: 1.5px solid var(--border); border-radius: 8px;
   padding: 9px 12px; font-size: 15px; width: 110px; font-family: inherit;
   height: 44px; transition: border-color .15s;
+  -webkit-appearance: none; appearance: none;
 }
 .ist-input:focus { outline: none; border-color: var(--primary-med); }
+.ist-input.val-ok  { border-color: var(--green); background: var(--green-bg); color: var(--green); font-weight: 700; }
+.ist-input.val-bad { border-color: var(--red);   background: var(--red-bg);   color: var(--red);   font-weight: 700; }
 
 /* ── Text Input ── */
 .text-input {
@@ -306,12 +309,12 @@ body {
       <div style="font-size:12px;font-weight:600;color:var(--gray);margin-bottom:2px;">Kabinentemperatur</div>
       <div class="soll-ist-row">
         <span class="soll-badge">SOLL: +21°C ±5°C</span>
-        <input type="number" class="ist-input" id="f-cabin1-temp" placeholder="IST °C">
+        <input type="number" class="ist-input" id="f-cabin1-temp" data-min="16" data-max="26" placeholder="IST °C">
       </div>
       <div style="font-size:12px;font-weight:600;color:var(--gray);margin-top:8px;margin-bottom:2px;">Kabinendruck</div>
       <div class="soll-ist-row">
         <span class="soll-badge">SOLL: 0–10 Pa</span>
-        <input type="number" class="ist-input" id="f-cabin1-druck" placeholder="IST Pa">
+        <input type="number" class="ist-input" id="f-cabin1-druck" data-min="0" data-max="10" placeholder="IST Pa">
       </div>
       <div style="font-size:12px;font-weight:600;color:var(--gray);margin-top:8px;margin-bottom:2px;">Beleuchtung</div>
       <div class="toggle-group" data-key="beleuchtung1">
@@ -331,12 +334,12 @@ body {
       <div style="font-size:12px;font-weight:600;color:var(--gray);margin-bottom:2px;">Kabinentemperatur</div>
       <div class="soll-ist-row">
         <span class="soll-badge">SOLL: +21°C ±5°C</span>
-        <input type="number" class="ist-input" id="f-cabin2-temp" placeholder="IST °C">
+        <input type="number" class="ist-input" id="f-cabin2-temp" data-min="16" data-max="26" placeholder="IST °C">
       </div>
       <div style="font-size:12px;font-weight:600;color:var(--gray);margin-top:8px;margin-bottom:2px;">Kabinendruck</div>
       <div class="soll-ist-row">
         <span class="soll-badge">SOLL: 0–10 Pa</span>
-        <input type="number" class="ist-input" id="f-cabin2-druck" placeholder="IST Pa">
+        <input type="number" class="ist-input" id="f-cabin2-druck" data-min="0" data-max="10" placeholder="IST Pa">
       </div>
       <div style="font-size:12px;font-weight:600;color:var(--gray);margin-top:8px;margin-bottom:2px;">Beleuchtung</div>
       <div class="toggle-group" data-key="beleuchtung2">
@@ -356,12 +359,12 @@ body {
       <div style="font-size:12px;font-weight:600;color:var(--gray);margin-bottom:2px;">Kabinentemperatur</div>
       <div class="soll-ist-row">
         <span class="soll-badge">SOLL: +21°C ±5°C</span>
-        <input type="number" class="ist-input" id="f-cabin3-temp" placeholder="IST °C">
+        <input type="number" class="ist-input" id="f-cabin3-temp" data-min="16" data-max="26" placeholder="IST °C">
       </div>
       <div style="font-size:12px;font-weight:600;color:var(--gray);margin-top:8px;margin-bottom:2px;">Kabinendruck</div>
       <div class="soll-ist-row">
         <span class="soll-badge">SOLL: 0–10 Pa</span>
-        <input type="number" class="ist-input" id="f-cabin3-druck" placeholder="IST Pa">
+        <input type="number" class="ist-input" id="f-cabin3-druck" data-min="0" data-max="10" placeholder="IST Pa">
       </div>
       <div style="font-size:12px;font-weight:600;color:var(--gray);margin-top:8px;margin-bottom:2px;">Beleuchtung</div>
       <div class="toggle-group" data-key="beleuchtung3">
@@ -381,12 +384,12 @@ body {
       <div style="font-size:12px;font-weight:600;color:var(--gray);margin-bottom:2px;">Kabinentemperatur</div>
       <div class="soll-ist-row">
         <span class="soll-badge">SOLL: +21°C ±5°C</span>
-        <input type="number" class="ist-input" id="f-cabin4-temp" placeholder="IST °C">
+        <input type="number" class="ist-input" id="f-cabin4-temp" data-min="16" data-max="26" placeholder="IST °C">
       </div>
       <div style="font-size:12px;font-weight:600;color:var(--gray);margin-top:8px;margin-bottom:2px;">Kabinendruck</div>
       <div class="soll-ist-row">
         <span class="soll-badge">SOLL: 0–10 Pa</span>
-        <input type="number" class="ist-input" id="f-cabin4-druck" placeholder="IST Pa">
+        <input type="number" class="ist-input" id="f-cabin4-druck" data-min="0" data-max="10" placeholder="IST Pa">
       </div>
       <div style="font-size:12px;font-weight:600;color:var(--gray);margin-top:8px;margin-bottom:2px;">Beleuchtung</div>
       <div class="toggle-group" data-key="beleuchtung4">
@@ -417,7 +420,7 @@ body {
       <div class="cp-label required">Großraumtrockner [°C]</div>
       <div class="soll-ist-row">
         <span class="soll-badge">SOLL: +90°C ±5°C</span>
-        <input type="number" class="ist-input" id="f-grtrockner" placeholder="IST °C">
+        <input type="number" class="ist-input" id="f-grtrockner" data-min="85" data-max="95" placeholder="IST °C">
       </div>
       <div class="toggle-group" data-key="grtrockner">
         <button class="toggle-btn" onclick="select(this,'io','grtrockner')">✓ i.O.</button>
@@ -429,7 +432,7 @@ body {
       <div class="cp-label required">Trockner Kabine 4 [°C]</div>
       <div class="soll-ist-row">
         <span class="soll-badge">SOLL: +82°C ±5°C</span>
-        <input type="number" class="ist-input" id="f-kab4" placeholder="IST °C">
+        <input type="number" class="ist-input" id="f-kab4" data-min="77" data-max="87" placeholder="IST °C">
       </div>
       <div class="toggle-group" data-key="kab4trockner">
         <button class="toggle-btn" onclick="select(this,'io','kab4trockner')">✓ i.O.</button>
@@ -509,7 +512,23 @@ const TOTAL = KEYS.length;
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('f-datum').value = new Date().toISOString().split('T')[0];
   updateProgress();
+  initIstValidation();
 });
+
+// ── SOLL/IST-Grenzwertprüfung (grün = i.O., rot = außerhalb Toleranz) ──
+function pruefeIstFeld(el) {
+  const min = parseFloat(el.dataset.min);
+  const max = parseFloat(el.dataset.max);
+  const val = parseFloat(el.value);
+  el.classList.remove('val-ok', 'val-bad');
+  if (el.value.trim() === '' || isNaN(val)) return;
+  el.classList.add(val >= min && val <= max ? 'val-ok' : 'val-bad');
+}
+function initIstValidation() {
+  document.querySelectorAll('.ist-input[data-min]').forEach(el => {
+    el.addEventListener('input', () => pruefeIstFeld(el));
+  });
+}
 
 // ── Art der Prüfung ──────────────────────────────────────────────────
 function selectPruefungsart(val) {
@@ -676,6 +695,7 @@ function resetForm() {
    'f-cabin3-temp','f-cabin3-druck','f-cabin4-temp','f-cabin4-druck',
    'f-grtrockner','f-kab4','f-bemerkung']
     .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  document.querySelectorAll('.ist-input').forEach(el => el.classList.remove('val-ok', 'val-bad'));
   document.getElementById('nio-alert').style.display      = 'none';
   document.getElementById('form-screen').style.display    = 'block';
   document.getElementById('success-screen').style.display = 'none';
