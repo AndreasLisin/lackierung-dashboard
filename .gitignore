@@ -24,3 +24,6 @@ parsed.json
 *_view.json
 blocks_view.json
 farbton_view.json
+
+# --- Lackformeln: Sync-Skript enthaelt interne Server-/Auth-Logik ---
+08_Lackformeln/Sync_Lackformeln.ps1
