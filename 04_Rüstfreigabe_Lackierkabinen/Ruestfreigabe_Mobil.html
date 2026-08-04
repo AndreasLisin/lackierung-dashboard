@@ -305,7 +305,7 @@ body {
       </div>
     </div>
     <div class="cp-row">
-      <div class="cp-label required">Painting Cabin 1</div>
+      <div class="cp-label">Painting Cabin 1</div>
       <div style="font-size:12px;font-weight:600;color:var(--gray);margin-bottom:2px;">Kabinentemperatur</div>
       <div class="soll-ist-row">
         <span class="soll-badge">SOLL: +21°C ±5°C</span>
@@ -330,7 +330,7 @@ body {
       </div>
     </div>
     <div class="cp-row">
-      <div class="cp-label required">Painting Cabin 2</div>
+      <div class="cp-label">Painting Cabin 2</div>
       <div style="font-size:12px;font-weight:600;color:var(--gray);margin-bottom:2px;">Kabinentemperatur</div>
       <div class="soll-ist-row">
         <span class="soll-badge">SOLL: +21°C ±5°C</span>
@@ -355,7 +355,7 @@ body {
       </div>
     </div>
     <div class="cp-row">
-      <div class="cp-label required">Painting Cabin 3</div>
+      <div class="cp-label">Painting Cabin 3</div>
       <div style="font-size:12px;font-weight:600;color:var(--gray);margin-bottom:2px;">Kabinentemperatur</div>
       <div class="soll-ist-row">
         <span class="soll-badge">SOLL: +21°C ±5°C</span>
@@ -380,7 +380,7 @@ body {
       </div>
     </div>
     <div class="cp-row">
-      <div class="cp-label required">Painting Cabin 4</div>
+      <div class="cp-label">Painting Cabin 4</div>
       <div style="font-size:12px;font-weight:600;color:var(--gray);margin-bottom:2px;">Kabinentemperatur</div>
       <div class="soll-ist-row">
         <span class="soll-badge">SOLL: +21°C ±5°C</span>
@@ -449,7 +449,7 @@ body {
   </div>
 
   <!-- Absenden -->
-  <p class="required-note">* Alle Pflichtfelder müssen ausgefüllt sein</p>
+  <p class="required-note">* Pflichtfelder müssen ausgefüllt sein. Kabinen, die nicht in Betrieb sind, einfach frei lassen.</p>
   <button class="submit-btn" onclick="submitForm()">
     <span>✓</span> Rüstfreigabe absenden
   </button>
@@ -507,7 +507,9 @@ const KEYS = ['betriebsmittel',
               'cabin1','beleuchtung1','cabin2','beleuchtung2',
               'cabin3','beleuchtung3','cabin4','beleuchtung4',
               'sauberkeit','grtrockner','kab4trockner'];
-const TOTAL = KEYS.length;
+// Kabinen (Kabine 1–4 + Beleuchtung) sind optional, da nicht immer alle Kabinen in Betrieb sind.
+const REQUIRED_KEYS = ['betriebsmittel','sauberkeit','grtrockner','kab4trockner'];
+const TOTAL = REQUIRED_KEYS.length;
 
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('f-datum').value = new Date().toISOString().split('T')[0];
@@ -540,18 +542,23 @@ function selectPruefungsart(val) {
   updateProgress();
 }
 
-// ── Toggle select ────────────────────────────────────────────────────
+// ── Toggle select (erneutes Klicken auf denselben Punkt hebt Auswahl auf) ──
 function select(btn, val, key) {
   const group = btn.closest('.toggle-group');
+  const wasSelected = values[key] === val;
   group.querySelectorAll('.toggle-btn').forEach(b => b.className = 'toggle-btn');
-  btn.classList.add('sel-' + val);
-  values[key] = val;
+  if (wasSelected) {
+    delete values[key];
+  } else {
+    btn.classList.add('sel-' + val);
+    values[key] = val;
+  }
   updateProgress();
 }
 
 // ── Progress ─────────────────────────────────────────────────────────
 function updateProgress() {
-  const done    = Object.keys(values).length;
+  const done    = REQUIRED_KEYS.filter(k => values[k]).length;
   const pruefer = document.getElementById('f-pruefer').value ? 1 : 0;
   const pruef   = pruefungsart ? 1 : 0;
   const pct = Math.round(((done + pruefer + pruef) / (TOTAL + 2)) * 100);
@@ -565,7 +572,7 @@ async function submitForm() {
   if (!pruefer) { alert('Bitte Prüfer auswählen.'); return; }
   if (!pruefungsart) { alert('Bitte Art der Prüfung auswählen (Erstprüfung oder Wiederholungsprüfung).'); return; }
 
-  const missing = KEYS.filter(k => !values[k]);
+  const missing = REQUIRED_KEYS.filter(k => !values[k]);
   if (missing.length > 0) {
     alert(`Bitte noch ${missing.length} Punkt(e) bewerten:\n${missing.slice(0,3).join(', ')}${missing.length>3?'...':''}`);
     return;
