@@ -58,23 +58,21 @@ create index if not exists lackformeln_eingang_status_idx
   on public.lackformeln_eingang (status);
 
 -- ---------- 3) Row Level Security ----------
+-- Haertung 31.08.2026 (Sicherheits-Review, Manuel Einhaus): anon hatte hier
+-- Lese- UND Schreibzugriff (using(true)/with check(true)) - zusammen mit dem
+-- oeffentlich eingebetteten anon-Key waren die Lackformeln fuer jeden im
+-- Internet les- und beschreibbar. Rotation des Keys allein haette nichts
+-- gebracht, der neue Key haette wieder im HTML gelegen. Deshalb: keine
+-- anon-Policies mehr. Zugriff laeuft kuenftig ausschliesslich ueber ein
+-- Backend (service_role bzw. wincarat-api), nie direkt vom Client aus.
+-- Dieses Supabase-Projekt ist ohnehin dauerhaft abgeschaltet (kein Restore,
+-- Entscheidung Manuel 26.08.2026) - diese Datei ist Referenz/Historie.
 alter table public.lackformeln          enable row level security;
 alter table public.lackformeln_eingang  enable row level security;
 
--- anon darf Formeln lesen
 drop policy if exists "lackformeln_select_anon" on public.lackformeln;
-create policy "lackformeln_select_anon"
-  on public.lackformeln for select
-  to anon using (true);
-
--- anon darf Neuanlagen anlegen und sehen (Schreiben/Aendern der Master-
--- Tabelle sowie Statuswechsel laufen ueber service_role und umgehen RLS)
 drop policy if exists "eingang_insert_anon" on public.lackformeln_eingang;
-create policy "eingang_insert_anon"
-  on public.lackformeln_eingang for insert
-  to anon with check (true);
-
 drop policy if exists "eingang_select_anon" on public.lackformeln_eingang;
-create policy "eingang_select_anon"
-  on public.lackformeln_eingang for select
-  to anon using (true);
+-- Keine Ersatz-Policies fuer anon: ohne Policy verweigert RLS per Default
+-- jeden Zugriff. Lesen/Schreiben ausschliesslich ueber service_role
+-- (serverseitig, nie im Client-Code).

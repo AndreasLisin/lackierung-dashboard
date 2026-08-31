@@ -23,20 +23,13 @@ create index if not exists zeitaufnahme_gruppe_idx
     on public.zeitaufnahme (kabine, bauteil, prozessschritt);
 
 -- Row Level Security aktivieren
+-- Haertung 31.08.2026 (Sicherheits-Review, Manuel Einhaus): anon-Policies
+-- entfernt (waren using(true)/with check(true) fuer select/insert/delete -
+-- zusammen mit dem oeffentlich eingebetteten anon-Key konnte jeder im
+-- Internet die Tabelle lesen, befuellen und leeren). Diese Kopie ist zudem
+-- veraltet: REFA-Zeitaufnahme laeuft produktiv im separaten Repo
+-- zeitaufnahme-lackierung (eigenes Supabase_Tabelle.sql, ebenfalls zu
+-- haerten). Dieses Supabase-Projekt ist dauerhaft abgeschaltet (kein
+-- Restore, Entscheidung Manuel 26.08.2026). Ohne Policy verweigert RLS per
+-- Default jeden Zugriff - Zugriff nur noch ueber service_role/Backend.
 alter table public.zeitaufnahme enable row level security;
-
--- Anon-Key darf lesen, einfügen und löschen (Löschen = Ausreißer/Fehlmessungen entfernen)
-create policy "anon select zeitaufnahme"
-    on public.zeitaufnahme for select
-    to anon
-    using (true);
-
-create policy "anon insert zeitaufnahme"
-    on public.zeitaufnahme for insert
-    to anon
-    with check (true);
-
-create policy "anon delete zeitaufnahme"
-    on public.zeitaufnahme for delete
-    to anon
-    using (true);
