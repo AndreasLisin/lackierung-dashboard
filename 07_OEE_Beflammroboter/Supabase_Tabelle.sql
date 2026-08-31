@@ -21,15 +21,11 @@ create table if not exists public.oee_beflammroboter (
 );
 
 -- Row Level Security aktivieren
+-- Haertung 31.08.2026 (Sicherheits-Review, Manuel Einhaus): anon-Policies
+-- entfernt (waren using(true)/with check(true), zusammen mit dem oeffentlich
+-- eingebetteten anon-Key voller Lese-/Schreibzugriff fuer jeden im Internet).
+-- OEE Beflammroboter ist laengst auf einhaus-report migriert (Erfassung +
+-- Auswertung); dieses Supabase-Projekt ist dauerhaft abgeschaltet (kein
+-- Restore, Entscheidung Manuel 26.08.2026). Ohne Policy verweigert RLS per
+-- Default jeden Zugriff - Zugriff nur noch ueber service_role/Backend.
 alter table public.oee_beflammroboter enable row level security;
-
--- Anon-Key darf lesen und einfügen (wie bei oee_erfassung)
-create policy "anon insert oee_beflammroboter"
-    on public.oee_beflammroboter for insert
-    to anon
-    with check (true);
-
-create policy "anon select oee_beflammroboter"
-    on public.oee_beflammroboter for select
-    to anon
-    using (true);
