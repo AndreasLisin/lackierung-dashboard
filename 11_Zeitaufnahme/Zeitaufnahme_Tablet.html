@@ -413,6 +413,15 @@
   // ═══════════════════════════════════════════════════
   const LS_DATEN = 'zeitaufnahme_daten';
 
+  // Kabine/Bauteil/Prozessschritt sind Freitextfelder - vor jeder innerHTML-
+  // Einfuegung escapen, sonst gespeicherte XSS (Sicherheits-Review 31.08.2026,
+  // Manuel Einhaus; identischer Fix wie im produktiven Repo zeitaufnahme-lackierung).
+  function escapeHtml(s) {
+    return String(s ?? '').replace(/[&<>"']/g, c => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+  }
+
   function alleDatenLesen() {
     try { return JSON.parse(localStorage.getItem(LS_DATEN)) || []; }
     catch (e) { return []; }
@@ -505,7 +514,7 @@
     const box = document.getElementById('aktuelleAuswahl');
     const btnStopp = document.getElementById('btnStopp');
     if (k && b && aktuellerSchritt) {
-      box.innerHTML = `<b>${k}</b> · <b>${b}</b> · <b>${aktuellerSchritt}</b>`;
+      box.innerHTML = `<b>${escapeHtml(k)}</b> · <b>${escapeHtml(b)}</b> · <b>${escapeHtml(aktuellerSchritt)}</b>`;
       btnStopp.classList.remove('inaktiv');
     } else {
       box.textContent = 'Bitte Kabine, Bauteil und Prozessschritt wählen.';

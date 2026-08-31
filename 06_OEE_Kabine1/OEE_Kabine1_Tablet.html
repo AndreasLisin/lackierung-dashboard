@@ -455,6 +455,17 @@
 </div>
 
 
+<!-- Schicht (Funktions-Fix 31.08.2026: UI fehlte komplett, "schicht" blieb dadurch
+     immer auf dem Default 'Früh' stehen, unabhängig von der tatsächlichen Schicht) -->
+<div class="card">
+  <h2>Schicht</h2>
+  <div class="schicht-grid">
+    <button class="btn-schicht aktiv" data-s="Früh" onclick="schichtWaehlen(this)">Früh</button>
+    <button class="btn-schicht" data-s="Spät" onclick="schichtWaehlen(this)">Spät</button>
+    <button class="btn-schicht" data-s="Nacht" onclick="schichtWaehlen(this)">Nacht</button>
+  </div>
+</div>
+
 <!-- Produktion -->
 <div class="card">
   <h2>Produktion</h2>

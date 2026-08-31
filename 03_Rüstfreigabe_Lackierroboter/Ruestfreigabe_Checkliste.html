@@ -655,6 +655,22 @@ async function renderHistory() {
   applyFilter();
 }
 
+// Pruefer ist ein Freitextfeld und landet per innerHTML in der Verlaufstabelle -
+// vor jeder Einfuegung escapen, sonst gespeicherte XSS (Sicherheits-Review
+// 31.08.2026, Manuel Einhaus).
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+// Formula-Injection-Schutz fuer den CSV-Fallback: Freitext, der mit =+-@
+// beginnt, wuerde Excel/LibreOffice beim Oeffnen als Formel interpretieren.
+function csvSicher(v) {
+  const s = String(v ?? '');
+  return /^[=+\-@]/.test(s) ? "'" + s : s;
+}
+
 function applyFilter() {
   const year     = document.getElementById('filter-year').value;
   const month    = document.getElementById('filter-month').value;
@@ -688,7 +704,7 @@ function applyFilter() {
         const cls = v === 'i.O.' ? 'cell-io' : v === 'n.i.O.' ? 'cell-nio' : '';
         return `<td class="${cls}">${v || '–'}</td>`;
       }),
-      `<td>${e.prüfer}</td>`
+      `<td>${esc(e.prüfer)}</td>`
     ].join('');
     return `<tr>${cells}</tr>`;
   }).join('');
@@ -712,7 +728,7 @@ async function exportExcel() {
 
   if (typeof XLSX === 'undefined') {
     const hdr  = ['Nr.', 'Datum', ...robot.checks, 'Name Prüfer'];
-    const rows = entries.map((e, i) => [i + 1, e.dateDisplay, ...robot.checks.map(c => e.checks[c] || ''), e.prüfer]);
+    const rows = entries.map((e, i) => [i + 1, e.dateDisplay, ...robot.checks.map(c => e.checks[c] || ''), csvSicher(e.prüfer)]);
     const csv  = [hdr, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\r\n');
     const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
     const a    = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: `${ts}_${currentRobot.replace(' ', '_')}.csv` });

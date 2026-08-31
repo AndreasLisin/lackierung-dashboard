@@ -129,6 +129,7 @@
   tr.row-o td { background: var(--o-bg); }
   tr.row-b td { background: #eef4fb; }
   tr.row-p td { background: #eef0f2; }
+  tr.row-k td { background: #f2eefa; }
   tbody tr:hover td { filter: brightness(.97); }
 
   .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; white-space: nowrap; }
@@ -137,12 +138,29 @@
   .badge-g { background: var(--g); color: #fff; }
   .badge-b { background: #1c6fb5; color: #fff; }
   .badge-p { background: #6b7785; color: #fff; }
+  .badge-k { background: #6d4aa8; color: #fff; }
 
   .days-r { color: var(--r); font-weight: bold; }
   .days-o { color: var(--o); font-weight: bold; }
   .days-g { color: var(--g); }
   .days-b { color: #1c6fb5; font-weight: bold; }
   .days-p { color: #6b7785; font-weight: bold; }
+  .days-k { color: #6d4aa8; font-weight: bold; }
+
+  /* ── Anleitung / Hilfe ── */
+  .help-box { background: var(--card); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 20px; overflow: hidden; }
+  .help-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; cursor: pointer; font-size: 14px; font-weight: bold; color: var(--primary); user-select: none; }
+  .help-header:hover { background: var(--icon-bg); }
+  .help-body { padding: 0 20px 4px 20px; font-size: 13px; line-height: 1.6; color: var(--text); display: none; }
+  .help-body.open { display: block; padding-bottom: 20px; }
+  .help-body h4 { font-size: 11px; text-transform: uppercase; letter-spacing: .6px; color: var(--text-muted); margin: 16px 0 8px; }
+  .help-body h4:first-child { margin-top: 0; }
+  .help-legend { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 4px 0; }
+  .help-legend-item { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+  .help-body ol, .help-body ul { margin: 4px 0 4px 20px; }
+  .help-body li { margin-bottom: 4px; }
+  .help-toggle-icon { transition: transform .2s; font-size: 12px; color: var(--text-muted); }
+  .help-toggle-icon.open { transform: rotate(180deg); }
 
   /* ── Buttons ── */
   .btn {
@@ -266,6 +284,57 @@
 </div>
 
 <main>
+  <div class="help-box" id="helpBox">
+    <div class="help-header" onclick="toggleHelp()">
+      <span>📖 Anleitung: So funktioniert die Wartungsübersicht</span>
+      <span class="help-toggle-icon" id="helpToggleIcon">▾</span>
+    </div>
+    <div class="help-body" id="helpBody">
+      <h4>Was ist das?</h4>
+      <p>Diese Seite ist die zentrale Übersicht aller Wartungstermine der Lackierung-Anlagen. Alle Kolleginnen und Kollegen pflegen sie gemeinsam – Änderungen sind sofort für alle sichtbar (PC &amp; Handy). Aus denselben Daten verschickt ein Skript werktags morgens automatisch eine Zusammenfassung per E-Mail.</p>
+
+      <h4>Status-Ampel</h4>
+      <div class="help-legend">
+        <div class="help-legend-item"><span class="badge badge-r">Überfällig</span> Termin überschritten – sofort handeln</div>
+        <div class="help-legend-item"><span class="badge badge-o">Bald fällig</span> Termin liegt in den nächsten 3 Monaten</div>
+        <div class="help-legend-item"><span class="badge badge-g">OK</span> alles im grünen Bereich</div>
+        <div class="help-legend-item"><span class="badge badge-b">Beobachten</span> stundenbasierte Anlage, Intervall abgelaufen – Betriebsstunden prüfen</div>
+        <div class="help-legend-item"><span class="badge badge-p">Stillgelegt</span> Anlage außer Betrieb, Prüfung ausgesetzt (kein Alarm)</div>
+        <div class="help-legend-item"><span class="badge badge-k">Ohne Turnus</span> kein festes Intervall mehr, z. B. Kalibrierung vom Hersteller eingestellt</div>
+      </div>
+
+      <h4>Spalten</h4>
+      <ul>
+        <li><strong>Anlage &amp; Wartungstyp</strong> – Name, Art der Wartung, ggf. Notizen/Sonderfälle</li>
+        <li><strong>Nächste Wartung</strong> – berechnetes Datum und verbleibende Tage</li>
+        <li><strong>Zuständig (intern)</strong> – Ansprechpartner bei EINHAUS für diese Anlage</li>
+        <li><strong>Dienstleister Kontaktdaten</strong> – Firma, die die Wartung durchführt (falls vorhanden)</li>
+        <li><strong>Aktionen</strong> – siehe unten</li>
+      </ul>
+
+      <h4>Wartung als erledigt eintragen</h4>
+      <ol>
+        <li>Bei der Anlage auf <strong>✏ Bearbeiten</strong> klicken</li>
+        <li>Bei „Letzte Wartung" das Datum der durchgeführten Wartung eintragen</li>
+        <li><strong>Speichern</strong> – die nächste Fälligkeit wird automatisch aus Zyklus + Datum berechnet</li>
+      </ol>
+
+      <h4>Neue Anlage anlegen</h4>
+      <p><strong>+ Anlage hinzufügen</strong> oben rechts. Pflicht sind nur Anlagenname und „Letzte Wartung", alles andere ist optional und kann später ergänzt werden.</p>
+
+      <h4>Aktionen-Icons</h4>
+      <ul>
+        <li><strong>✉</strong> – Erinnerungs-Mail an die zuständige Person (öffnet einen Outlook-Entwurf)</li>
+        <li><strong>🔧</strong> – Mail an den Dienstleister, um einen Termin abzustimmen (fasst mehrere fällige Anlagen desselben Dienstleisters automatisch in einer Mail zusammen)</li>
+        <li><strong>✏</strong> – Anlage bearbeiten</li>
+        <li><strong>✕</strong> – Anlage löschen</li>
+      </ul>
+
+      <h4>Meine Signatur</h4>
+      <p>Einmalig oben auf <strong>✍ Absender / Signatur</strong> klicken und den eigenen Namen wählen – danach steht die richtige Signatur automatisch in jeder von dir versendeten Mail (pro Gerät gespeichert).</p>
+    </div>
+  </div>
+
   <div class="banners" id="banners"></div>
 
   <div class="summary-row" id="summary"></div>
@@ -369,6 +438,16 @@
           Stillgelegt – Prüfung ausgesetzt (<strong style="margin:0 4px;">nicht als überfällig</strong> anzeigen)
         </label>
       </div>
+      <div class="fg full">
+        <label style="display:flex;align-items:center;gap:8px;text-transform:none;font-weight:normal;font-size:13px;cursor:pointer;">
+          <input type="checkbox" id="fKeinTurnus" onchange="onKeinTurnusChange()" style="width:18px;height:18px;padding:0;margin:0;flex:none;">
+          Ohne festes Wartungsintervall (<strong style="margin:0 4px;">nicht als überfällig</strong> anzeigen, z. B. Kalibrierung vom Hersteller eingestellt)
+        </label>
+      </div>
+      <div class="fg full" id="keinTurnusGrundWrap" style="display:none;">
+        <label>Grund (wird in der Übersicht vermerkt)</label>
+        <input type="text" id="fKeinTurnusGrund" placeholder="z. B. Kalibrierung vom Hersteller eingestellt">
+      </div>
 
       <div class="form-section-divider full" style="grid-column:1/-1;margin-top:8px;padding-top:14px;border-top:1px solid var(--border);font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:.8px;color:var(--primary);">
         🔧 Wartungsfirma / Dienstleister
@@ -446,7 +525,8 @@ function fromRow(r) {
     letzteWartung: r.letzte_wartung, intervallMonate: r.intervall_monate,
     person: r.person, email: r.email, notizen: r.notizen,
     wFirma: r.w_firma, wKontakt: r.w_kontakt, wTelefon: r.w_telefon, wEmail: r.w_email, wAnrede: r.w_anrede,
-    stundenbasiert: r.stundenbasiert, stundenInfo: r.stunden_info, stillgelegt: r.stillgelegt
+    stundenbasiert: r.stundenbasiert, stundenInfo: r.stunden_info, stillgelegt: r.stillgelegt,
+    keinTurnus: r.kein_turnus, keinTurnusGrund: r.kein_turnus_grund
   };
 }
 function toRow(e) {
@@ -459,6 +539,7 @@ function toRow(e) {
   if (hasAnrede) r.w_anrede = e.wAnrede || '';
   if (hasStunden) { r.stundenbasiert = !!e.stundenbasiert; r.stunden_info = e.stundenInfo || ''; }
   if (hasStillgelegt) r.stillgelegt = !!e.stillgelegt;
+  if (hasKeinTurnus) { r.kein_turnus = !!e.keinTurnus; r.kein_turnus_grund = e.keinTurnusGrund || ''; }
   return r;
 }
 
@@ -472,6 +553,7 @@ function setDbStatus(msg, color) {
 let hasAnrede = true;
 let hasStunden = true;
 let hasStillgelegt = true;
+let hasKeinTurnus = true;
 async function loadData() {
   const res = await fetch(`${REST}?order=created_at.asc`, { headers: HEADERS });
   if (!res.ok) throw new Error('HTTP ' + res.status + ' ' + (await res.text()));
@@ -480,6 +562,7 @@ async function loadData() {
     hasAnrede      = Object.prototype.hasOwnProperty.call(rows[0], 'w_anrede');
     hasStunden     = Object.prototype.hasOwnProperty.call(rows[0], 'stundenbasiert');
     hasStillgelegt = Object.prototype.hasOwnProperty.call(rows[0], 'stillgelegt');
+    hasKeinTurnus  = Object.prototype.hasOwnProperty.call(rows[0], 'kein_turnus');
   }
   data = rows.map(fromRow);
 }
@@ -510,9 +593,19 @@ function getStatus(days) {
 
 // Status pro Anlage: stundenbasierte Anlagen werden nach Ablauf "beobachtet" statt überfällig
 function entryStatus(e, days) {
+  if (e.keinTurnus) return 'k';
   if (e.stillgelegt) return 'p';
   if (e.stundenbasiert && days <= 0) return 'b';
   return getStatus(days);
+}
+
+// Freitextfelder (Notizen, Person, Kontaktdaten des Dienstleisters ...) landen per
+// innerHTML in der Tabelle - vor jeder Einfuegung escapen, sonst gespeicherte XSS
+// (Sicherheits-Review 31.08.2026, Manuel Einhaus).
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
 }
 
 function fmtDate(d) {
@@ -524,10 +617,12 @@ function badgeHtml(st) {
   if (st === 'o') return '<span class="badge badge-o">Bald fällig</span>';
   if (st === 'b') return '<span class="badge badge-b">Beobachten</span>';
   if (st === 'p') return '<span class="badge badge-p">Stillgelegt</span>';
+  if (st === 'k') return '<span class="badge badge-k">Ohne Turnus</span>';
   return '<span class="badge badge-g">OK</span>';
 }
 
 function daysHtml(days, st) {
+  if (st === 'k') return `<span class="days-k" style="font-style:italic;">ohne Turnus</span>`;
   if (st === 'p') return `<span class="days-p">${days < 0 ? `Termin überschritten (seit ${Math.abs(days)} Tagen)` : `${days} Tage`}</span>`;
   if (st === 'b') return `<span class="days-b">Beobachten${days < 0 ? ` (seit ${Math.abs(days)} Tagen)` : ''}</span>`;
   if (days < 0)  return `<span class="days-r">+ ${Math.abs(days)} Tage überfällig</span>`;
@@ -551,6 +646,11 @@ function onStundenChange() {
     document.getElementById('fStundenbasiert').checked ? '' : 'none';
 }
 
+function onKeinTurnusChange() {
+  document.getElementById('keinTurnusGrundWrap').style.display =
+    document.getElementById('fKeinTurnus').checked ? '' : 'none';
+}
+
 function updateNextDate() {
   const letzte = document.getElementById('fLetzte').value;
   const iv = getIntervall();
@@ -563,7 +663,11 @@ function render() {
     const next = addMonths(e.letzteWartung, e.intervallMonate);
     const days = calcDays(next);
     return { ...e, next, days, st: entryStatus(e, days) };
-  }).sort((a, b) => a.days - b.days);
+  }).sort((a, b) => {
+    const ka = a.st === 'k' ? Infinity : a.days;
+    const kb = b.st === 'k' ? Infinity : b.days;
+    return ka - kb;
+  });
 
   const overdue = enriched.filter(e => e.st === 'r').length;
   const soon    = enriched.filter(e => e.st === 'o').length;
@@ -591,40 +695,42 @@ function render() {
   // Table rows
   let rows = '';
   for (const e of enriched) {
-    const rc = e.st === 'r' ? 'row-r' : e.st === 'o' ? 'row-o' : e.st === 'b' ? 'row-b' : e.st === 'p' ? 'row-p' : '';
+    const rc = e.st === 'r' ? 'row-r' : e.st === 'o' ? 'row-o' : e.st === 'b' ? 'row-b' : e.st === 'p' ? 'row-p' : e.st === 'k' ? 'row-k' : '';
 
     const mailBtn = e.email
-      ? `<button class="btn btn-icon btn-mail" onclick="sendReminder(${e.id})" title="Erinnerung an ${e.person || 'zuständige Person'}">✉</button>`
+      ? `<button class="btn btn-icon btn-mail" onclick="sendReminder(${e.id})" title="Erinnerung an ${esc(e.person || 'zuständige Person')}">✉</button>`
       : `<button class="btn btn-icon btn-nomail" onclick="openModal(${e.id})" title="Keine E-Mail hinterlegt – hier klicken zum Ergänzen">✉</button>`;
 
     const dlBtn = e.wEmail
-      ? `<button class="btn btn-icon btn-dl" onclick="sendDienstleister(${e.id})" title="E-Mail an Dienstleister: ${e.wFirma || e.wEmail}">🔧</button>`
+      ? `<button class="btn btn-icon btn-dl" onclick="sendDienstleister(${e.id})" title="E-Mail an Dienstleister: ${esc(e.wFirma || e.wEmail)}">🔧</button>`
       : '';
 
     rows += `
       <tr class="${rc}">
         <td>${badgeHtml(e.st)}</td>
         <td>
-          <strong>${e.anlage}</strong>
-          <br><span style="font-size:11px;color:var(--text-muted)">${e.wartungstyp}</span>
-          ${e.stundenbasiert ? `<br><span style="font-size:11px;color:#1c6fb5">⏱ stundenbasiert${e.stundenInfo ? ' · ' + e.stundenInfo : ''}</span>` : ''}
+          <strong>${esc(e.anlage)}</strong>
+          <br><span style="font-size:11px;color:var(--text-muted)">${esc(e.wartungstyp)}</span>
+          ${e.stundenbasiert ? `<br><span style="font-size:11px;color:#1c6fb5">⏱ stundenbasiert${e.stundenInfo ? ' · ' + esc(e.stundenInfo) : ''}</span>` : ''}
           ${e.stillgelegt ? `<br><span style="font-size:11px;color:#6b7785">🚫 stillgelegt – Prüfung ausgesetzt</span>` : ''}
-          ${e.notizen ? `<br><span style="font-size:11px;color:var(--text-muted);font-style:italic">${e.notizen}</span>` : ''}
+          ${e.keinTurnus ? `<br><span style="font-size:11px;color:#6d4aa8">🔕 ohne Turnus${e.keinTurnusGrund ? ' – ' + esc(e.keinTurnusGrund) : ''}</span>` : ''}
+          ${e.notizen ? `<br><span style="font-size:11px;color:var(--text-muted);font-style:italic">${esc(e.notizen)}</span>` : ''}
         </td>
         <td>
-          <span style="font-weight:bold">${fmtDate(e.next)}</span>
-          <br>${daysHtml(e.days, e.st)}
+          ${e.st === 'k'
+            ? `<span style="color:var(--text-muted);font-style:italic;font-size:12px">ohne Turnus</span>`
+            : `<span style="font-weight:bold">${fmtDate(e.next)}</span><br>${daysHtml(e.days, e.st)}`}
         </td>
         <td style="max-width:150px">
-          <span title="${e.email || ''}">${e.person}</span>
-          ${e.email ? `<br><small style="color:var(--text-muted);font-size:10px">${e.email}</small>` : ''}
+          <span title="${esc(e.email || '')}">${esc(e.person)}</span>
+          ${e.email ? `<br><small style="color:var(--text-muted);font-size:10px">${esc(e.email)}</small>` : ''}
         </td>
         <td style="max-width:180px">
           ${e.wFirma ? `
-              <strong style="font-size:12px">${e.wFirma}</strong>
-              ${e.wKontakt ? `<br><span style="font-size:11px;color:var(--text-muted)">👤 ${e.wKontakt}</span>` : ''}
-              ${e.wTelefon ? `<br><a href="tel:${e.wTelefon}" style="font-size:11px;color:var(--primary-light);text-decoration:none">📞 ${e.wTelefon}</a>` : ''}
-              ${e.wEmail ? `<br><a href="mailto:${e.wEmail}" style="font-size:11px;color:var(--primary-light);text-decoration:none">✉ ${e.wEmail}</a>` : ''}
+              <strong style="font-size:12px">${esc(e.wFirma)}</strong>
+              ${e.wKontakt ? `<br><span style="font-size:11px;color:var(--text-muted)">👤 ${esc(e.wKontakt)}</span>` : ''}
+              ${e.wTelefon ? `<br><a href="tel:${esc(e.wTelefon)}" style="font-size:11px;color:var(--primary-light);text-decoration:none">📞 ${esc(e.wTelefon)}</a>` : ''}
+              ${e.wEmail ? `<br><a href="mailto:${esc(e.wEmail)}" style="font-size:11px;color:var(--primary-light);text-decoration:none">✉ ${esc(e.wEmail)}</a>` : ''}
           ` : '<span style="color:var(--text-muted);font-size:12px">—</span>'}
         </td>
         <td>
@@ -645,7 +751,7 @@ function openModal(id) {
   document.getElementById('modalOverlay').classList.add('open');
   if (id === null) {
     document.getElementById('modalTitle').textContent = 'Anlage hinzufügen';
-    ['fAnlage','fTyp','fPerson','fEmail','fNotizen','fNaechste','fWFirma','fWAnrede','fWKontakt','fWTelefon','fWEmail','fStundenInfo'].forEach(f => document.getElementById(f).value = '');
+    ['fAnlage','fTyp','fPerson','fEmail','fNotizen','fNaechste','fWFirma','fWAnrede','fWKontakt','fWTelefon','fWEmail','fStundenInfo','fKeinTurnusGrund'].forEach(f => document.getElementById(f).value = '');
     document.getElementById('fZyklus').value = '12';
     document.getElementById('fIntervall').value = '';
     document.getElementById('customWrap').style.display = 'none';
@@ -653,6 +759,8 @@ function openModal(id) {
     document.getElementById('fStundenbasiert').checked = false;
     document.getElementById('stundenInfoWrap').style.display = 'none';
     document.getElementById('fStillgelegt').checked = false;
+    document.getElementById('fKeinTurnus').checked = false;
+    document.getElementById('keinTurnusGrundWrap').style.display = 'none';
   } else {
     const e = data.find(x => x.id === id);
     document.getElementById('modalTitle').textContent = 'Anlage bearbeiten';
@@ -670,6 +778,9 @@ function openModal(id) {
     document.getElementById('fStundenInfo').value = e.stundenInfo || '';
     onStundenChange();
     document.getElementById('fStillgelegt').checked = !!e.stillgelegt;
+    document.getElementById('fKeinTurnus').checked = !!e.keinTurnus;
+    document.getElementById('fKeinTurnusGrund').value = e.keinTurnusGrund || '';
+    onKeinTurnusChange();
     const presets = ['1','2','3','6','12','24'];
     const iv = String(e.intervallMonate);
     if (presets.includes(iv)) {
@@ -714,6 +825,8 @@ async function saveModal() {
     stundenbasiert: document.getElementById('fStundenbasiert').checked,
     stundenInfo:    document.getElementById('fStundenInfo').value.trim(),
     stillgelegt:    document.getElementById('fStillgelegt').checked,
+    keinTurnus:      document.getElementById('fKeinTurnus').checked,
+    keinTurnusGrund: document.getElementById('fKeinTurnusGrund').value.trim(),
   };
   try {
     let res;
@@ -917,8 +1030,25 @@ function exportData() {
   URL.revokeObjectURL(a.href);
 }
 
+/* ══════════ Anleitung / Hilfe ein-/ausklappen ══════════ */
+function toggleHelp() {
+  const body = document.getElementById('helpBody');
+  const icon = document.getElementById('helpToggleIcon');
+  const open = !body.classList.contains('open');
+  body.classList.toggle('open', open);
+  icon.classList.toggle('open', open);
+  localStorage.setItem('wartungAnleitungOffen', open ? '1' : '0');
+}
+function initHelp() {
+  const stored = localStorage.getItem('wartungAnleitungOffen');
+  const open = stored === null ? true : stored === '1';
+  document.getElementById('helpBody').classList.toggle('open', open);
+  document.getElementById('helpToggleIcon').classList.toggle('open', open);
+}
+
 /* ══════════ Start: Daten aus der zentralen Datenbank laden ══════════ */
 async function init() {
+  initHelp();
   setDbStatus('Lädt …', 'var(--text-muted)');
   try {
     await loadData();
