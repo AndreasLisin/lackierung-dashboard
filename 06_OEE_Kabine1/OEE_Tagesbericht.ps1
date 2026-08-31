@@ -401,8 +401,7 @@ foreach ($empfaenger in $EMPFAENGER) {
         $mail.To       = $empfaenger
         $mail.Subject  = $betreff
         $mail.HTMLBody = $htmlBody
-        $mail.DeleteAfterSubmit = $true
-        $mail.Send()
+        $mail.Save()
         $gesendet++
         Write-Log "Gesendet -> $empfaenger"
     } catch {
