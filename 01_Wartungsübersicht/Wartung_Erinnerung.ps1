@@ -148,7 +148,7 @@ Saarlandstr. 375a, 55411 Bingen
         $mail.CC      = $absenderMail
         $mail.Subject = $betreff
         $mail.Body    = $mailBody
-        $mail.Send()
+        $mail.Save()
         $gesendet++
         Write-Log "Gesendet: $($eintrag.Anlage) -> $($eintrag.Email) (RestTage: $($eintrag.RestTage))"
     } catch {
