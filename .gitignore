@@ -27,3 +27,7 @@ farbton_view.json
 
 # --- Lackformeln: Sync-Skript enthaelt interne Server-/Auth-Logik ---
 08_Lackformeln/Sync_Lackformeln.ps1
+
+# --- OEE-Tagesberichte: enthalten Supabase-URL + anon-Key im Klartext ---
+06_OEE_Kabine1/OEE_Tagesbericht.ps1
+07_OEE_Beflammroboter/OEE_Tagesbericht.ps1
