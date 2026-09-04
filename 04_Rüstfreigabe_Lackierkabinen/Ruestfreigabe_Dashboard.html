@@ -446,6 +446,14 @@ async function getSavedHandle() {
   });
 }
 
+// Freitextfelder (Bemerkung/Lack_Charge) vor jeder innerHTML-Einfuegung escapen,
+// sonst gespeicherte XSS (Security-Review, Manuel, 04.09.2026).
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
 // ── DATEN VERARBEITEN ────────────────────────────────────────────────────────
 async function processEntries(text) {
   allEntries = JSON.parse(text).map(e => ({
@@ -787,7 +795,7 @@ function buildEvents() {
       <td><strong>${e.dateDisplay||e.date}</strong></td>
       <td>Rüstfreigabe Lackierkabinen</td>
       <td><span class="tag ${cls}">${label}</span></td>
-      <td style="font-size:12px;">${e.bemerkung||'–'}</td>
+      <td style="font-size:12px;">${escapeHtml(e.bemerkung)||'–'}</td>
     </tr>`;
   });
 }
@@ -843,9 +851,9 @@ function showDayDetail(dateStr) {
   html += '</div>';
 
   const charge = entry.Lack_Charge||'';
-  if (charge) html += `<div class="modal-charge">🏷️ <strong>Lack-Charge:</strong> ${charge}</div>`;
+  if (charge) html += `<div class="modal-charge">🏷️ <strong>Lack-Charge:</strong> ${escapeHtml(charge)}</div>`;
   const bem = entry.bemerkung||'';
-  if (bem)    html += `<div class="modal-remark">💬 <strong>Bemerkung:</strong> ${bem}</div>`;
+  if (bem)    html += `<div class="modal-remark">💬 <strong>Bemerkung:</strong> ${escapeHtml(bem)}</div>`;
 
   document.getElementById('modal-body').innerHTML = html;
   document.getElementById('dayModal').classList.add('open');
