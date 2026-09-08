@@ -700,6 +700,11 @@ let listData = [
   { ts:'19.05.2026 06:47', datum:'19.05.2026', schicht:'Früh', pruefer:'A. Lisin', kabinen:'i.O.', trockner:'i.O.', primerIst:'17°C', charge:'2026-A443', gesamt:'n.i.O.', bem:'Heizung ausgefallen → Nachgeregelt' },
 ];
 
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
 function badgeHtml(val) {
   if (val === 'i.O.')  return `<span class="status-badge badge-io">✓ i.O.</span>`;
   if (val === 'b.i.O.') return `<span class="status-badge badge-bio">⚠ b.i.O.</span>`;
@@ -723,8 +728,8 @@ function updateDashboard() {
   const tb = document.getElementById('dash-table');
   tb.innerHTML = listData.slice(0,7).map(r =>
     `<tr><td><strong>${r.datum}</strong><br><span class="timestamp">${r.schicht}</span></td>
-     <td>${r.pruefer}</td><td>${r.primerIst}</td><td>${r.charge}</td>
-     <td>${badgeHtml(r.gesamt)}</td><td style="font-size:12px;">${r.bem}</td></tr>`
+     <td>${escapeHtml(r.pruefer)}</td><td>${escapeHtml(r.primerIst)}</td><td>${escapeHtml(r.charge)}</td>
+     <td>${badgeHtml(r.gesamt)}</td><td style="font-size:12px;">${escapeHtml(r.bem)}</td></tr>`
   ).join('');
 
   // Charts update
@@ -801,9 +806,9 @@ function submitForm() {
   const tbody = document.getElementById('sp-tbody');
   const tr = document.createElement('tr');
   tr.className = 'new-row';
-  tr.innerHTML = `<td class="timestamp">${ts}</td><td>${ds}</td><td>${schicht}</td><td>${pruefer}</td>
+  tr.innerHTML = `<td class="timestamp">${ts}</td><td>${ds}</td><td>${schicht}</td><td>${escapeHtml(pruefer)}</td>
     <td>${badgeHtml(newRow.kabinen)}</td><td>${badgeHtml(newRow.trockner)}</td>
-    <td>${primerIst}</td><td>${charge}</td><td>${badgeHtml(gesamt)}</td><td>${bemerkung}</td>`;
+    <td>${escapeHtml(primerIst)}</td><td>${escapeHtml(charge)}</td><td>${badgeHtml(gesamt)}</td><td>${escapeHtml(bemerkung)}</td>`;
   tbody.insertBefore(tr, tbody.firstChild);
   document.getElementById('sp-count').textContent = listData.length + ' Einträge';
 
