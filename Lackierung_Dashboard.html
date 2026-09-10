@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Lackierung – Dashboard</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@700&display=swap');
-
   :root {
     --primary: #1a3a5c;
     --primary-light: #2558a0;
@@ -18,8 +16,6 @@
     --text: #1a2535;
     --text-muted: #5a6a7a;
     --icon-bg: #e8eef7;
-    --logo-text: #111;
-    --logo-tagline: #444;
     --divider: #c0ccd8;
   }
   [data-theme="dark"] {
@@ -33,8 +29,6 @@
     --text: #e0eaf4;
     --text-muted: #7a9ab8;
     --icon-bg: #1e3048;
-    --logo-text: #ffffff;
-    --logo-tagline: #aaaaaa;
     --divider: #2e3c4e;
   }
 
@@ -63,49 +57,15 @@
   }
   .logo-wrap {
     display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-  .logo-text {
-    font-size: 38px;
-    font-weight: 900;
-    letter-spacing: 4px;
-    color: var(--logo-text);
-    line-height: 1;
-    font-family: 'Comfortaa', Arial Black, Arial, sans-serif;
-    transition: color 0.25s;
-  }
-  .logo-sub-row {
-    display: flex;
     align-items: center;
-    gap: 10px;
+    background: #ffffff;
+    padding: 8px 14px;
+    border-radius: 6px;
   }
-  .logo-stripes {
-    display: flex;
-    gap: 3px;
-    height: 12px;
-    overflow: visible;
-  }
-  .logo-stripes span {
+  .logo-img {
     display: block;
-    width: 16px;
-    height: 12px;
-    transform: skewX(-18deg);
-  }
-  .s1 { background: #c0c0c0; }
-  .s2 { background: #ffd400; }
-  .s3 { background: #44bef0; }
-  .s4 { background: #3aaa35; }
-  .s5 { background: #e8007d; }
-  .s6 { background: #e83010; }
-  .s7 { background: #1155bb; }
-  .logo-tagline {
-    font-size: 10px;
-    font-weight: bold;
-    letter-spacing: 1.5px;
-    color: var(--logo-tagline);
-    text-transform: uppercase;
-    transition: color 0.25s;
+    height: 40px;
+    width: auto;
   }
   .header-divider {
     width: 1px;
@@ -295,19 +255,7 @@
 
 <header>
   <div class="logo-wrap">
-    <div class="logo-text">EINHAUS.</div>
-    <div class="logo-sub-row">
-      <div class="logo-stripes">
-        <span class="s1"></span>
-        <span class="s2"></span>
-        <span class="s3"></span>
-        <span class="s4"></span>
-        <span class="s5"></span>
-        <span class="s6"></span>
-        <span class="s7"></span>
-      </div>
-      <div class="logo-tagline">Oberflächenveredelung auf höchstem Niveau.</div>
-    </div>
+    <img class="logo-img" src="assets/logo_einhaus.png" alt="EINHAUS Oberflächenveredelung auf höchstem Niveau.">
   </div>
   <div class="header-divider"></div>
   <div class="header-info">
