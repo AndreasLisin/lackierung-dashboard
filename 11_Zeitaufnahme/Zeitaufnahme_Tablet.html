@@ -293,6 +293,32 @@
     color: #888;
     padding: 8px 14px 0;
   }
+
+  /* ── Bereichs-Reiter (Lackierung / Endkontrolle) ── */
+  .bereich-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin: 14px 14px 0;
+  }
+  .bereich-tab {
+    padding: 16px 10px;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    background: #fff;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #555;
+    cursor: pointer;
+    transition: all .15s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+  .bereich-tab.aktiv {
+    background: var(--blau);
+    border-color: var(--blau);
+    color: #fff;
+  }
 </style>
 <script defer src="../assets/zurueck-kontext.js"></script>
 </head>
@@ -307,7 +333,7 @@
   </div>
   <div class="topbar-center">
     <div class="titel">⏱ REFA-Zeitaufnahme Erfassung</div>
-    <div class="untertitel">Lackierung | <span id="headerDatum"></span></div>
+    <div class="untertitel"><span id="headerBereich">Lackierung</span> | <span id="headerDatum"></span></div>
   </div>
   <div class="topbar-right">
     <a class="btn-back" href="../index.html">← Zurück</a>
@@ -315,6 +341,12 @@
 </div>
 
 <div class="lokal-hinweis">⚠ Daten werden aktuell nur lokal in diesem Browser gespeichert – nicht auf einem anderen Gerät sichtbar.</div>
+
+<!-- Bereich (Lackierung / Endkontrolle) -->
+<div class="bereich-tabs" id="bereichTabs">
+  <button class="bereich-tab" data-bereich="Lackierung" onclick="bereichWaehlen(this.dataset.bereich)">Lackierung</button>
+  <button class="bereich-tab" data-bereich="Endkontrolle" onclick="bereichWaehlen(this.dataset.bereich)">Endkontrolle</button>
+</div>
 
 <!-- Stammdaten -->
 <div class="card">
@@ -344,19 +376,7 @@
 <!-- Prozessschritt -->
 <div class="card">
   <h2>Prozessschritt</h2>
-  <div class="schritt-grid" id="schrittGrid">
-    <div class="btn-schritt" data-schritt="Einlegen / Bestücken" onclick="schrittWaehlen(this,this.dataset.schritt)">Einlegen /<br>Bestücken</div>
-    <div class="btn-schritt" data-schritt="Vorbehandlung / Reinigung" onclick="schrittWaehlen(this,this.dataset.schritt)">Vorbehandlung /<br>Reinigung</div>
-    <div class="btn-schritt" data-schritt="Lack anmischen" onclick="schrittWaehlen(this,this.dataset.schritt)">Lack anmischen</div>
-    <div class="btn-schritt" data-schritt="Grundierung / Primer" onclick="schrittWaehlen(this,this.dataset.schritt)">Grundierung /<br>Primer</div>
-    <div class="btn-schritt" data-schritt="Basislack" onclick="schrittWaehlen(this,this.dataset.schritt)">Basislack</div>
-    <div class="btn-schritt" data-schritt="Ablüften" onclick="schrittWaehlen(this,this.dataset.schritt)">Ablüften</div>
-    <div class="btn-schritt" data-schritt="Klarlack" onclick="schrittWaehlen(this,this.dataset.schritt)">Klarlack</div>
-    <div class="btn-schritt" data-schritt="Zwischentrocknung" onclick="schrittWaehlen(this,this.dataset.schritt)">Zwischen-<br>trocknung</div>
-    <div class="btn-schritt" data-schritt="Ofentrocknung" onclick="schrittWaehlen(this,this.dataset.schritt)">Ofentrocknung</div>
-    <div class="btn-schritt" data-schritt="Abkühlen" onclick="schrittWaehlen(this,this.dataset.schritt)">Abkühlen</div>
-    <div class="btn-schritt eigen" onclick="schrittEigenerZeigen()">Eigener Schritt…</div>
-  </div>
+  <div class="schritt-grid" id="schrittGrid"></div>
   <div class="feld" id="schrittEigenWrap" style="display:none;margin-top:10px">
     <input type="text" id="schrittEigen" placeholder="Bezeichnung eingeben…" oninput="schrittEigenUebernehmen()">
   </div>
@@ -438,6 +458,39 @@
   document.getElementById('headerDatum').textContent =
     heute.toLocaleDateString('de-DE', { weekday:'short', day:'2-digit', month:'2-digit', year:'numeric' });
 
+  // Prozessschritte je Bereich. Endkontrolle-Liste ist ein Vorschlag der üblichen
+  // Finish-Tätigkeiten und darf jederzeit angepasst/erweitert werden.
+  const SCHRITTE = {
+    'Lackierung': [
+      'Einlegen / Bestücken',
+      'Vorbehandlung / Reinigung',
+      'Lack anmischen',
+      'Grundierung / Primer',
+      'Basislack',
+      'Ablüften',
+      'Klarlack',
+      'Zwischentrocknung',
+      'Ofentrocknung',
+      'Abkühlen'
+    ],
+    'Endkontrolle': [
+      'Abrüsten / Entnehmen',
+      'Sichtprüfung',
+      'Schichtdicke messen',
+      'Nacharbeit Polieren',
+      'Nacharbeit Schleifen',
+      'Entstauben / Reinigen',
+      'Kleben / Montage',
+      'Etikettieren',
+      'Verpacken',
+      'Dokumentation / Prüfprotokoll',
+      'Ausschuss aussortieren',
+      'Bereitstellen / Kommissionieren'
+    ]
+  };
+
+  let aktuellerBereich = localStorage.getItem('zeitaufnahme_bereich') || 'Lackierung';
+  if (!SCHRITTE[aktuellerBereich]) aktuellerBereich = 'Lackierung';
   let aktuellerSchritt = null;
   let laeuft = false;
   let startZeit = null;
@@ -462,6 +515,47 @@
   document.getElementById('erfasser').addEventListener('input', () => {
     localStorage.setItem('zeitaufnahme_erfasser', document.getElementById('erfasser').value);
   });
+
+  // Bereich wechseln: setzt die Schritt-Auswahl zurück, da jeder Bereich eigene Schritte hat
+  function bereichWaehlen(bereich) {
+    if (!SCHRITTE[bereich]) return;
+    aktuellerBereich = bereich;
+    localStorage.setItem('zeitaufnahme_bereich', bereich);
+    aktuellerSchritt = null;
+    localStorage.removeItem('zeitaufnahme_schritt');
+    document.getElementById('schrittEigenWrap').style.display = 'none';
+    document.getElementById('schrittEigen').value = '';
+    zyklen = [];
+    naechsteZyklusNr = 1;
+    renderBereichTabs();
+    renderSchrittGrid();
+    renderZyklusListe();
+    aktualisiereAuswahlAnzeige();
+  }
+
+  function renderBereichTabs() {
+    document.querySelectorAll('.bereich-tab').forEach(t =>
+      t.classList.toggle('aktiv', t.dataset.bereich === aktuellerBereich));
+    document.getElementById('headerBereich').textContent = aktuellerBereich;
+  }
+
+  function renderSchrittGrid() {
+    const grid = document.getElementById('schrittGrid');
+    grid.innerHTML = '';
+    SCHRITTE[aktuellerBereich].forEach(s => {
+      const div = document.createElement('div');
+      div.className = 'btn-schritt' + (s === aktuellerSchritt ? ' aktiv' : '');
+      div.dataset.schritt = s;
+      div.textContent = s;
+      div.onclick = () => schrittWaehlen(div, s);
+      grid.appendChild(div);
+    });
+    const eigen = document.createElement('div');
+    eigen.className = 'btn-schritt eigen';
+    eigen.textContent = 'Eigener Schritt…';
+    eigen.onclick = schrittEigenerZeigen;
+    grid.appendChild(eigen);
+  }
 
   function schrittWaehlen(btn, schritt) {
     document.querySelectorAll('.btn-schritt').forEach(b => b.classList.remove('aktiv'));
@@ -489,12 +583,14 @@
     }
   }
 
-  // Zuletzt gewählten Prozessschritt wiederherstellen (Kabine/Bauteil werden schon oben wiederhergestellt –
-  // sonst bleibt der Schritt nach einem Reload leer, während Kabine/Bauteil ausgefüllt aussehen, und der
-  // Start-Button wirkt "kaputt", weil er stumm deaktiviert bleibt).
-  (function schrittWiederherstellen() {
+  // Bereich + zuletzt gewählten Prozessschritt wiederherstellen (Kabine/Bauteil werden schon oben
+  // wiederhergestellt – sonst bleibt der Schritt nach einem Reload leer, während Kabine/Bauteil
+  // ausgefüllt aussehen, und der Start-Button wirkt "kaputt", weil er stumm deaktiviert bleibt).
+  (function initWiederherstellen() {
+    renderBereichTabs();
+    renderSchrittGrid();
     const gespeichert = localStorage.getItem('zeitaufnahme_schritt');
-    if (!gespeichert) return;
+    if (!gespeichert) { aktualisiereAuswahlAnzeige(); return; }
     const tile = [...document.querySelectorAll('#schrittGrid > .btn-schritt[data-schritt]')]
       .find(t => t.dataset.schritt === gespeichert);
     if (tile) {
@@ -514,7 +610,7 @@
     const box = document.getElementById('aktuelleAuswahl');
     const btnStopp = document.getElementById('btnStopp');
     if (k && b && aktuellerSchritt) {
-      box.innerHTML = `<b>${escapeHtml(k)}</b> · <b>${escapeHtml(b)}</b> · <b>${escapeHtml(aktuellerSchritt)}</b>`;
+      box.innerHTML = `<b>${escapeHtml(aktuellerBereich)}</b> · <b>${escapeHtml(k)}</b> · <b>${escapeHtml(b)}</b> · <b>${escapeHtml(aktuellerSchritt)}</b>`;
       btnStopp.classList.remove('inaktiv');
     } else {
       box.textContent = 'Bitte Kabine, Bauteil und Prozessschritt wählen.';
@@ -527,7 +623,10 @@
     const k = document.getElementById('kabine').value.trim();
     const b = document.getElementById('bauteil').value.trim();
     if (!k || !b || !aktuellerSchritt) return;
-    const rows = alleDatenLesen().filter(r => r.kabine === k && r.bauteil === b && r.prozessschritt === aktuellerSchritt);
+    // Altdatensätze ohne Bereich zählen als "Lackierung" (Feld erst am 10.09.2026 ergänzt)
+    const rows = alleDatenLesen().filter(r =>
+      (r.bereich || 'Lackierung') === aktuellerBereich &&
+      r.kabine === k && r.bauteil === b && r.prozessschritt === aktuellerSchritt);
     rows.sort((a,z) => a.zyklus_nr - z.zyklus_nr);
     zyklen = rows.map(r => ({ id: r.id, zyklus_nr: r.zyklus_nr, istzeit_sek: r.istzeit_sek, leistungsgrad: r.leistungsgrad, normalzeit_sek: r.normalzeit_sek }));
     naechsteZyklusNr = zyklen.length ? Math.max(...zyklen.map(z => z.zyklus_nr)) + 1 : 1;
@@ -608,9 +707,9 @@
     const id = neueId();
 
     const eintrag = {
-      id, datum: datumStr, kabine: k, bauteil: b, prozessschritt: aktuellerSchritt,
-      zyklus_nr: zyklusNr, istzeit_sek: istzeit, leistungsgrad: gewaehlterLg,
-      normalzeit_sek: normalzeit, bemerkung, erfasser
+      id, datum: datumStr, bereich: aktuellerBereich, kabine: k, bauteil: b,
+      prozessschritt: aktuellerSchritt, zyklus_nr: zyklusNr, istzeit_sek: istzeit,
+      leistungsgrad: gewaehlterLg, normalzeit_sek: normalzeit, bemerkung, erfasser
     };
 
     const btn = document.getElementById('btnLgSpeichern');

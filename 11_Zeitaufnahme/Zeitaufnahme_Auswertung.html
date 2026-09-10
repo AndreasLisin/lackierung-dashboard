@@ -150,6 +150,10 @@
     </div>
     <div class="filter-grid">
       <div class="feld">
+        <label>Bereich</label>
+        <select id="fBereich" onchange="render()"><option value="">Alle</option></select>
+      </div>
+      <div class="feld">
         <label>Kabine</label>
         <select id="fKabine" onchange="render()"><option value="">Alle</option></select>
       </div>
@@ -181,7 +185,7 @@
       <table id="tabelleSchritte">
         <thead>
           <tr>
-            <th>Bauteil</th><th>Prozessschritt</th><th>n</th>
+            <th>Bauteil</th><th>Bereich</th><th>Prozessschritt</th><th>n</th>
             <th>Ø Istzeit (s)</th><th>Ø Leistungsgrad</th><th>Ø Normalzeit (s)</th>
             <th>Vorgabezeit (s)</th>
           </tr>
@@ -220,7 +224,7 @@
       <div class="table-scroll" style="margin-top:12px">
         <table id="tabelleRoh">
           <thead>
-            <tr><th>Datum</th><th>Bauteil</th><th>Schritt</th><th>#</th><th>Istzeit (s)</th><th>LG %</th><th>Normalzeit (s)</th><th>Erfasser</th><th></th></tr>
+            <tr><th>Datum</th><th>Bereich</th><th>Bauteil</th><th>Schritt</th><th>#</th><th>Istzeit (s)</th><th>LG %</th><th>Normalzeit (s)</th><th>Erfasser</th><th></th></tr>
           </thead>
           <tbody id="bodyRoh"></tbody>
         </table>
@@ -260,7 +264,16 @@
     render();
   }
 
+  // Altdatensätze ohne Bereich zählen als "Lackierung" (Feld erst am 10.09.2026 ergänzt)
+  function bereichVon(d) { return d.bereich || 'Lackierung'; }
+
   function fuelleFilter() {
+    const bereiche = [...new Set(alleDaten.map(bereichVon))].sort();
+    const selBer = document.getElementById('fBereich');
+    const merkeBer = selBer.value;
+    selBer.innerHTML = '<option value="">Alle</option>' + bereiche.map(x => `<option value="${x}">${x}</option>`).join('');
+    if (bereiche.includes(merkeBer)) selBer.value = merkeBer;
+
     const kabinen = [...new Set(alleDaten.map(d => d.kabine))].sort();
     const bauteile = [...new Set(alleDaten.map(d => d.bauteil))].sort();
     const selK = document.getElementById('fKabine');
@@ -276,11 +289,13 @@
   }
 
   function gefiltert() {
+    const ber = document.getElementById('fBereich').value;
     const k = document.getElementById('fKabine').value;
     const b = document.getElementById('fBauteil').value;
     const von = document.getElementById('fVon').value;
     const bis = document.getElementById('fBis').value;
     return alleDaten.filter(d =>
+      (!ber || bereichVon(d) === ber) &&
       (!k || d.kabine === k) &&
       (!b || d.bauteil === b) &&
       (!von || d.datum >= von) &&
@@ -298,8 +313,8 @@
   function gruppiereSchritte(daten) {
     const gruppen = {};
     daten.forEach(d => {
-      const key = d.bauteil + '␟' + d.prozessschritt;
-      if (!gruppen[key]) gruppen[key] = { bauteil: d.bauteil, prozessschritt: d.prozessschritt, rows: [] };
+      const key = d.bauteil + '␟' + bereichVon(d) + '␟' + d.prozessschritt;
+      if (!gruppen[key]) gruppen[key] = { bauteil: d.bauteil, bereich: bereichVon(d), prozessschritt: d.prozessschritt, rows: [] };
       gruppen[key].rows.push(d);
     });
     return Object.values(gruppen);
@@ -311,13 +326,15 @@
 
     const gruppen = gruppiereSchritte(daten);
     const body = document.getElementById('bodySchritte');
-    if (!gruppen.length) { body.innerHTML = '<tr><td colspan="7" class="leer">Keine Daten für diesen Filter.</td></tr>'; return; }
+    if (!gruppen.length) { body.innerHTML = '<tr><td colspan="8" class="leer">Keine Daten für diesen Filter.</td></tr>'; return; }
 
-    // nach Bauteil sortieren, dann Schritt-Reihenfolge nach erstem Auftreten
+    // nach Bauteil sortieren, innerhalb dessen Lackierung vor Endkontrolle, dann nach erstem Auftreten
     const bauteile = [...new Set(gruppen.map(g => g.bauteil))].sort();
     let html = '';
     bauteile.forEach(bauteil => {
-      const schritteDesBauteils = gruppen.filter(g => g.bauteil === bauteil);
+      const schritteDesBauteils = gruppen
+        .filter(g => g.bauteil === bauteil)
+        .sort((a, b) => a.bereich === b.bereich ? 0 : (a.bereich === 'Lackierung' ? -1 : 1));
       let summeVorgabe = 0;
       schritteDesBauteils.forEach(g => {
         const n = g.rows.length;
@@ -327,12 +344,12 @@
         const vorgabe = oeNz * zuschlagFaktor;
         summeVorgabe += vorgabe;
         html += `<tr>
-          <td>${escapeHtml(bauteil)}</td><td>${escapeHtml(g.prozessschritt)}</td><td>${n}</td>
+          <td>${escapeHtml(bauteil)}</td><td>${escapeHtml(g.bereich)}</td><td>${escapeHtml(g.prozessschritt)}</td><td>${n}</td>
           <td>${oeIst.toFixed(1)}</td><td>${oeLg.toFixed(0)} %</td><td>${oeNz.toFixed(1)}</td>
           <td>${vorgabe.toFixed(1)}</td>
         </tr>`;
       });
-      html += `<tr class="bauteil-summe"><td colspan="6">${escapeHtml(bauteil)} — gesamt (alle Prozessschritte)</td><td>${summeVorgabe.toFixed(1)}</td></tr>`;
+      html += `<tr class="bauteil-summe"><td colspan="7">${escapeHtml(bauteil)} — gesamt (alle Prozessschritte)</td><td>${summeVorgabe.toFixed(1)}</td></tr>`;
     });
     body.innerHTML = html;
   }
@@ -370,9 +387,10 @@
 
   function renderRohdaten(daten) {
     const body = document.getElementById('bodyRoh');
-    if (!daten.length) { body.innerHTML = '<tr><td colspan="9" class="leer">Keine Daten für diesen Filter.</td></tr>'; return; }
+    if (!daten.length) { body.innerHTML = '<tr><td colspan="10" class="leer">Keine Daten für diesen Filter.</td></tr>'; return; }
     body.innerHTML = daten.map(d => `<tr data-id="${escapeHtml(d.id)}">
       <td>${new Date(d.datum).toLocaleDateString('de-DE')}</td>
+      <td>${escapeHtml(bereichVon(d))}</td>
       <td>${escapeHtml(d.bauteil)}</td>
       <td>${escapeHtml(d.prozessschritt)}</td>
       <td>${d.zyklus_nr}</td>
@@ -416,12 +434,12 @@
   function exportierenCsv() {
     const daten = gefiltert();
     if (!daten.length) { alert('Keine Daten für diesen Filter zum Exportieren.'); return; }
-    const spalten = ['datum','kabine','bauteil','prozessschritt','zyklus_nr','istzeit_sek','leistungsgrad','normalzeit_sek','bemerkung','erfasser'];
+    const spalten = ['datum','bereich','kabine','bauteil','prozessschritt','zyklus_nr','istzeit_sek','leistungsgrad','normalzeit_sek','bemerkung','erfasser'];
     // Formula-Injection-Schutz (Sicherheits-Review 31.08.2026, Manuel Einhaus): Freitextfelder,
     // die mit =+-@ beginnen, wuerden Excel/LibreOffice beim Oeffnen als Formel interpretieren.
     const csvSicher = v => /^[=+\-@]/.test(v) ? "'" + v : v;
     const zeilen = [spalten.join(';')].concat(
-      daten.map(d => spalten.map(s => csvSicher(String(d[s] ?? '')).replace(/;/g, ',')).join(';'))
+      daten.map(d => spalten.map(s => csvSicher(String((s === 'bereich' ? bereichVon(d) : d[s]) ?? '')).replace(/;/g, ',')).join(';'))
     );
     const blob = new Blob(['﻿' + zeilen.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
