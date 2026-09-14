@@ -28,6 +28,17 @@ farbton_view.json
 # --- Lackformeln: Sync-Skript enthaelt interne Server-/Auth-Logik ---
 08_Lackformeln/Sync_Lackformeln.ps1
 
+# --- Sicherheits-Review 26.08.2026: 14 unversionierte Dateien vor dem naechsten
+#     GitHub_Aktualisieren.bat (git add -A) geschuetzt. Betraf u.a. zwei live
+#     wachsende OEE-Tagesbericht-Logs mit Klartext-Absenderadresse. Diese Regel
+#     schuetzt nur kuenftige "git add", bereits getrackte Dateien (z. B.
+#     01_Wartungsuebersicht/Wartung_Erinnerung.log) bleiben unveraendert und
+#     brauchen eine eigene Entscheidung (git rm --cached). ---
+Chatverlauf_*.md
+*.log
+*.sql
+*_Start.vbs
+
 # --- OEE-Tagesberichte: enthalten Supabase-URL + anon-Key im Klartext ---
 06_OEE_Kabine1/OEE_Tagesbericht.ps1
 07_OEE_Beflammroboter/OEE_Tagesbericht.ps1
